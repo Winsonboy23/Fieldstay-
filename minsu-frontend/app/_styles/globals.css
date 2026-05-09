@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-serif: "Noto Serif TC", "Songti TC", Georgia, serif;
+    --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  }
+
+  html {
+    background: #fdfbf8;
+  }
+
+  body {
+    letter-spacing: 0;
+  }
+
+  ::selection {
+    background: #c8e5da;
+    color: #00352e;
+  }
+}
+
+@layer components {
+  .field-card {
+    @apply rounded-lg border border-primary-200 bg-primary-50 shadow-[0_18px_45px_rgba(48,44,40,0.07)];
+  }
+
+  .field-button {
+    @apply inline-flex items-center justify-center rounded-md bg-accent-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-accent-600;
+  }
+
+  .member-input {
+    @apply w-full rounded-lg border border-primary-200 bg-primary-100 px-4 py-3 text-sm text-primary-900 outline-none transition focus:border-accent-500 focus:bg-primary-50 disabled:cursor-not-allowed disabled:text-primary-600;
+  }
+
+  .spinner {
+    margin: 3.2rem auto 1.6rem;
+    width: 60px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid theme("colors.primary.900");
+    border-right-color: theme("colors.primary.200");
+    animation: rotate 1s infinite linear;
+  }
+
+  .spinner-mini {
+    margin: 0;
+    width: 20px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid theme("colors.primary.200");
+    border-right-color: transparent;
+    animation: rotate 1s infinite linear;
+  }
+
+  @keyframes rotate {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+}
+
+/* For data picker */
+.rdp {
+  --rdp-cell-size: 32px !important;
+  --rdp-accent-color: theme("colors.accent.500") !important;
+  --rdp-background-color: theme("colors.accent.600") !important;
+  margin: 0 !important;
+}

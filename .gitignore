@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds
+.next/
+out/
+dist/
+dist-ssr/
+build/
+coverage/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# local/editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+
+# local test scratch
+_test_
+__test__
+
+# codex/claude local settings
+.claude/
+minsu-admin/supabase/.temp/
