@@ -20,14 +20,12 @@ export default function AccountReservationActions({ bookingId, roomId, editable 
       >
         查看房型
       </Link>
-      {editable ? (
-        <Link
-          href={`/account/reservations/edit/${bookingId}`}
-          className="rounded-lg border border-accent-600 bg-accent-50 px-4 py-2 text-sm font-semibold text-accent-700 transition hover:bg-accent-700 hover:text-white"
-        >
-          修改訂單
-        </Link>
-      ) : null}
+      <Link
+        href={`/account/reservations/${bookingId}`}
+        className="rounded-lg border border-accent-600 bg-accent-50 px-4 py-2 text-sm font-semibold text-accent-700 transition hover:bg-accent-700 hover:text-white"
+      >
+        查看訂單
+      </Link>
       {editable ? (
         <button
           type="button"

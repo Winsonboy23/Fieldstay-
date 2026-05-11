@@ -1,13 +1,31 @@
+import fs from "fs";
+import path from "path";
 import { getRooms } from "./_lib/data-service";
 import { auth } from "./_lib/auth";
 
 export const metadata = { title: "山田寓所 FIELDSTAY — 田間民宿訂房" };
 
-const heroImages = [
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=2400&q=85",
-  "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=2400&q=85",
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=2400&q=85",
-];
+const bannerExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
+
+function getBannerImages() {
+  const publicDir = path.join(process.cwd(), "public");
+
+  try {
+    return fs
+      .readdirSync(publicDir)
+      .filter((file) => {
+        const lowerFile = file.toLowerCase();
+        return (
+          lowerFile.startsWith("banner") &&
+          bannerExtensions.has(path.extname(lowerFile))
+        );
+      })
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .map((file) => `/${file}`);
+  } catch {
+    return [];
+  }
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -47,16 +65,13 @@ export default async function Page() {
   const roomCardsHtml = featuredRooms
     .map((room) => {
       const type = getRoomType(room.maxCapacity);
-      const typeLabel = getRoomTypeLabel(type);
       const displayPrice = Number(room.regularPrice) - Number(room.discount || 0);
       const roomName = escapeHtml(room.name);
       const roomImage = escapeHtml(room.image || "");
 
       return `
         <a class="room-card" href="/rooms/${room.id}" data-type="${type}" aria-label="${roomName}，NT$${displayPrice}起">
-          <div class="room-thumb" style="background-image: linear-gradient(120deg, rgba(0,0,0,0.20), rgba(0,0,0,0.35)), url('${roomImage}'); background-size: cover; background-position: center;">
-            <span class="room-tag">${typeLabel}</span>
-          </div>
+          <div class="room-thumb" style="background-image: linear-gradient(120deg, rgba(0,0,0,0.20), rgba(0,0,0,0.35)), url('${roomImage}'); background-size: cover; background-position: center;"></div>
           <div class="room-body">
             <h3>${roomName}</h3>
             <p class="room-meta">最多 ${room.maxCapacity} 位</p>
@@ -69,12 +84,14 @@ export default async function Page() {
       `;
     })
     .join("");
+  const heroImages = getBannerImages();
+  const heroDuration = Math.max(heroImages.length, 1) * 6;
   const heroSlidesHtml = heroImages
     .map(
       (image, index) => `
         <div
-          class="hero-slide hero-slide-${index + 1}"
-          style="background-image: url('${escapeHtml(image)}');"
+          class="hero-slide"
+          style="background-image: url('${escapeHtml(image)}'); --hero-duration: ${heroDuration}s; animation-delay: ${index * 6}s;"
           aria-hidden="true"
         ></div>
       `
@@ -250,13 +267,10 @@ export default async function Page() {
       opacity: 0;
       background-position: center;
       background-size: cover;
-      animation: heroFade 18s infinite ease-in-out;
+      animation: heroFade var(--hero-duration, 18s) infinite ease-in-out;
       transform: scale(1.03);
     }
 
-    .hero-slide-1 { animation-delay: 0s; }
-    .hero-slide-2 { animation-delay: 6s; }
-    .hero-slide-3 { animation-delay: 12s; }
 
     @keyframes heroFade {
       0% { opacity: 0; }
@@ -476,16 +490,6 @@ export default async function Page() {
       display: flex;
       align-items: flex-end;
       padding: 1rem;
-    }
-
-    .room-tag {
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      background: rgba(255,255,255,0.93);
-      color: var(--fg);
     }
 
     .room-body { padding: 1.25rem; }

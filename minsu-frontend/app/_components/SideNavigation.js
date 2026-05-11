@@ -42,7 +42,8 @@ function SideNavigation() {
           <li key={link.name}>
             <Link
               className={`${
-                pathname === link.href
+                pathname === link.href ||
+                (link.href !== "/" && pathname.startsWith(`${link.href}/`))
                   ? "border-l-4 border-accent-600 bg-accent-50 font-bold text-accent-700"
                   : "border-l-4 border-transparent text-primary-600"
               } flex items-center gap-3 border-b border-primary-200 px-5 py-4 transition-colors last:border-b-0 hover:bg-accent-50 hover:text-accent-700`}

@@ -21,23 +21,6 @@ function RoomCard({ room }) {
   const finalPrice = Number(regularPrice) - Number(discount || 0);
 
   const normalizedCategory = category || "double";
-
-  const categoryLabelMap = {
-    double: "雙人套房",
-    family: "家庭房",
-    whole: "包棟",
-    special: "特色房",
-  };
-  const categoryLabel = categoryLabelMap[normalizedCategory] || "房型";
-
-  const badgeClassMap = {
-    double: "bg-[#b9efe3] text-[#06564b]",
-    family: "bg-[#f8e5bb] text-[#7c5a02]",
-    whole: "bg-[#111111] text-[#ffffff]",
-    special: "bg-[#f9d8d1] text-[#7f1f0e]",
-  };
-  const badgeClass =
-    badgeClassMap[normalizedCategory] || "bg-primary-100 text-primary-700";
   const gradientClassMap = {
     double: "from-[#005f53] via-[#067968] to-[#0b8a75]",
     family: "from-[#8e6400] via-[#a57500] to-[#b59445]",
@@ -70,9 +53,6 @@ function RoomCard({ room }) {
           />
         ) : null}
         <div className="absolute inset-0 bg-black/10" />
-        <span className={`absolute left-4 top-4 rounded-md px-3 py-1 text-xs font-semibold ${badgeClass}`}>
-          {categoryLabel}
-        </span>
         <span className="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-primary-800">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           有空房

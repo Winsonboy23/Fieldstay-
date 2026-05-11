@@ -3,6 +3,7 @@ import { auth } from "@/app/_lib/auth";
 import { getBookings } from "@/app/_lib/data-service";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { format, isPast } from "date-fns";
+import Link from "next/link";
 
 export const metadata = {
   title: "我的訂單",
@@ -65,24 +66,31 @@ export default async function Page() {
                 className="overflow-hidden rounded-xl border border-primary-200 bg-primary-50"
               >
                 <div className="grid gap-5 p-5 md:grid-cols-[100px_1fr_auto] md:items-center">
-                  <div className="relative h-24 w-full overflow-hidden rounded-lg bg-accent-700 md:w-24">
+                  <Link
+                    href={`/account/reservations/${booking.id}`}
+                    className="relative h-24 w-full overflow-hidden rounded-lg bg-accent-700 md:w-24"
+                    aria-label={`查看 ${booking.rooms?.name || "訂單"} 明細`}
+                  >
                     {booking.rooms?.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={booking.rooms.image}
                         alt={booking.rooms.name}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition hover:scale-105"
                       />
                     ) : null}
-                  </div>
+                  </Link>
 
                   <div>
                     <p className="mb-1 text-xs text-primary-500">
                       訂單 #FS-{String(booking.id).padStart(4, "0")}
                     </p>
-                    <h3 className="mb-2 font-serif text-xl font-semibold text-primary-900">
+                    <Link
+                      href={`/account/reservations/${booking.id}`}
+                      className="mb-2 block font-serif text-xl font-semibold text-primary-900 transition hover:text-accent-700"
+                    >
                       {booking.rooms?.name}
-                    </h3>
+                    </Link>
                     <p className="flex flex-wrap items-center gap-2 text-sm text-primary-500">
                       <CalendarDaysIcon className="h-4 w-4" />
                       {format(new Date(booking.startDate), "yyyy / MM / dd")} →{" "}

@@ -52,7 +52,7 @@ export async function POST(request) {
     .join("\n")
     .slice(0, 1000);
 
-  await createGuestBooking({
+  const booking = await createGuestBooking({
     startDate: payload.startDate,
     endDate: payload.endDate,
     numNights,
@@ -68,5 +68,5 @@ export async function POST(request) {
     status: "unconfirmed",
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, bookingId: booking?.id || null });
 }
