@@ -221,6 +221,7 @@ export default async function Page() {
       --accent:   oklch(44% 0.13 183);
       --accent-d: oklch(38% 0.13 183);
       --accent2:  oklch(40% 0.14 28);
+      --brand-color: oklch(44% 0.13 183);
       --font-serif: Georgia, serif;
       --font-sans:  system-ui, sans-serif;
     }
@@ -238,17 +239,18 @@ export default async function Page() {
 
     /* ── NAV ─────────────────────────────────────── */
     .nav {
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 200;
-      height: 64px;
+      height: 100px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 2.5rem;
-      background: rgba(253, 251, 249, 0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
+      background: transparent;
+      border-bottom: none;
     }
 
     .nav-logo {
@@ -269,34 +271,48 @@ export default async function Page() {
       font-size: 15px;
       font-weight: 600;
       letter-spacing: 0.08em;
-      color: var(--fg);
+      color: white;
     }
 
     .logo-en {
       font-size: 9px;
       letter-spacing: 0.22em;
-      color: var(--muted);
+      color: rgba(255, 255, 255, 0.72);
       text-transform: uppercase;
       margin-top: 2px;
     }
 
     .nav-links {
+      margin-left: auto;
+      margin-right: 1rem;
       display: flex;
       align-items: center;
-      gap: 2.2rem;
+      gap: 0.3rem;
       list-style: none;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 999px;
     }
 
     .nav-links a {
-      color: var(--muted);
+      color: white;
       text-decoration: none;
       font-size: 14px;
-      font-weight: 400;
+      font-weight: 500;
       letter-spacing: 0.02em;
-      transition: color 0.2s;
+      padding: 8px 18px;
+      border-radius: 999px;
+      transition: background 0.2s, color 0.2s;
     }
 
-    .nav-links a:hover { color: var(--fg); }
+    .nav-links a:hover,
+    .nav-links a.active {
+      background: var(--brand-color);
+      color: white;
+    }
 
     .nav-actions {
       display: flex;
@@ -339,10 +355,75 @@ export default async function Page() {
 
     .btn-primary:hover { background: var(--accent-d); }
 
+    .nav .btn-ghost {
+      border-color: rgba(255, 255, 255, 0.45);
+      background: transparent;
+      color: white;
+    }
+    .nav .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: white;
+      color: white;
+    }
+    .nav .btn-primary {
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--fg);
+      border: 1px solid transparent;
+    }
+    .nav .btn-primary:hover { background: white; }
+
+    .user-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      color: white;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .user-icon:hover {
+      background: rgba(30, 30, 30, 0.78);
+    }
+
+    /* nav state after scrolling past hero */
+    .nav.scrolled {
+      background: rgba(253, 251, 249, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav.scrolled .logo-zh { color: var(--fg); }
+    .nav.scrolled .logo-en { color: var(--muted); }
+    .nav.scrolled .nav-links {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    .nav.scrolled .nav-links a { color: var(--fg); }
+    .nav.scrolled .nav-links a:hover,
+    .nav.scrolled .nav-links a.active {
+      background: var(--brand-color);
+      color: white;
+    }
+    .nav.scrolled .user-icon {
+      color: var(--fg);
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    .nav.scrolled .user-icon:hover {
+      background: var(--fg);
+      color: white;
+    }
+
     /* ── HERO ────────────────────────────────────── */
     .hero {
       position: relative;
-      min-height: calc(100vh - 64px);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -502,25 +583,25 @@ export default async function Page() {
     .sw-btn:hover { background: var(--accent-d); }
 
     /* ── SECTIONS ───────────────────────────────── */
-    .section { padding: 80px 2.5rem; scroll-margin-top: 80px; }
+    .section {
+      padding: 80px 2.5rem;
+      scroll-margin-top: 80px;
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+    }
     .section-alt { background: var(--surface); }
-    .container { max-width: 1200px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; width: 100%; }
 
     /* 房型選擇 / 田間體驗 色塊區分 */
     #rooms {
       background: oklch(94% 0.018 75);
-      padding: 110px 2.5rem;
-      margin-bottom: 40px;
     }
     #experience {
       background: var(--surface);
-      padding: 110px 2.5rem;
-      margin-top: 40px;
     }
     #transport {
       background: oklch(94% 0.018 75);
-      padding: 110px 2.5rem;
-      margin-top: 40px;
     }
 
     /* ── HAMBURGER ──────────────────────────────── */
@@ -834,13 +915,17 @@ export default async function Page() {
 
     /* ── ABOUT BAND ──────────────────────────────── */
     .about-band {
-      background: var(--accent);
-      color: white;
+      background: white;
+      color: var(--fg);
       padding: 80px 2.5rem;
+      min-height: 70dvh;
+      display: flex;
+      align-items: center;
     }
 
     .about-inner {
       max-width: 1200px;
+      width: 100%;
       margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -859,18 +944,19 @@ export default async function Page() {
     .about-copy p {
       font-size: 15px;
       line-height: 1.9;
-      opacity: 0.8;
+      color: var(--muted);
       margin-bottom: 1rem;
     }
+    .about-copy p.about-eyebrow { color: var(--brand-color); }
 
     .about-copy p:last-of-type { margin-bottom: 1.75rem; }
 
     .btn-outline {
       display: inline-flex;
       padding: 10px 24px;
-      border: 1.5px solid rgba(255,255,255,0.55);
+      border: 1.5px solid var(--brand-color);
       border-radius: 8px;
-      color: white;
+      color: var(--brand-color);
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
@@ -878,23 +964,68 @@ export default async function Page() {
     }
 
     .btn-outline:hover {
-      background: white;
-      color: var(--accent);
-      border-color: white;
+      background: var(--brand-color);
+      color: white;
+      border-color: var(--brand-color);
     }
 
     .about-visual {
-      height: 340px;
+      height: 420px;
       border-radius: 12px;
+      overflow: hidden;
       background: oklch(38% 0.11 180);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-serif);
-      font-size: 1rem;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.3);
-      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .about-visual img {
+      width: 100%;
+      height: 135%;
+      object-fit: cover;
+      display: block;
+      will-change: transform;
+      transform: translate3d(0, -12%, 0);
+    }
+
+    /* About reveal (fade-up stagger) */
+    .about-band .about-copy > *,
+    .about-band .about-visual {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .about-band .about-visual {
+      transform: translateY(24px) scale(1.04);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    .about-band.in-view .about-copy > * {
+      opacity: 1;
+      transform: none;
+    }
+    .about-band.in-view .about-visual {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .about-band .about-copy > *:nth-child(1) { transition-delay: 0ms; }
+    .about-band .about-copy > *:nth-child(2) { transition-delay: 100ms; }
+    .about-band .about-copy > *:nth-child(3) { transition-delay: 200ms; }
+    .about-band .about-copy > *:nth-child(4) { transition-delay: 300ms; }
+    .about-band .about-visual { transition-delay: 150ms; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .about-band .about-copy > *,
+      .about-band .about-visual,
+      .about-visual img {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+
+    .about-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      color: var(--brand-color);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
     }
 
     /* ── FOOTER ──────────────────────────────────── */
@@ -1017,7 +1148,7 @@ export default async function Page() {
       .nav-actions .btn-ghost { display: none; }
       .nav-toggle { display: inline-flex; }
       #rooms, #experience, #transport { padding: 60px 1.25rem; }
-      .hero { padding: 4rem 1.25rem 6rem; min-height: calc(100vh - 64px); }
+      .hero { padding: 4rem 1.25rem 6rem; min-height: 100dvh; }
       .hero h1 { font-size: 2.2rem; }
       .search-widget {
         flex-direction: column;
@@ -1027,7 +1158,7 @@ export default async function Page() {
       .sw-field { width: 100%; border-radius: 8px; }
       .sw-divider { width: 100%; height: 1px; }
       .sw-btn { width: 100%; justify-content: center; margin-inline-start: 0; border-radius: 8px; }
-      .section { padding: 48px 1.25rem; }
+      .section, .about-band { padding: 48px 1.25rem; min-height: auto; display: block; }
       .room-grid { grid-template-columns: 1fr; }
       .exp-grid { grid-template-columns: 1fr; }
       .about-inner { grid-template-columns: 1fr; gap: 2rem; }
@@ -1049,15 +1180,19 @@ export default async function Page() {
     </a>
 
     <ul class="nav-links">
+      <li><a href="#about">關於我們</a></li>
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
-      <li><a href="#about">關於我們</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
 
     <div class="nav-actions">
-      <a href="/account" class="btn btn-ghost">會員中心</a>
-      ${authActionHtml}
+      <a href="/account" class="user-icon" aria-label="會員中心">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </a>
       <button class="nav-toggle" id="navToggle" aria-label="開啟選單" aria-expanded="false" aria-controls="mobileMenu">
         <span></span>
       </button>
@@ -1066,9 +1201,9 @@ export default async function Page() {
 
   <div class="mobile-menu" id="mobileMenu" role="menu" aria-label="行動版選單">
     <ul>
+      <li><a href="#about">關於我們</a></li>
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
-      <li><a href="#about">關於我們</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
     <div class="mobile-actions">
@@ -1097,6 +1232,21 @@ export default async function Page() {
         與我們共度一段慢速的田間時光
       </p>
 
+    </div>
+  </section>
+
+  <!-- ═══ ABOUT BAND ════════════════════════════════════ -->
+  <section class="about-band" id="about">
+    <div class="about-inner">
+      <div class="about-copy">
+        <h2>在老屋裡，讓時間變慢</h2>
+        <p class="about-eyebrow">STOP AND SMELL THE EARTH.</p>
+        <p>山田寓所是一座結合住宿、咖啡、藝術課程與社區導覽的生活實驗場。我們以設計與美感教育，串起土地、風土飲食與人之間的連結。</p>
+        <a href="#" class="btn-outline">了解我們的故事</a>
+      </div>
+      <div class="about-visual">
+        <img src="/about-1.jpg" alt="老屋影像" />
+      </div>
     </div>
   </section>
 
@@ -1158,21 +1308,6 @@ export default async function Page() {
     </div>
   </section>
 
-  <!-- ═══ ABOUT BAND ════════════════════════════════════ -->
-  <section class="about-band" id="about">
-    <div class="about-inner">
-      <div class="about-copy">
-        <h2>田間的家<br>慢速的生活</h2>
-        <p>山田寓所坐落於台南農村，以百年磚瓦老屋為本，提供一個回歸土地的落腳之所。我們相信，離開城市的最好方式，是找回田間生活的節奏。</p>
-        <p>這裡不是度假村，是一個讓你真正放慢腳步、親近農事、體驗節氣文化的地方。</p>
-        <a href="#" class="btn-outline">了解我們的故事</a>
-      </div>
-      <div class="about-visual" aria-hidden="true">
-        — 老屋影像 —
-      </div>
-    </div>
-  </section>
-
   <!-- ═══ FOOTER ════════════════════════════════════════ -->
   <footer>
     <div class="footer-grid">
@@ -1211,6 +1346,86 @@ export default async function Page() {
 ` }} />
       <script dangerouslySetInnerHTML={{ __html: `
     (function() {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      var forceTop = function() {
+        if (window.location.hash) return;
+        try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }
+        catch (e) { window.scrollTo(0, 0); }
+      };
+      forceTop();
+      window.addEventListener('pageshow', forceTop);
+
+    function initInteractions() {
+      var nav = document.querySelector('.nav');
+      var hero = document.querySelector('.hero');
+      if (nav && hero) {
+        var onScroll = function() {
+          var bottom = hero.getBoundingClientRect().bottom;
+          if (bottom <= 100) nav.classList.add('scrolled');
+          else nav.classList.remove('scrolled');
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
+
+      var links = document.querySelectorAll('.nav-links a[href^="#"]');
+      var sectionMap = {};
+      links.forEach(function(a) {
+        var id = a.getAttribute('href').slice(1);
+        var sec = document.getElementById(id);
+        if (sec) sectionMap[id] = { link: a, el: sec };
+      });
+      var ids = Object.keys(sectionMap);
+      if (ids.length) {
+        var setActive = function(id) {
+          ids.forEach(function(k) {
+            sectionMap[k].link.classList.toggle('active', k === id);
+          });
+        };
+        var onSpy = function() {
+          var offset = 120;
+          var current = null;
+          ids.forEach(function(id) {
+            var top = sectionMap[id].el.getBoundingClientRect().top;
+            if (top - offset <= 0) current = id;
+          });
+          if (current) setActive(current);
+          else ids.forEach(function(k) { sectionMap[k].link.classList.remove('active'); });
+        };
+        window.addEventListener('scroll', onSpy, { passive: true });
+        onSpy();
+      }
+
+      var aboutSec = document.querySelector('.about-band');
+      var aboutImg = aboutSec && aboutSec.querySelector('.about-visual img');
+      if (aboutSec) {
+        var io = new IntersectionObserver(function(entries) {
+          entries.forEach(function(en) {
+            if (en.isIntersecting) {
+              aboutSec.classList.add('in-view');
+              io.unobserve(aboutSec);
+            }
+          });
+        }, { threshold: 0.2 });
+        io.observe(aboutSec);
+      }
+      if (aboutSec && aboutImg) {
+        var ticking = false;
+        var update = function() {
+          var rect = aboutSec.getBoundingClientRect();
+          var vh = window.innerHeight;
+          var progress = 1 - rect.bottom / (vh + rect.height);
+          progress = Math.max(0, Math.min(1, progress));
+          var offset = -12 + (progress - 0.5) * 22;
+          aboutImg.style.transform = 'translate3d(0,' + offset + '%,0)';
+          ticking = false;
+        };
+        window.addEventListener('scroll', function() {
+          if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
+        }, { passive: true });
+        update();
+      }
+
       var btn = document.getElementById('navToggle');
       var menu = document.getElementById('mobileMenu');
       if (btn && menu) {
@@ -1225,6 +1440,15 @@ export default async function Page() {
             btn.setAttribute('aria-expanded', 'false');
             btn.setAttribute('aria-label', '開啟選單');
           });
+        });
+      }
+    }
+
+      if (document.readyState === 'complete') {
+        setTimeout(initInteractions, 0);
+      } else {
+        window.addEventListener('load', function() {
+          setTimeout(initInteractions, 0);
         });
       }
     })();
