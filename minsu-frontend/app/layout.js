@@ -1,12 +1,27 @@
 import "@/app/_styles/globals.css";
 import { ReservationProvider } from "./_components/ReservationContext";
+import { getSettings } from "./_lib/data-service";
 
-export const metadata = {
-  title: {
-    template: "%s | 山田寓所 FIELDSTAY",
-    default: "山田寓所 FIELDSTAY | 田間民宿訂房",
-  },
-};
+export async function generateMetadata() {
+  try {
+    const settings = await getSettings();
+    const zh = settings?.brand_name_zh || "訂房系統";
+    const tagline = settings?.brand_tagline || "";
+    const brand = zh;
+    const icons = settings?.logo_url ? { icon: settings.logo_url } : undefined;
+    return {
+      title: {
+        template: `%s | ${brand}`,
+        default: tagline ? `${brand} | ${tagline}` : brand,
+      },
+      icons,
+    };
+  } catch {
+    return {
+      title: { template: "%s | 訂房系統", default: "訂房系統" },
+    };
+  }
+}
 
 export default function RootLayout({ children }) {
   return (

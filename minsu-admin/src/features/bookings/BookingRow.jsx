@@ -1,29 +1,42 @@
 import styled from "styled-components";
-import { format, isToday } from "date-fns";
-
-import Tag from "../../ui/Tag";
-import Table from "../../ui/Table";
-
-import { formatCurrency } from "../../utils/helpers";
-import { formatDistanceFromNow } from "../../utils/helpers";
-import Menus from "../../ui/Menus";
 import {
-  HiArrowDownOnSquare,
-  HiArrowUpOnSquare,
-  HiEye,
-  HiTrash,
+  HiOutlineArrowUpOnSquare,
+  HiOutlineBanknotes,
+  HiOutlineCheckCircle,
+  HiOutlinePencilSquare,
+  HiOutlineXCircle,
 } from "react-icons/hi2";
-import { useNavigate } from "react-router-dom";
-import { useCheckout } from "../check-in-out/useCheckout";
-import { useDeleteBooking } from "./useDeleteBooking";
+import toast from "react-hot-toast";
+
+import Table from "../../ui/Table";
+import Menus from "../../ui/Menus";
 import Modal from "../../ui/Modal";
-import ConfirmDelete from "../../ui/ConfirmDelete";
+import { formatCurrency } from "../../utils/helpers";
+
+import EditBookingForm from "./EditBookingForm";
+import CheckinConfirm from "../check-in-out/CheckinConfirm";
+import { useUpdateBooking } from "./useUpdateBooking";
+import { useCheckout } from "../check-in-out/useCheckout";
+
+const OrderCode = styled.a`
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-brand-700);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
 
 const Room = styled.div`
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: var(--color-grey-600);
-  font-family: "Sono";
+  font-weight: 500;
+  color: var(--color-grey-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const Stacked = styled.div`
@@ -33,6 +46,7 @@ const Stacked = styled.div`
 
   & span:first-child {
     font-weight: 500;
+    color: var(--color-grey-700);
   }
 
   & span:last-child {
@@ -42,102 +56,229 @@ const Stacked = styled.div`
 `;
 
 const Amount = styled.div`
-  font-family: "Sono";
-  font-weight: 500;
+  font-family: "Noto Sans TC", sans-serif;
+  font-weight: 600;
+  color: var(--color-grey-700);
 `;
 
-function BookingRow({
-  booking: {
+const PayWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+
+  & .method {
+    color: var(--color-grey-700);
+    font-size: 1.3rem;
+  }
+`;
+
+const SubTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.2rem 0.8rem;
+  border-radius: 100px;
+  background-color: ${(p) => (p.$paid ? "#dcfce7" : "#fee2e2")};
+  color: ${(p) => (p.$paid ? "#15803d" : "#b91c1c")};
+
+  & svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+`;
+
+const StatusCell = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
+const StatusTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 1.3rem;
+  font-weight: 600;
+  padding: 0.6rem 1.6rem;
+  border-radius: 100px;
+  background-color: ${(p) => p.$bg};
+  color: ${(p) => p.$fg};
+  min-width: 7rem;
+`;
+
+function orderCode(id) {
+  return `BK${String(id || "").replace(/\D/g, "").padStart(12, "0")}`;
+}
+
+function formatDateRange(startDate, endDate) {
+  return {
+    start: String(startDate || "").replaceAll("-", "/"),
+    end: String(endDate || "").replaceAll("-", "/"),
+  };
+}
+
+function observationValue(observations, label) {
+  if (!observations) return "";
+  const prefix = `${label}：`;
+  const line = String(observations)
+    .split("\n")
+    .find((item) => item.startsWith(prefix));
+  return line ? line.slice(prefix.length).trim() : "";
+}
+
+function statusBadge({ status, isPaid }) {
+  if (status === "cancelled") return { label: "已取消", bg: "#f3f4f6", fg: "#6b7280" };
+  if (status === "checked-out") return { label: "已完成", bg: "#dbeafe", fg: "#1d4ed8" };
+  if (status === "checked-in") return { label: "進行中", bg: "#dbeafe", fg: "#1d4ed8" };
+  if (status === "unconfirmed" && isPaid) return { label: "已確認", bg: "#dcfce7", fg: "#15803d" };
+  return { label: "待確認", bg: "#fef3c7", fg: "#b45309" };
+}
+
+function BookingRow({ booking }) {
+  const {
     id: bookingId,
-    created_at,
     startDate,
     endDate,
     numNights,
-    numGuests,
     totalPrice,
     status,
-    guests: { fullName: guestName, email },
-    rooms: { name: roomName },
-  },
-}) {
-  const navigate = useNavigate();
-  const { checkout, isCheckingOut } = useCheckout();
-  const { deleteBooking, isDeleting } = useDeleteBooking();
+    isPaid,
+    payment_method: paymentMethod,
+    observations,
+    guests: { fullName: guestName } = {},
+    rooms: { name: roomName } = {},
+  } = booking;
 
-  const statusToTagName = {
-    unconfirmed: "blue",
-    "checked-in": "green",
-    "checked-out": "silver",
-  };
+  const { updateBooking, isUpdating } = useUpdateBooking();
+  const { checkout, isCheckingOut } = useCheckout();
+
+  const dates = formatDateRange(startDate, endDate);
+  const badge = statusBadge({ status, isPaid });
+  const isBankTransfer = paymentMethod !== "credit_card";
+  const phone = observationValue(observations, "聯絡電話");
+
+  const isPendingConfirm = status === "unconfirmed" && !isPaid;
+  const isConfirmed = status === "unconfirmed" && isPaid;
+  const isCheckedIn = status === "checked-in";
+
+  function handleConfirmTransfer() {
+    if (!window.confirm("確認此筆訂單已收到轉帳款項？")) return;
+    updateBooking({ id: bookingId, updates: { isPaid: true } });
+  }
+
+  function handleCancel() {
+    if (!window.confirm("確定要取消此筆訂單？取消後將無法復原。")) return;
+    updateBooking(
+      { id: bookingId, updates: { status: "cancelled" } },
+      { onSuccess: () => toast.success("訂單已取消") }
+    );
+  }
+
+  function handleCheckout() {
+    if (!window.confirm("確認辦理退房？")) return;
+    checkout(bookingId);
+  }
 
   return (
     <Table.Row>
+      <OrderCode
+        href={`http://localhost:3000/rooms/thankyou?bookingId=${bookingId}&admin=1`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {orderCode(bookingId)}
+      </OrderCode>
+
       <Room>{roomName}</Room>
 
       <Stacked>
         <span>{guestName}</span>
-        <span>{email}</span>
+        <span>{phone || "-"}</span>
       </Stacked>
 
       <Stacked>
-        <span>
-          {isToday(new Date(startDate))
-            ? "Today"
-            : formatDistanceFromNow(startDate)}{" "}
-          &rarr; {numNights} night stay
-        </span>
-        <span>
-          {format(new Date(startDate), "MMM dd yyyy")} &mdash;{" "}
-          {format(new Date(endDate), "MMM dd yyyy")}
-        </span>
+        <span>{dates.start}</span>
+        <span>至 {dates.end}</span>
       </Stacked>
 
-      <Tag type={statusToTagName[status]}>{status.replace("-", " ")}</Tag>
+      <div>{numNights} 晚</div>
 
       <Amount>{formatCurrency(totalPrice)}</Amount>
+
+      <PayWrap>
+        <span className="method">{isBankTransfer ? "銀行轉帳" : "信用卡"}</span>
+        {isBankTransfer ? (
+          <SubTag $paid={isPaid}>
+            {isPaid ? <HiOutlineCheckCircle /> : <HiOutlineXCircle />}
+            {isPaid ? "已轉帳" : "未轉帳"}
+          </SubTag>
+        ) : null}
+      </PayWrap>
+
+      <StatusCell>
+        <StatusTag $bg={badge.bg} $fg={badge.fg}>
+          {badge.label}
+        </StatusTag>
+      </StatusCell>
 
       <Modal>
         <Menus.Menu>
           <Menus.Toggle id={bookingId} />
           <Menus.List id={bookingId}>
-            <Menus.Button
-              icon={<HiEye />}
-              onClick={() => navigate(`/bookings/${bookingId}`)}
-            >
-              See details
-            </Menus.Button>
-
-            {status === "unconfirmed" && (
+            {isPendingConfirm && (
               <Menus.Button
-                icon={<HiArrowDownOnSquare />}
-                onClick={() => navigate(`/checkin/${bookingId}`)}
+                icon={<HiOutlineBanknotes />}
+                onClick={handleConfirmTransfer}
+                disabled={isUpdating}
               >
-                Check in
+                確認轉帳
               </Menus.Button>
             )}
 
-            {status === "checked-in" && (
+            {isConfirmed && (
+              <Modal.Open opens="checkin">
+                <Menus.Button icon={<HiOutlineCheckCircle />}>
+                  Check-in
+                </Menus.Button>
+              </Modal.Open>
+            )}
+
+            {isCheckedIn && (
               <Menus.Button
-                icon={<HiArrowUpOnSquare />}
-                onClick={() => checkout(bookingId)}
+                icon={<HiOutlineArrowUpOnSquare />}
+                onClick={handleCheckout}
                 disabled={isCheckingOut}
               >
-                Check out
+                Check-out
               </Menus.Button>
             )}
 
-            <Modal.Open opens="delete">
-              <Menus.Button icon={<HiTrash />}>Delete booking</Menus.Button>
+            <Modal.Open opens="edit">
+              <Menus.Button icon={<HiOutlinePencilSquare />}>編輯訂單</Menus.Button>
             </Modal.Open>
+
+            {(isPendingConfirm || isConfirmed) && (
+              <Menus.Button
+                icon={<HiOutlineXCircle />}
+                onClick={handleCancel}
+                disabled={isUpdating}
+              >
+                取消訂單
+              </Menus.Button>
+            )}
           </Menus.List>
         </Menus.Menu>
 
-        <Modal.Window name="delete">
-          <ConfirmDelete
-            resourceName="booking"
-            disabled={isDeleting}
-            onConfirm={() => deleteBooking(bookingId)}
-          />
+        <Modal.Window name="edit">
+          <EditBookingForm bookingToEdit={booking} />
+        </Modal.Window>
+
+        <Modal.Window name="checkin">
+          <CheckinConfirm booking={booking} />
         </Modal.Window>
       </Modal>
     </Table.Row>

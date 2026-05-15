@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { getRooms } from "./_lib/data-service";
+import { getRooms, getActivities, getSettings } from "./_lib/data-service";
 import { auth } from "./_lib/auth";
 
 export const metadata = { title: "山田寓所 FIELDSTAY — 田間民宿訂房" };
@@ -56,8 +56,59 @@ function getRoomBadge(type) {
 
 export default async function Page() {
   const session = await auth();
+  const settings = (await getSettings().catch(() => ({}))) || {};
+  const brandName = settings.brand_name_zh || "山田寓所";
+  const brandTagline = settings.brand_tagline || "FIELDSTAY";
+  const logoUrl = settings.logo_url || "";
+  const lineUrl = settings.line_url || "";
+  const threadsUrl = settings.threads_url || "";
+  const instagramUrl = settings.instagram_url || "";
+  const contactEmail = settings.contact_email || "";
+  const contactPhone = settings.contact_phone || "";
+  const settingsBanners = Array.isArray(settings.banner_images)
+    ? settings.banner_images.filter(Boolean)
+    : [];
   const rooms = await getRooms();
   const featuredRooms = rooms.slice(0, 4);
+  const allActivities = await getActivities();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcomingActivities = allActivities
+    .filter((a) => String(a.activity_date) >= todayStr)
+    .sort((a, b) =>
+      String(a.activity_date).localeCompare(String(b.activity_date))
+    )
+    .slice(0, 3);
+  const activityCardsHtml = upcomingActivities
+    .map((a) => {
+      const title = escapeHtml(a.title || "");
+      const summary = escapeHtml(a.summary || "");
+      const category = escapeHtml(a.category || "活動");
+      const date = escapeHtml(a.activity_date || "");
+      const start = escapeHtml(String(a.start_time || "").slice(0, 5));
+      const end = escapeHtml(String(a.end_time || "").slice(0, 5));
+      const timeLabel = start && end ? `${start} – ${end}` : "";
+      const price = Number(a.price || 0).toLocaleString("zh-TW");
+      const thumbStyle = a.image
+        ? `background-image: url('${escapeHtml(a.image)}'); background-size: cover; background-position: center;`
+        : `background: linear-gradient(155deg, oklch(38% 0.10 162) 0%, oklch(54% 0.12 152) 100%);`;
+      return `
+        <a class="exp-card" href="/activities/${a.id}">
+          <div class="exp-thumb" style="${thumbStyle}">
+            <span class="exp-cat">${category}</span>
+          </div>
+          <div class="exp-body">
+            <div class="exp-date">${date}${timeLabel ? ` · ${timeLabel}` : ""}</div>
+            <h3>${title}</h3>
+            <p>${summary}</p>
+            <div class="exp-foot">
+              <span class="exp-price">NT$${price}</span>
+              <span class="exp-cta">查看詳情 →</span>
+            </div>
+          </div>
+        </a>
+      `;
+    })
+    .join("");
   const userName = session?.user?.name || session?.user?.email || "";
   const authActionHtml = session?.user
     ? `<a href="/account" class="btn btn-primary">${escapeHtml(userName)}</a>`
@@ -84,8 +135,66 @@ export default async function Page() {
       `;
     })
     .join("");
-  const heroImages = getBannerImages();
+  const heroImages = settingsBanners.length > 0 ? settingsBanners : getBannerImages();
   const heroDuration = Math.max(heroImages.length, 1) * 6;
+  const brandNameSafe = escapeHtml(brandName);
+  const brandTaglineSafe = escapeHtml(brandTagline);
+  const logoUrlSafe = escapeHtml(logoUrl);
+  const navLogoMarkHtml = logoUrl
+    ? `<img src="${logoUrlSafe}" alt="${brandNameSafe}" style="width:38px;height:38px;object-fit:contain;border-radius:50%;" />`
+    : `<svg width="38" height="38" viewBox="0 0 38 38" fill="none" aria-hidden="true">
+        <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)"/>
+        <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.95"/>
+        <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white"/>
+      </svg>`;
+  const footerLogoMarkHtml = logoUrl
+    ? `<img src="${logoUrlSafe}" alt="${brandNameSafe}" style="width:36px;height:36px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,0.05);" />`
+    : `<svg width="36" height="36" viewBox="0 0 38 38" fill="none" aria-hidden="true">
+        <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)" opacity="0.6"/>
+        <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.8"/>
+        <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white" opacity="0.8"/>
+      </svg>`;
+  const socialItems = [
+    instagramUrl && {
+      href: instagramUrl,
+      label: "Instagram",
+      svg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="5"/>
+        <circle cx="12" cy="12" r="4"/>
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+      </svg>`,
+    },
+    threadsUrl && {
+      href: threadsUrl,
+      label: "Threads",
+      svg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>
+      </svg>`,
+    },
+    lineUrl && {
+      href: lineUrl,
+      label: "LINE",
+      svg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+        <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.494.25l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.628-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.07 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+      </svg>`,
+    },
+  ].filter(Boolean);
+  const socialListHtml = socialItems
+    .map(
+      (s) =>
+        `<li><a href="${escapeHtml(s.href)}" target="_blank" rel="noopener noreferrer" aria-label="${s.label}">${s.svg}</a></li>`
+    )
+    .join("");
+  const mailIconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`;
+  const phoneIconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  const contactBlockHtml =
+    contactEmail || contactPhone
+      ? `<ul class="footer-contact">
+          ${contactEmail ? `<li><a href="mailto:${escapeHtml(contactEmail)}">${mailIconSvg}<span>${escapeHtml(contactEmail)}</span></a></li>` : ""}
+          ${contactPhone ? `<li><a href="tel:${escapeHtml(contactPhone.replace(/\s+/g, ""))}">${phoneIconSvg}<span>${escapeHtml(contactPhone)}</span></a></li>` : ""}
+        </ul>`
+      : "";
   const heroSlidesHtml = heroImages
     .map(
       (image, index) => `
@@ -112,8 +221,8 @@ export default async function Page() {
       --accent:   oklch(44% 0.13 183);
       --accent-d: oklch(38% 0.13 183);
       --accent2:  oklch(40% 0.14 28);
-      --font-serif: 'Noto Serif TC', 'Georgia', 'Iowan Old Style', serif;
-      --font-sans:  'Noto Sans TC', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-serif: Georgia, serif;
+      --font-sans:  system-ui, sans-serif;
     }
 
     html { scroll-behavior: smooth; }
@@ -397,6 +506,88 @@ export default async function Page() {
     .section-alt { background: var(--surface); }
     .container { max-width: 1200px; margin: 0 auto; }
 
+    /* 房型選擇 / 田間體驗 色塊區分 */
+    #rooms {
+      background: oklch(94% 0.018 75);
+      padding: 110px 2.5rem;
+      margin-bottom: 40px;
+    }
+    #experience {
+      background: var(--surface);
+      padding: 110px 2.5rem;
+      margin-top: 40px;
+    }
+    #transport {
+      background: oklch(94% 0.018 75);
+      padding: 110px 2.5rem;
+      margin-top: 40px;
+    }
+
+    /* ── HAMBURGER ──────────────────────────────── */
+    .nav-toggle {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .nav-toggle span,
+    .nav-toggle span::before,
+    .nav-toggle span::after {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--fg);
+      border-radius: 2px;
+      position: relative;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .nav-toggle span::before,
+    .nav-toggle span::after {
+      content: '';
+      position: absolute;
+      left: 0;
+    }
+    .nav-toggle span::before { top: -6px; }
+    .nav-toggle span::after { top: 6px; }
+    .nav-toggle[aria-expanded="true"] span { background: transparent; }
+    .nav-toggle[aria-expanded="true"] span::before { top: 0; transform: rotate(45deg); }
+    .nav-toggle[aria-expanded="true"] span::after { top: 0; transform: rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 199;
+      padding: 1rem 1.25rem 1.5rem;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu ul { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; }
+    .mobile-menu a {
+      display: block;
+      padding: 12px 8px;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mobile-menu .mobile-actions {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+    .mobile-menu .mobile-actions .btn { flex: 1; justify-content: center; }
+
     .section-header {
       display: flex;
       align-items: flex-end;
@@ -559,19 +750,53 @@ export default async function Page() {
     }
 
     .exp-card {
+      display: block;
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
       background: var(--bg);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .exp-thumb { height: 168px; }
+    .exp-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.07);
+    }
+
+    .exp-thumb {
+      height: 168px;
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      padding: 0.75rem;
+    }
+
+    .exp-cat {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      border-radius: 999px;
+    }
 
     .exp-body { padding: 1.25rem; }
 
+    .exp-date {
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
     .exp-body h3 {
       font-family: var(--font-serif);
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       margin-bottom: 0.5rem;
     }
@@ -580,6 +805,31 @@ export default async function Page() {
       font-size: 13px;
       color: var(--muted);
       line-height: 1.75;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .exp-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.9rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .exp-price {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .exp-cta {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 500;
     }
 
     /* ── ABOUT BAND ──────────────────────────────── */
@@ -650,19 +900,68 @@ export default async function Page() {
     /* ── FOOTER ──────────────────────────────────── */
     footer {
       background: oklch(14% 0.014 80);
-      color: rgba(255,255,255,0.55);
+      color: white;
       padding: 64px 2.5rem 36px;
     }
+    footer a { color: white; }
 
     .footer-grid {
       max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      grid-template-columns: 1.6fr 1fr;
       gap: 3rem;
       padding-bottom: 2.5rem;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       margin-bottom: 2rem;
+    }
+
+    .footer-social { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 1rem; }
+    .footer-contact {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: right;
+    }
+    .footer-col .footer-contact li { margin: 0; }
+    .footer-contact a {
+      color: white;
+      text-decoration: none;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+    }
+    .footer-contact a:hover { opacity: 0.75; }
+    .footer-contact svg { flex-shrink: 0; }
+    .footer-social .social-list {
+      list-style: none;
+      display: flex;
+      gap: 1rem;
+    }
+    .footer-social .social-list a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .footer-social .social-list a:hover {
+      background: rgba(255,255,255,0.18);
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .footer-social { align-items: flex-start; }
+      .footer-contact { text-align: left; }
     }
 
     .footer-brand-logo .logo-zh { color: white; }
@@ -680,7 +979,7 @@ export default async function Page() {
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.85);
+      color: white;
       margin-bottom: 1rem;
     }
 
@@ -689,21 +988,21 @@ export default async function Page() {
     .footer-col li { margin-bottom: 0.6rem; }
 
     .footer-col a {
-      color: rgba(255,255,255,0.45);
+      color: white;
       text-decoration: none;
       font-size: 13px;
-      transition: color 0.2s;
+      transition: opacity 0.2s;
     }
 
-    .footer-col a:hover { color: white; }
+    .footer-col a:hover { opacity: 0.75; }
 
     .footer-bottom {
       max-width: 1200px;
       margin: 0 auto;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       font-size: 12px;
-      color: rgba(255,255,255,0.25);
+      color: white;
     }
 
     /* ── RESPONSIVE ──────────────────────────────── */
@@ -715,6 +1014,9 @@ export default async function Page() {
     @media (max-width: 768px) {
       .nav { padding: 0 1.25rem; }
       .nav-links { display: none; }
+      .nav-actions .btn-ghost { display: none; }
+      .nav-toggle { display: inline-flex; }
+      #rooms, #experience, #transport { padding: 60px 1.25rem; }
       .hero { padding: 4rem 1.25rem 6rem; min-height: calc(100vh - 64px); }
       .hero h1 { font-size: 2.2rem; }
       .search-widget {
@@ -739,14 +1041,10 @@ export default async function Page() {
   <!-- ═══ NAV ═══════════════════════════════════════ -->
   <nav class="nav">
     <a href="/" class="nav-logo">
-      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-        <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)"/>
-        <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.95"/>
-        <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white"/>
-      </svg>
+      ${navLogoMarkHtml}
       <div class="logo-wordmark">
-        <span class="logo-zh">山田寓所</span>
-        <span class="logo-en">FIELDSTAY</span>
+        <span class="logo-zh">${brandNameSafe}</span>
+        ${brandTaglineSafe ? `<span class="logo-en">${brandTaglineSafe}</span>` : ""}
       </div>
     </a>
 
@@ -754,14 +1052,30 @@ export default async function Page() {
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
       <li><a href="#about">關於我們</a></li>
-      <li><a href="#">交通資訊</a></li>
+      <li><a href="#transport">交通資訊</a></li>
     </ul>
 
     <div class="nav-actions">
       <a href="/account" class="btn btn-ghost">會員中心</a>
       ${authActionHtml}
+      <button class="nav-toggle" id="navToggle" aria-label="開啟選單" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span>
+      </button>
     </div>
   </nav>
+
+  <div class="mobile-menu" id="mobileMenu" role="menu" aria-label="行動版選單">
+    <ul>
+      <li><a href="#rooms">房型選擇</a></li>
+      <li><a href="#experience">田間體驗</a></li>
+      <li><a href="#about">關於我們</a></li>
+      <li><a href="#transport">交通資訊</a></li>
+    </ul>
+    <div class="mobile-actions">
+      <a href="/account" class="btn btn-ghost">會員中心</a>
+      ${authActionHtml}
+    </div>
+  </div>
 
   <!-- ═══ HERO ════════════════════════════════════════ -->
   <section class="hero">
@@ -783,35 +1097,6 @@ export default async function Page() {
         與我們共度一段慢速的田間時光
       </p>
 
-      <!-- Search Widget -->
-      <div class="search-widget" role="search">
-        <div class="sw-field">
-          <label for="checkin">入住日期</label>
-          <input type="date" id="checkin" value="2026-05-10" aria-label="入住日期">
-        </div>
-        <div class="sw-divider" aria-hidden="true"></div>
-        <div class="sw-field">
-          <label for="checkout">退房日期</label>
-          <input type="date" id="checkout" value="2026-05-12" aria-label="退房日期">
-        </div>
-        <div class="sw-divider" aria-hidden="true"></div>
-        <div class="sw-field">
-          <label for="guests">房客人數</label>
-          <select id="guests" aria-label="房客人數">
-            <option>1 位大人</option>
-            <option selected>2 位大人</option>
-            <option>2 大人 1 兒童</option>
-            <option>4 位大人</option>
-          </select>
-        </div>
-        <button class="sw-btn" id="searchBtn">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="4.5" stroke="white" stroke-width="1.5"/>
-            <path d="M10.5 10.5 L14 14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          查詢空房
-        </button>
-      </div>
     </div>
   </section>
 
@@ -824,13 +1109,6 @@ export default async function Page() {
           房型選擇
         </h2>
         <a href="/rooms" class="see-all">查看全部房型 →</a>
-      </div>
-
-      <div class="filter-tabs" role="tablist" aria-label="房型篩選">
-        <button class="filter-tab active" onclick="filterRooms('all', this)" role="tab">全部</button>
-        <button class="filter-tab" onclick="filterRooms('double', this)" role="tab">雙人</button>
-        <button class="filter-tab" onclick="filterRooms('family', this)" role="tab">家庭</button>
-        <button class="filter-tab" onclick="filterRooms('whole', this)" role="tab">包棟</button>
       </div>
 
       <div class="room-grid" id="roomGrid">
@@ -847,31 +1125,35 @@ export default async function Page() {
           <small>FIELD ACTIVITIES</small>
           田間體驗
         </h2>
-        <a href="/activities" class="see-all">查看活動行事曆 →</a>
+        <a href="/activities" class="see-all">查看所有活動 →</a>
       </div>
 
       <div class="exp-grid">
-        <div class="exp-card">
-          <div class="exp-thumb" style="background: linear-gradient(155deg, oklch(42% 0.08 72) 0%, oklch(58% 0.10 80) 100%);"></div>
-          <div class="exp-body">
-            <h3>傳統炊粿體驗</h3>
-            <p>使用百年大灶，與長輩一起學習傳統紅龜粿、草仔粿的製作，感受節氣食物文化的溫度。每次 2 小時，需提前預約。</p>
-          </div>
-        </div>
-        <div class="exp-card">
-          <div class="exp-thumb" style="background: linear-gradient(155deg, oklch(38% 0.10 162) 0%, oklch(52% 0.11 152) 100%);"></div>
-          <div class="exp-body">
-            <h3>農事體驗 · 米食文化</h3>
-            <p>跟隨農人認識稻米生長週期，親手體驗農事勞作，了解台灣農村的日常節奏與土地間流傳的智慧。</p>
-          </div>
-        </div>
-        <div class="exp-card">
-          <div class="exp-thumb" style="background: linear-gradient(155deg, oklch(36% 0.10 28) 0%, oklch(50% 0.12 35) 100%);"></div>
-          <div class="exp-body">
-            <h3>節氣料理工作坊</h3>
-            <p>依二十四節氣設計的手作課程，每月主題各異。結合在地農產，製作最應時節的傳統風味食物。</p>
-          </div>
-        </div>
+        ${activityCardsHtml || '<p style="color:var(--muted);">目前沒有即將舉辦的活動。</p>'}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TRANSPORT ════════════════════════════════════ -->
+  <section class="section" id="transport">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <small>TRANSPORT · 抵達方式</small>
+          交通資訊
+        </h2>
+      </div>
+      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface);">
+        <iframe
+          title="山田寓所交通地圖"
+          src="https://www.google.com/maps?q=台南市&output=embed"
+          width="100%"
+          height="420"
+          style="border:0;display:block;"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
       </div>
     </div>
   </section>
@@ -896,53 +1178,23 @@ export default async function Page() {
     <div class="footer-grid">
       <div>
         <a href="/" class="nav-logo footer-brand-logo" style="text-decoration:none;">
-          <svg width="36" height="36" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-            <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)" opacity="0.6"/>
-            <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.8"/>
-            <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white" opacity="0.8"/>
-          </svg>
+          ${footerLogoMarkHtml}
           <div class="logo-wordmark">
-            <span class="logo-zh">山田寓所</span>
-            <span class="logo-en">FIELDSTAY</span>
+            <span class="logo-zh">${brandNameSafe}</span>
+            ${brandTaglineSafe ? `<span class="logo-en">${brandTaglineSafe}</span>` : ""}
           </div>
         </a>
         <p class="footer-desc">台南農村民宿，提供田間體驗與住宿，感受節氣文化與土地連結。</p>
       </div>
 
-      <div class="footer-col">
-        <h4>住宿</h4>
-        <ul>
-          <li><a href="rooms/1">房型介紹</a></li>
-          <li><a href="#">訂房須知</a></li>
-          <li><a href="#">取消政策</a></li>
-          <li><a href="#">包棟洽詢</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>體驗</h4>
-        <ul>
-          <li><a href="#">炊粿體驗</a></li>
-          <li><a href="#">農事體驗</a></li>
-          <li><a href="#">節氣料理</a></li>
-          <li><a href="#">活動行事曆</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>聯絡</h4>
-        <ul>
-          <li><a href="#">關於我們</a></li>
-          <li><a href="#">交通資訊</a></li>
-          <li><a href="#">Instagram</a></li>
-          <li><a href="#">LINE 客服</a></li>
-        </ul>
+      <div class="footer-col footer-social">
+        ${socialListHtml ? `<ul class="social-list">${socialListHtml}</ul>` : ""}
+        ${contactBlockHtml}
       </div>
     </div>
 
     <div class="footer-bottom">
-      <span>© 2026 山田寓所 FIELDSTAY · 版權所有</span>
-      <span>台南市 · 隱私政策 · 服務條款</span>
+      <span>© 2026 ${brandNameSafe}${brandTaglineSafe ? ` ${brandTaglineSafe}` : ""} · 版權所有</span>
     </div>
   </footer>
 
@@ -955,37 +1207,28 @@ export default async function Page() {
       });
     }
 
-    document.getElementById('searchBtn')?.addEventListener('click', function() {
-      const checkin  = document.getElementById('checkin').value;
-      const checkout = document.getElementById('checkout').value;
-      const guests   = document.getElementById('guests').value;
-      if (!checkin || !checkout) { alert('請選擇入住與退房日期'); return; }
-      if (new Date(checkout) <= new Date(checkin)) { alert('退房日期須晚於入住日期'); return; }
-      window.location.href = 'rooms/1?checkin=' + encodeURIComponent(checkin)
-        + '&checkout=' + encodeURIComponent(checkout)
-        + '&guests=' + encodeURIComponent(guests);
-    });
   </script>
 ` }} />
       <script dangerouslySetInnerHTML={{ __html: `
-    window.filterRooms = function filterRooms(type, btn) {
-      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelectorAll('.room-card').forEach(card => {
-        card.style.display = (type === 'all' || card.dataset.type === type) ? 'block' : 'none';
-      });
-    }
+    (function() {
+      var btn = document.getElementById('navToggle');
+      var menu = document.getElementById('mobileMenu');
+      if (btn && menu) {
+        btn.addEventListener('click', function() {
+          var open = menu.classList.toggle('open');
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          btn.setAttribute('aria-label', open ? '關閉選單' : '開啟選單');
+        });
+        menu.querySelectorAll('a').forEach(function(a) {
+          a.addEventListener('click', function() {
+            menu.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.setAttribute('aria-label', '開啟選單');
+          });
+        });
+      }
+    })();
 
-    document.getElementById('searchBtn')?.addEventListener('click', function() {
-      const checkin  = document.getElementById('checkin').value;
-      const checkout = document.getElementById('checkout').value;
-      const guests   = document.getElementById('guests').value;
-      if (!checkin || !checkout) { alert('請選擇入住與退房日期'); return; }
-      if (new Date(checkout) <= new Date(checkin)) { alert('退房日期須晚於入住日期'); return; }
-      window.location.href = 'rooms/1?checkin=' + encodeURIComponent(checkin)
-        + '&checkout=' + encodeURIComponent(checkout)
-        + '&guests=' + encodeURIComponent(guests);
-    });
   ` }} />
     </>
   );

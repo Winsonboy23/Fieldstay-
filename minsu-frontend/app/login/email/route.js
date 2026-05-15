@@ -22,9 +22,11 @@ export async function POST(request) {
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      redirect(`/login?error=invalid_credentials&next=${encodeURIComponent(nextPath)}`);
+      const code = error.code || "invalid_credentials";
+      redirect(
+        `/login?error=${encodeURIComponent(code)}&next=${encodeURIComponent(nextPath)}`
+      );
     }
-
     throw error;
   }
 }

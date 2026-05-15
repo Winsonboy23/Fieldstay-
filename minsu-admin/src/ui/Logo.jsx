@@ -1,9 +1,15 @@
 import styled from "styled-components";
 
-const StyledLogo = styled.div`
+const StyledLogo = styled.a`
   display: flex;
   align-items: center;
   gap: 1.2rem;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.85;
+  }
 `;
 
 const Mark = styled.div`
@@ -37,8 +43,11 @@ const Sub = styled.div`
 `;
 
 function Logo() {
+  const frontendUrl =
+    import.meta.env.VITE_FRONTEND_URL || "http://localhost:3000";
+
   return (
-    <StyledLogo>
+    <StyledLogo href={frontendUrl} title="前往前台首頁">
       <Mark aria-hidden="true">
         <svg width="34" height="34" viewBox="0 0 38 38" fill="none">
           <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="currentColor" opacity="0.95" />
@@ -46,8 +55,7 @@ function Logo() {
         </svg>
       </Mark>
       <Text>
-        <Name>山田寓所</Name>
-        <Sub>FIELDSTAY ADMIN</Sub>
+        <Name>後台管理</Name>
       </Text>
     </StyledLogo>
   );

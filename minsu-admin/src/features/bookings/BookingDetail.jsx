@@ -12,7 +12,7 @@ import { useMoveBack } from "../../hooks/useMoveBack";
 import { useBooking } from "./useBooking";
 import Spinner from "../../ui/Spinner";
 import { useNavigate } from "react-router-dom";
-import { HiArrowUpOnSquare, HiPencilSquare, HiTrash } from "react-icons/hi2";
+import { HiOutlineArrowUpOnSquare, HiOutlinePencilSquare, HiOutlineTrash } from "react-icons/hi2";
 import { useCheckout } from "../check-in-out/useCheckout";
 import Modal from "../../ui/Modal";
 import ConfirmDelete from "../../ui/ConfirmDelete";
@@ -67,7 +67,7 @@ function BookingDetail() {
 
         {status === "checked-in" && (
           <Button
-            icon={<HiArrowUpOnSquare />}
+            icon={<HiOutlineArrowUpOnSquare />}
             onClick={() => checkout(bookingId)}
             disabled={isCheckingOut}
           >
@@ -78,7 +78,7 @@ function BookingDetail() {
         {status !== "checked-out" && (
           <Modal>
             <Modal.Open opens="edit-booking">
-              <Button icon={<HiPencilSquare />} variation="secondary">
+              <Button icon={<HiOutlinePencilSquare />} variation="secondary">
                 編輯訂單
               </Button>
             </Modal.Open>

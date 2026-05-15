@@ -1,5 +1,7 @@
 import supabase from "./supabase";
 
+const BUCKET = "site-images";
+
 export async function getSettings() {
   const { data, error } = await supabase.from("settings").select("*").single();
 
@@ -10,12 +12,10 @@ export async function getSettings() {
   return data;
 }
 
-// We expect a newSetting object that looks like {setting: newValue}
 export async function updateSetting(newSetting) {
   const { data, error } = await supabase
     .from("settings")
     .update(newSetting)
-    // There is only ONE row of settings, and it has the ID=1, and so this is the updated one
     .eq("id", 1)
     .single();
 
@@ -24,4 +24,19 @@ export async function updateSetting(newSetting) {
     throw new Error("Settings could not be updated");
   }
   return data;
+}
+
+function safeFileName(file) {
+  return `${Date.now()}-${Math.random()}-${file.name}`
+    .replaceAll("/", "")
+    .replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+export async function uploadSiteImage(file) {
+  const name = safeFileName(file);
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(name, file, { contentType: file.type || "image/jpeg" });
+  if (error) throw new Error(`Image upload failed: ${error.message}`);
+  return supabase.storage.from(BUCKET).getPublicUrl(name).data.publicUrl;
 }

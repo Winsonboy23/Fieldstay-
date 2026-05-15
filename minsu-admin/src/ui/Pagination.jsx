@@ -1,113 +1,138 @@
-import { HiChevronLeft, HiChevronRight } from "react-icons/hi2";
+import {
+  HiOutlineChevronDoubleLeft,
+  HiOutlineChevronDoubleRight,
+  HiOutlineChevronLeft,
+  HiOutlineChevronRight,
+} from "react-icons/hi2";
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { PAGE_SIZE } from "../utils/constants";
 
-const StyledPagination = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const P = styled.p`
-  font-size: 1.4rem;
-  margin-left: 0.8rem;
-
-  & span {
-    font-weight: 600;
-  }
-`;
-
-const Buttons = styled.div`
-  display: flex;
-  gap: 0.6rem;
-`;
-
-const PaginationButton = styled.button`
-  background-color: ${(props) =>
-    props.active ? " var(--color-brand-600)" : "var(--color-grey-50)"};
-  color: ${(props) => (props.active ? " var(--color-brand-50)" : "inherit")};
-  border: none;
-  border-radius: var(--border-radius-sm);
-  font-weight: 500;
-  font-size: 1.4rem;
-
+const Bar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1.2rem;
-  transition: all 0.3s;
+  gap: 0.6rem;
+`;
 
-  &:has(span:last-child) {
-    padding-left: 0.4rem;
+const PageBtn = styled.button`
+  min-width: 3.6rem;
+  height: 3.6rem;
+  padding: 0 1rem;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-grey-100);
+  background-color: ${(p) =>
+    p.$active ? "var(--color-grey-800)" : "var(--color-grey-0)"};
+  color: ${(p) =>
+    p.$active ? "var(--color-grey-0)" : "var(--color-grey-700)"};
+  font-size: 1.4rem;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background-color: ${(p) =>
+      p.$active ? "var(--color-grey-700)" : "var(--color-grey-50)"};
   }
 
-  &:has(span:first-child) {
-    padding-right: 0.4rem;
+  &:disabled {
+    opacity: 0.4;
   }
 
   & svg {
-    height: 1.8rem;
-    width: 1.8rem;
-  }
-
-  &:hover:not(:disabled) {
-    background-color: var(--color-brand-600);
-    color: var(--color-brand-50);
+    width: 1.6rem;
+    height: 1.6rem;
   }
 `;
 
+const Ellipsis = styled.span`
+  min-width: 2.4rem;
+  text-align: center;
+  color: var(--color-grey-500);
+  font-size: 1.4rem;
+`;
+
+function pageList(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  const sorted = [...pages]
+    .filter((p) => p >= 1 && p <= total)
+    .sort((a, b) => a - b);
+  const result = [];
+  for (let i = 0; i < sorted.length; i++) {
+    result.push(sorted[i]);
+    if (i < sorted.length - 1 && sorted[i + 1] - sorted[i] > 1) {
+      result.push("…");
+    }
+  }
+  return result;
+}
+
 function Pagination({ count }) {
   const [searchParams, setSearchParams] = useSearchParams();
-
   const currentPage = !searchParams.get("page")
     ? 1
     : Number(searchParams.get("page"));
-
   const pageCount = Math.ceil(count / PAGE_SIZE);
-
-  function nextPage() {
-    const next = currentPage === pageCount ? currentPage : currentPage + 1;
-
-    searchParams.set("page", next);
-    setSearchParams(searchParams);
-  }
-
-  function prevPage() {
-    const prev = currentPage === 1 ? currentPage : currentPage - 1;
-
-    searchParams.set("page", prev);
-    setSearchParams(searchParams);
-  }
 
   if (pageCount <= 1) return null;
 
+  function goto(page) {
+    if (page < 1 || page > pageCount || page === currentPage) return;
+    searchParams.set("page", page);
+    setSearchParams(searchParams);
+  }
+
+  const items = pageList(currentPage, pageCount);
+
   return (
-    <StyledPagination>
-      <P>
-        Showing <span>{(currentPage - 1) * PAGE_SIZE + 1}</span> to{" "}
-        <span>
-          {currentPage === pageCount ? count : currentPage * PAGE_SIZE}
-        </span>{" "}
-        of <span>{count}</span> results
-      </P>
+    <Bar>
+      <PageBtn
+        onClick={() => goto(1)}
+        disabled={currentPage === 1}
+        aria-label="第一頁"
+      >
+        <HiOutlineChevronDoubleLeft />
+      </PageBtn>
+      <PageBtn
+        onClick={() => goto(currentPage - 1)}
+        disabled={currentPage === 1}
+        aria-label="上一頁"
+      >
+        <HiOutlineChevronLeft />
+      </PageBtn>
 
-      <Buttons>
-        <PaginationButton onClick={prevPage} disabled={currentPage === 1}>
-          <HiChevronLeft /> <span>Previous</span>
-        </PaginationButton>
+      {items.map((item, idx) =>
+        item === "…" ? (
+          <Ellipsis key={`e-${idx}`}>…</Ellipsis>
+        ) : (
+          <PageBtn
+            key={item}
+            $active={item === currentPage}
+            onClick={() => goto(item)}
+          >
+            {item}
+          </PageBtn>
+        )
+      )}
 
-        <PaginationButton
-          onClick={nextPage}
-          disabled={currentPage === pageCount}
-        >
-          <span>Next</span>
-          <HiChevronRight />
-        </PaginationButton>
-      </Buttons>
-    </StyledPagination>
+      <PageBtn
+        onClick={() => goto(currentPage + 1)}
+        disabled={currentPage === pageCount}
+        aria-label="下一頁"
+      >
+        <HiOutlineChevronRight />
+      </PageBtn>
+      <PageBtn
+        onClick={() => goto(pageCount)}
+        disabled={currentPage === pageCount}
+        aria-label="最末頁"
+      >
+        <HiOutlineChevronDoubleRight />
+      </PageBtn>
+    </Bar>
   );
 }
 

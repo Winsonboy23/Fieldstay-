@@ -34,3 +34,6 @@ __test__
 # codex/claude local settings
 .claude/
 minsu-admin/supabase/.temp/
+
+# broken next caches
+minsu-frontend/.next.broken-*/

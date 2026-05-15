@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { formatCurrency } from "../../utils/helpers";
 import CreateRoomForm from "./CreateRoomForm";
 import { useDeleteRoom } from "./useDeleteRoom";
-import { HiSquare2Stack, HiPencil, HiTrash } from "react-icons/hi2";
+import { HiOutlineSquare2Stack, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi2";
 import { useCreateRoom } from "./useCreateRoom";
 import Modal from "../../ui/Modal";
 import ConfirmDelete from "../../ui/ConfirmDelete";
@@ -107,7 +107,7 @@ function RoomRow({ room }) {
 
             <Menus.List id={roomId}>
               <Menus.Button
-                icon={<HiSquare2Stack />}
+                icon={<HiOutlineSquare2Stack />}
                 onClick={handleDuplicate}
                 disabled={isCreating}
               >
@@ -115,11 +115,11 @@ function RoomRow({ room }) {
               </Menus.Button>
 
               <Modal.Open opens="edit">
-                <Menus.Button icon={<HiPencil />}>Edit</Menus.Button>
+                <Menus.Button icon={<HiOutlinePencil />}>Edit</Menus.Button>
               </Modal.Open>
 
               <Modal.Open opens="delete">
-                <Menus.Button icon={<HiTrash />}>Delete</Menus.Button>
+                <Menus.Button icon={<HiOutlineTrash />}>Delete</Menus.Button>
               </Modal.Open>
             </Menus.List>
 

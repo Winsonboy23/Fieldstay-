@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { createPortal } from "react-dom";
-import { HiEllipsisVertical } from "react-icons/hi2";
+import { HiOutlineEllipsisVertical } from "react-icons/hi2";
 import styled from "styled-components";
 import { useOutsideClick } from "../hooks/useOutsideClick";
 
@@ -46,21 +46,21 @@ const StyledButton = styled.button`
   text-align: left;
   background: none;
   border: none;
-  padding: 1.2rem 2.4rem;
+  padding: 1.2rem 1.6rem;
   font-size: 1.4rem;
   transition: all 0.2s;
 
   display: flex;
   align-items: center;
-  gap: 1.6rem;
+  gap: 1.2rem;
 
   &:hover {
     background-color: var(--color-grey-50);
   }
 
   & svg {
-    width: 1.6rem;
-    height: 1.6rem;
+    width: 2rem;
+    height: 2rem;
     color: var(--color-grey-400);
     transition: all 0.3s;
   }
@@ -101,7 +101,7 @@ function Toggle({ id }) {
 
   return (
     <StyledToggle onClick={handleClick}>
-      <HiEllipsisVertical />
+      <HiOutlineEllipsisVertical />
     </StyledToggle>
   );
 }

@@ -6,12 +6,16 @@ export async function getBookings({ filter, sortBy, page }) {
   let query = supabase
     .from("bookings")
     .select(
-      "id, created_at, startDate, endDate,numNights, numGuests, status, totalPrice, rooms(name), guests(fullName, email)",
+      "id, created_at, startDate, endDate, numNights, numGuests, status, totalPrice, isPaid, payment_method, observations, guestId, rooms(name), guests(fullName, email)",
       { count: "exact" }
     );
-
-  //FILTER
-  if (filter) query = query[filter.method || "eq"](filter.field, filter.value);
+  //FILTER (supports single object or array of {field, value, method?})
+  const filters = Array.isArray(filter) ? filter : filter ? [filter] : [];
+  const hasStatusFilter = filters.some((f) => f.field === "status");
+  if (!hasStatusFilter) query = query.neq("status", "cancelled");
+  for (const f of filters) {
+    query = query[f.method || "eq"](f.field, f.value);
+  }
 
   //SORT
   if (sortBy)

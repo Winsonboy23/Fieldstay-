@@ -36,13 +36,6 @@ export default async function Page({ searchParams }) {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-12 text-sm font-medium md:flex">
-            <Link href="/rooms" className="text-primary-900">房型選擇</Link>
-            <Link href="/#experience" className="text-primary-600 hover:text-primary-900">田間體驗</Link>
-            <Link href="/about" className="text-primary-600 hover:text-primary-900">關於我們</Link>
-            <Link href="#" className="text-primary-600 hover:text-primary-900">交通資訊</Link>
-          </nav>
-
           <div className="flex items-center gap-3">
             <Link
               href="/account"

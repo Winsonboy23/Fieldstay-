@@ -12,6 +12,7 @@ import Rooms from "./pages/Rooms";
 import Users from "./pages/Users";
 import Guests from "./pages/Guests";
 import Settings from "./pages/Settings";
+import Activities from "./pages/Activities";
 import Account from "./pages/Account";
 import Login from "./pages/Login";
 import PageNotFound from "./pages/PageNotFound";
@@ -52,6 +53,7 @@ function App() {
               <Route path="checkin/:bookingId" element={<Checkin />} />
 
               <Route path="rooms" element={<Rooms />} />
+              <Route path="activities" element={<Activities />} />
               <Route path="guests" element={<Guests />} />
               <Route path="users" element={<Users />} />
               <Route path="settings" element={<Settings />} />

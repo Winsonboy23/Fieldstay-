@@ -8,6 +8,7 @@ const errorMessages = {
   password_too_short: "密碼至少需要 8 碼。",
   password_mismatch: "兩次輸入的密碼不一致。",
   email_exists: "這個 Email 已經註冊過，請直接登入。",
+  rate_limit: "已達 email 發送上限，請等一小時後再試。",
   register_failed: "註冊失敗，請稍後再試或聯絡管理員。",
 };
 
@@ -26,7 +27,7 @@ export default function Page({ searchParams }) {
       padding: 48px 20px;
       background: oklch(96% 0.010 75);
       color: oklch(18% 0.012 80);
-      font-family: 'Noto Sans TC', -apple-system, system-ui, sans-serif;
+      font-family: system-ui, sans-serif;
     }
 
     .register-card {
@@ -48,7 +49,7 @@ export default function Page({ searchParams }) {
 
     .register-card h1 {
       margin-bottom: 8px;
-      font-family: 'Noto Serif TC', Georgia, serif;
+      font-family: Georgia, serif;
       font-size: 32px;
       font-weight: 700;
     }
@@ -126,7 +127,7 @@ export default function Page({ searchParams }) {
         <section className="register-card">
           <div className="register-eyebrow">FIELDSTAY MEMBER</div>
           <h1>建立會員帳號</h1>
-          <p>註冊後即可管理訂單、查看入住資訊，並在訂房時帶入會員資料。</p>
+          <p>送出後我們會寄一封驗證信到你的 email，點擊信中連結即可完成註冊。</p>
 
           {errorMessage && <div className="register-error">{errorMessage}</div>}
 
@@ -164,7 +165,7 @@ export default function Page({ searchParams }) {
             </div>
 
             <button className="register-submit" type="submit">
-              註冊並登入
+              建立帳號並寄送驗證信
             </button>
           </form>
 

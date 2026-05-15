@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --font-serif: "Noto Serif TC", "Songti TC", Georgia, serif;
-    --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-sans: system-ui, sans-serif;
   }
 
   html {

@@ -17,13 +17,34 @@ export async function signup({ fullName, email, password }) {
   return data;
 }
 
+function getAdminEmails() {
+  return String(import.meta.env.VITE_ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 export async function login({ email, password }) {
-  let { data, error } = await supabase.auth.signInWithPassword({
-    email,
+  const allowed = getAdminEmails();
+  const normalized = String(email || "").trim().toLowerCase();
+
+  if (allowed.length > 0 && !allowed.includes(normalized)) {
+    throw new Error("此帳號無管理員權限");
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: normalized,
     password,
   });
 
   if (error) throw new Error(error.message);
+
+  // Defence in depth: ensure the resolved user email is whitelisted.
+  const userEmail = String(data?.user?.email || "").toLowerCase();
+  if (allowed.length > 0 && !allowed.includes(userEmail)) {
+    await supabase.auth.signOut();
+    throw new Error("此帳號無管理員權限");
+  }
 
   return data;
 }

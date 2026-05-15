@@ -1,14 +1,17 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, Children } from "react";
 import styled from "styled-components";
 
 const StyledTable = styled.div`
   border: 1px solid var(--color-grey-100);
-
   font-size: 1.4rem;
   background-color: var(--color-grey-0);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+`;
+
+const ScrollArea = styled.div`
+  overflow-x: auto;
 `;
 
 const CommonRow = styled.div`
@@ -17,12 +20,12 @@ const CommonRow = styled.div`
   column-gap: 2.4rem;
   align-items: center;
   transition: none;
+  min-width: ${(props) => props.$minWidth || "0"};
 `;
 
 const StyledHeader = styled(CommonRow)`
   padding: 1.6rem 2.4rem;
-
-  background-color: var(--color-grey-50);
+  background-color: var(--color-grey-0);
   border-bottom: 1px solid var(--color-grey-100);
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -43,12 +46,12 @@ const StyledBody = styled.section`
 `;
 
 const Footer = styled.footer`
-  background-color: var(--color-grey-50);
+  background-color: var(--color-grey-0);
+  border-top: 1px solid var(--color-grey-100);
   display: flex;
   justify-content: center;
-  padding: 1.2rem;
+  padding: 1.6rem 2.4rem;
 
-  /* This will hide the footer when it contains no child elements. Possible thanks to the parent selector :has 🎉 */
   &:not(:has(*)) {
     display: none;
   }
@@ -63,26 +66,32 @@ const Empty = styled.p`
 
 const TableContext = createContext();
 
-function Table({ columns, children }) {
+function Table({ columns, minWidth, children }) {
+  const arr = Children.toArray(children);
+  const footers = arr.filter((c) => c?.type === Footer);
+  const rest = arr.filter((c) => c?.type !== Footer);
   return (
-    <TableContext.Provider value={{ columns }}>
-      <StyledTable role="table">{children}</StyledTable>
+    <TableContext.Provider value={{ columns, minWidth }}>
+      <StyledTable role="table">
+        <ScrollArea>{rest}</ScrollArea>
+        {footers}
+      </StyledTable>
     </TableContext.Provider>
   );
 }
 
 function Header({ children }) {
-  const { columns } = useContext(TableContext);
+  const { columns, minWidth } = useContext(TableContext);
   return (
-    <StyledHeader role="row" columns={columns} as="header">
+    <StyledHeader role="row" columns={columns} $minWidth={minWidth} as="header">
       {children}
     </StyledHeader>
   );
 }
 function Row({ children }) {
-  const { columns } = useContext(TableContext);
+  const { columns, minWidth } = useContext(TableContext);
   return (
-    <StyledRow role="row" columns={columns}>
+    <StyledRow role="row" columns={columns} $minWidth={minWidth}>
       {children}
     </StyledRow>
   );

@@ -1,18 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth, signIn, signOut } from "./auth";
+import { auth, signOut } from "./auth";
 import {
+  createActivitySignup,
   createBooking,
   deleteBooking,
   getBookings,
-  getGuest,
   registerGuest,
+  requestPasswordReset,
   updateBooking,
   updateGuest,
 } from "./data-service";
 import { redirect } from "next/navigation";
-import { supabase } from "./supabase";
 
 export async function UpdateGuest(formData) {
   const session = await auth();
@@ -103,12 +103,39 @@ export async function updateReservation(formData) {
   redirect("/account/reservations");
 }
 
+export async function createActivitySignupAction(activityId, formData) {
+  const session = await auth();
+  if (!session?.user) throw new Error("請先登入");
+
+  const contactName = String(formData.get("contactName") || "").trim();
+  const contactEmail = String(formData.get("contactEmail") || "").trim();
+  const contactPhone = String(formData.get("contactPhone") || "").trim();
+  const specialRequest = String(formData.get("specialRequest") || "").trim();
+  const quantity = Number(formData.get("quantity") || 1);
+
+  if (!contactName || !contactEmail || !contactPhone) {
+    throw new Error("請填寫姓名、電子郵件與電話號碼");
+  }
+
+  const signup = await createActivitySignup({
+    activityId,
+    guestId: session.user.guestId || null,
+    contactName,
+    contactEmail,
+    contactPhone,
+    quantity: Math.max(1, quantity),
+    specialRequest: specialRequest || null,
+    paymentMethod: "transfer",
+  });
+
+  revalidatePath(`/activities/${activityId}`);
+  revalidatePath("/account/experiences");
+  redirect(`/account/experiences/${activityId}`);
+}
+
 ///////////////////////
 // Sign In / Sign Out //
 ///////////////////////
-export async function signInAction() {
-  await signIn("google", { redirectTo: "/account" });
-}
 
 export async function registerAction(formData) {
   const fullName = String(formData.get("fullName") || "").trim();
@@ -128,22 +155,36 @@ export async function registerAction(formData) {
     redirect("/register?error=password_mismatch");
   }
 
-  const existingGuest = await getGuest(email);
-  if (existingGuest) {
-    redirect("/register?error=email_exists");
-  }
-
   try {
     await registerGuest({ fullName, email, password });
   } catch (error) {
     if (error.message === "email_exists") {
       redirect("/register?error=email_exists");
     }
-
+    if (error.message === "rate_limit") {
+      redirect("/register?error=rate_limit");
+    }
     redirect("/register?error=register_failed");
   }
 
-  await signIn("credentials", { email, password, redirectTo: "/account" });
+  redirect("/login?registered=1");
+}
+
+export async function forgotPasswordAction(formData) {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+
+  if (!email) {
+    redirect("/forgot-password?error=missing_email");
+  }
+
+  try {
+    await requestPasswordReset(email);
+  } catch (error) {
+    console.error(error);
+    redirect("/forgot-password?error=failed");
+  }
+
+  redirect("/forgot-password?sent=1");
 }
 
 export async function signOutAction() {

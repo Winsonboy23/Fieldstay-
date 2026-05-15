@@ -1,13 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import SiteHeader from "./SiteHeader";
 
 function formatCurrency(value) {
   return `NT$${Number(value || 0).toLocaleString("zh-TW")}`;
 }
 
 export default function BookingConfirmLayout({
-  systemTitle,
   title,
   user,
   onSubmit,
@@ -25,25 +24,11 @@ export default function BookingConfirmLayout({
   summaryRows,
   priceRows,
   totalPrice,
+  extraContactFields,
 }) {
-  const router = useRouter();
-
   return (
     <main className="min-h-screen bg-primary-100 text-primary-900">
-      <header className="border-b border-primary-200 bg-primary-50">
-        <div className="mx-auto flex h-16 max-w-[1120px] items-center gap-4 px-6">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="grid h-9 w-9 place-items-center rounded-full text-xl text-primary-900 transition hover:bg-primary-200"
-            aria-label="返回"
-          >
-            ←
-          </button>
-          <span className="h-9 w-9 rounded-full bg-accent-700" />
-          <span className="font-serif text-lg font-semibold">{systemTitle}</span>
-        </div>
-      </header>
+      <SiteHeader user={user} />
 
       <div className="mx-auto max-w-[1120px] px-6 py-10">
         <h1 className="mb-8 font-serif text-3xl font-semibold tracking-wide md:text-4xl">
@@ -85,6 +70,7 @@ export default function BookingConfirmLayout({
                     className="w-full rounded-lg border border-transparent bg-primary-100 px-4 py-3 outline-none transition focus:border-accent-600 focus:bg-primary-50"
                   />
                 </label>
+                {extraContactFields}
               </div>
             </section>
 

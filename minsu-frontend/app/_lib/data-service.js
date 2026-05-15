@@ -1,6 +1,7 @@
 import { eachDayOfInterval } from "date-fns";
 
 import { supabase } from "./supabase";
+import { supabaseAdmin } from "./supabase-admin";
 import { notFound } from "next/navigation";
 
 const fallbackCountries = [
@@ -105,7 +106,7 @@ export const getRooms = async function () {
 
 // Guests are uniquely identified by their email address
 export async function getGuest(email) {
-  const { data, error } = await supabase.rpc("get_guest_by_email", {
+  const { data, error } = await supabaseAdmin.rpc("get_guest_by_email", {
     p_email: email,
   });
 
@@ -119,7 +120,7 @@ export async function getGuest(email) {
 }
 
 export async function getBooking(id) {
-  const { data, error, count } = await supabase
+  const { data, error, count } = await supabaseAdmin
     .from("bookings")
     .select("*")
     .eq("id", id)
@@ -134,7 +135,7 @@ export async function getBooking(id) {
 }
 
 export async function getBookings(guestId) {
-  const { data, error } = await supabase.rpc("get_guest_bookings", {
+  const { data, error } = await supabaseAdmin.rpc("get_guest_bookings", {
     p_guest_id: guestId,
   });
 
@@ -144,7 +145,7 @@ export async function getBookings(guestId) {
 
   console.error(error);
 
-  const fallback = await supabase
+  const fallback = await supabaseAdmin
     .from("bookings")
     .select(
       "id, created_at, startDate, endDate, numNights, numGuests, roomPrice, extrasPrice, totalPrice, guestId, roomId, observations, status, isPaid, rooms(name, image)"
@@ -204,6 +205,108 @@ export async function getSettings() {
   return data;
 }
 
+// Activities
+export async function getActivities() {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("is_published", true)
+    .order("activity_date", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    throw new Error("Activities could not be loaded");
+  }
+  return data;
+}
+
+export async function getActivity(id) {
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Activity could not be loaded");
+  }
+  return data;
+}
+
+export async function getActivitySignupsByGuestId(guestId) {
+  const { data, error } = await supabaseAdmin
+    .from("activity_signups")
+    .select("*, activities(*)")
+    .eq("guest_id", guestId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    throw new Error("Activity signups could not be loaded");
+  }
+  return data;
+}
+
+export async function getActivitySignupByActivityAndGuest(activityId, guestId) {
+  const { data, error } = await supabaseAdmin
+    .from("activity_signups")
+    .select("*, activities(*)")
+    .eq("activity_id", activityId)
+    .eq("guest_id", guestId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Activity signup could not be loaded");
+  }
+  return data;
+}
+
+export async function getActivitySignupById(signupId) {
+  const { data, error } = await supabaseAdmin
+    .from("activity_signups")
+    .select("*, activities(*)")
+    .eq("id", signupId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Activity signup could not be loaded");
+  }
+  return data;
+}
+
+export async function createActivitySignup({
+  activityId,
+  guestId,
+  contactName,
+  contactEmail,
+  contactPhone,
+  quantity = 1,
+  specialRequest = null,
+  paymentMethod = "transfer",
+}) {
+  const { data, error } = await supabaseAdmin.rpc("create_activity_signup", {
+    p_activity_id: activityId,
+    p_guest_id: guestId,
+    p_contact_name: contactName,
+    p_contact_email: contactEmail,
+    p_contact_phone: contactPhone,
+    p_quantity: quantity,
+    p_special_request: specialRequest,
+    p_payment_method: paymentMethod,
+  });
+
+  if (error) {
+    console.error(error);
+    throw new Error(`Activity signup failed: ${error.message}`);
+  }
+  return data;
+}
+
 export async function getCountries() {
   try {
     const res = await fetch(
@@ -224,7 +327,7 @@ export async function getCountries() {
 // CREATE
 
 export async function createGuest(newGuest) {
-  const { data, error } = await supabase.rpc("ensure_guest", {
+  const { data, error } = await supabaseAdmin.rpc("ensure_guest", {
     p_full_name: newGuest.fullName,
     p_email: newGuest.email,
   });
@@ -238,36 +341,47 @@ export async function createGuest(newGuest) {
 }
 
 export async function registerGuest({ fullName, email, password }) {
-  const { data, error } = await supabase.rpc("register_guest", {
-    p_full_name: fullName,
-    p_email: email,
-    p_password: password,
+  const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { fullName },
+      emailRedirectTo: `${siteUrl}/verify`,
+    },
   });
 
+  if (error) {
+    console.error(error);
+    const msg = error.message?.toLowerCase() || "";
+    if (msg.includes("already registered") || msg.includes("user already")) {
+      throw new Error("email_exists");
+    }
+    if (
+      error.code === "over_email_send_rate_limit" ||
+      msg.includes("rate limit")
+    ) {
+      throw new Error("rate_limit");
+    }
+    throw new Error(error.message);
+  }
+
+  return data?.user ?? null;
+}
+
+export async function requestPasswordReset(email) {
+  const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/reset-password`,
+  });
   if (error) {
     console.error(error);
     throw new Error(error.message);
   }
-
-  return data?.[0] ?? null;
-}
-
-export async function authenticateGuest({ email, password }) {
-  const { data, error } = await supabase.rpc("authenticate_guest", {
-    p_email: email,
-    p_password: password,
-  });
-
-  if (error) {
-    console.error(error);
-    return null;
-  }
-
-  return data?.[0] ?? null;
 }
 
 export async function createBooking(newBooking) {
-  const { error } = await supabase.from("bookings").insert([newBooking]);
+  const { error } = await supabaseAdmin.from("bookings").insert([newBooking]);
 
   if (error) {
     console.error("createBooking failed", error);
@@ -278,7 +392,7 @@ export async function createBooking(newBooking) {
 }
 
 export async function createGuestBooking(newBooking) {
-  const { data, error } = await supabase.rpc("create_guest_booking", {
+  const { data, error } = await supabaseAdmin.rpc("create_guest_booking", {
     p_guest_id: newBooking.guestId,
     p_room_id: newBooking.roomId,
     p_start_date: newBooking.startDate,
@@ -304,7 +418,7 @@ export async function createGuestBooking(newBooking) {
 
 // The updatedFields is an object which should ONLY contain the updated data
 export async function updateGuest(id, updatedFields) {
-  const { data, error } = await supabase.rpc("update_guest_profile", {
+  const { data, error } = await supabaseAdmin.rpc("update_guest_profile", {
     p_email: updatedFields.email,
     p_occupation: updatedFields.occupation || "",
   });
@@ -317,7 +431,7 @@ export async function updateGuest(id, updatedFields) {
 }
 
 export async function updateBooking(id, updatedFields) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("bookings")
     .update(updatedFields)
     .eq("id", id)
@@ -335,7 +449,7 @@ export async function updateBooking(id, updatedFields) {
 // DELETE
 
 export async function deleteBooking(id) {
-  const { data, error } = await supabase.from("bookings").delete().eq("id", id);
+  const { data, error } = await supabaseAdmin.from("bookings").delete().eq("id", id);
 
   if (error) {
     console.error(error);

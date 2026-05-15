@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/app/_lib/auth";
-import { getBookings } from "@/app/_lib/data-service";
+import { getBookings, getSettings } from "@/app/_lib/data-service";
 import {
   ArrowLeftIcon,
   BanknotesIcon,
@@ -16,12 +16,6 @@ export const metadata = {
   title: "訂單明細",
 };
 
-const BANK_INFO = {
-  bankName: "台灣銀行 (004)",
-  branchName: "台中分行",
-  accountName: "訂房系統股份有限公司",
-  accountNumber: "123-456-789012",
-};
 
 function formatCurrency(value) {
   return `NT$${Number(value || 0).toLocaleString("zh-TW")}`;
@@ -66,6 +60,14 @@ export default async function Page({ params }) {
   );
 
   if (!booking) notFound();
+
+  const settings = await getSettings();
+  const BANK_INFO = {
+    bankName: settings?.bank_name || "—",
+    branchName: settings?.bank_branch || "—",
+    accountName: settings?.bank_account_name || "—",
+    accountNumber: settings?.bank_account_number || "—",
+  };
 
   const code = orderCode(booking.id);
   const roomPrice = Number(booking.roomPrice || booking.totalPrice || 0);

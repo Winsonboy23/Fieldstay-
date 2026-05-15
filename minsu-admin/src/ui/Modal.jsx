@@ -1,6 +1,6 @@
 import { cloneElement, createContext, useContext, useState } from "react";
 import { createPortal } from "react-dom";
-import { HiXMark } from "react-icons/hi2";
+import { HiOutlineXMark } from "react-icons/hi2";
 import styled from "styled-components";
 import { useOutsideClick } from "../hooks/useOutsideClick";
 
@@ -12,9 +12,9 @@ const StyledModal = styled.div`
   background-color: var(--color-grey-0);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 3.2rem 4rem;
-  max-width: 80vw;
-  max-height: 80vh;
+  padding: 2.8rem 3.2rem;
+  max-width: 90vw;
+  max-height: 95vh;
   overflow: auto;
   transition: all 0.5s;
 `;
@@ -37,11 +37,10 @@ const Button = styled.button`
   border: none;
   padding: 0.4rem;
   border-radius: var(--border-radius-sm);
-  transform: translateX(0.8rem);
   transition: all 0.2s;
   position: absolute;
-  top: 1.2rem;
-  right: 1.9rem;
+  top: 2.6rem;
+  right: 3.2rem;
 
   &:hover {
     background-color: var(--color-grey-100);
@@ -88,7 +87,7 @@ function Window({ children, name }) {
     <Overlay>
       <StyledModal ref={ref}>
         <Button onClick={close}>
-          <HiXMark />
+          <HiOutlineXMark />
         </Button>
         <div>{cloneElement(children, { onCloseModal: close })}</div>
       </StyledModal>

@@ -1,4 +1,3 @@
-import AccountReservationActions from "@/app/_components/AccountReservationActions";
 import { auth } from "@/app/_lib/auth";
 import { getBookings } from "@/app/_lib/data-service";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
@@ -52,8 +51,9 @@ export default async function Page() {
       ) : (
         <div className="space-y-6">
           {bookings.map((booking) => {
-            const isEditable = !isPast(new Date(booking.startDate));
-            const status = isEditable ? booking.status : "checked-out";
+            const status = isPast(new Date(booking.startDate))
+              ? "checked-out"
+              : booking.status;
             const statusClass =
               statusStyles[status] || "bg-primary-200 text-primary-600";
             const statusLabel = statusLabels[status] || "已確認";
@@ -61,36 +61,30 @@ export default async function Page() {
             const paymentLabel = booking.isPaid ? "已付款" : "待轉帳付款";
 
             return (
-              <article
+              <Link
                 key={booking.id}
-                className="overflow-hidden rounded-xl border border-primary-200 bg-primary-50"
+                href={`/rooms/thankyou?bookingId=${booking.id}`}
+                className="block overflow-hidden rounded-xl border border-primary-200 bg-primary-50 transition hover:border-accent-600 hover:shadow-sm"
               >
                 <div className="grid gap-5 p-5 md:grid-cols-[100px_1fr_auto] md:items-center">
-                  <Link
-                    href={`/account/reservations/${booking.id}`}
-                    className="relative h-24 w-full overflow-hidden rounded-lg bg-accent-700 md:w-24"
-                    aria-label={`查看 ${booking.rooms?.name || "訂單"} 明細`}
-                  >
+                  <div className="relative h-24 w-full overflow-hidden rounded-lg bg-accent-700 md:w-24">
                     {booking.rooms?.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={booking.rooms.image}
                         alt={booking.rooms.name}
-                        className="h-full w-full object-cover transition hover:scale-105"
+                        className="h-full w-full object-cover"
                       />
                     ) : null}
-                  </Link>
+                  </div>
 
                   <div>
                     <p className="mb-1 text-xs text-primary-500">
                       訂單 #FS-{String(booking.id).padStart(4, "0")}
                     </p>
-                    <Link
-                      href={`/account/reservations/${booking.id}`}
-                      className="mb-2 block font-serif text-xl font-semibold text-primary-900 transition hover:text-accent-700"
-                    >
+                    <p className="mb-2 font-serif text-xl font-semibold text-primary-900">
                       {booking.rooms?.name}
-                    </Link>
+                    </p>
                     <p className="flex flex-wrap items-center gap-2 text-sm text-primary-500">
                       <CalendarDaysIcon className="h-4 w-4" />
                       {format(new Date(booking.startDate), "yyyy / MM / dd")} →{" "}
@@ -122,15 +116,7 @@ export default async function Page() {
                     </div>
                   </div>
                 </div>
-
-                <div className="border-t border-primary-200 bg-primary-100/50 px-5 py-4">
-                  <AccountReservationActions
-                    bookingId={booking.id}
-                    roomId={booking.roomId}
-                    editable={isEditable}
-                  />
-                </div>
-              </article>
+              </Link>
             );
           })}
         </div>

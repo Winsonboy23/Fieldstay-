@@ -84,3 +84,15 @@ INSERT INTO rooms (name, maxCapacity, regularPrice, discount, description, image
 ('森林木屋', 6, 8500, 1000, '獨立木屋設計，隱身於百年老樹林間，設有客廳、廚房與三間臥室，適合家族或朋友包棟。', 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80'),
 ('精緻單人房', 1, 1800, 0, '旅行者的溫暖港灣，麻雀雖小五臟俱全，提供舒適床鋪、高速 WiFi 與免費早餐。', 'https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800&q=80'),
 ('觀星閣樓套房', 2, 5200, 200, '特殊天窗設計，躺在床上即可仰望星空。配備天文望遠鏡，每晚提供導星服務。', 'https://images.unsplash.com/photo-1501117716987-c8c394bb29df?w=800&q=80');
+
+-- =============================================
+-- 2026-05-14: 新增 banner 與社群媒體連結欄位
+-- 請在 Supabase SQL editor 執行以下語句
+-- =============================================
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS banner_images text[] DEFAULT '{}';
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS line_url text;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS threads_url text;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS instagram_url text;
+
+-- 同時需在 Supabase Dashboard > Storage 建立 public bucket：site-images
+-- 用來存放 banner 與 logo 圖片

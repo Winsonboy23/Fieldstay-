@@ -11,6 +11,7 @@ export function useUpdateBooking() {
       toast.success("Booking updated");
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["booking"] });
+      queryClient.invalidateQueries({ queryKey: ["bookingStats"] });
     },
     onError: (err) => toast.error(err.message),
   });

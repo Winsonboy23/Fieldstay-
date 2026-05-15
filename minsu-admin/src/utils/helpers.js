@@ -25,6 +25,8 @@ export const getToday = function (options = {}) {
 };
 
 export const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT' }).format(
-    value
-  );
+  new Intl.NumberFormat('zh-TW', {
+    style: 'currency',
+    currency: 'TWD',
+    maximumFractionDigits: 0,
+  }).format(value);
