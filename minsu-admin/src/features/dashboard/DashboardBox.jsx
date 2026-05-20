@@ -7,11 +7,11 @@ const DashboardBox = styled.div`
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
 
-  padding: 3.2rem;
+  padding: 2.8rem 3.2rem;
 
   display: flex;
   flex-direction: column;
-  gap: 2.4rem;
+  gap: 2rem;
 `;
 
 export default DashboardBox;

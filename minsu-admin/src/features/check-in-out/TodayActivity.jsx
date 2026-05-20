@@ -10,7 +10,8 @@ const StyledToday = styled.div`
   /* Box */
   background-color: var(--color-grey-0);
   border: 1px solid var(--color-grey-100);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
 
   padding: 3.2rem;
   display: flex;
@@ -18,6 +19,10 @@ const StyledToday = styled.div`
   gap: 2.4rem;
   grid-column: 1 / span 2;
   padding-top: 2.4rem;
+
+  & h2 {
+    font-size: 2.4rem;
+  }
 `;
 
 const TodayList = styled.ul`
@@ -45,7 +50,7 @@ function TodayActivity() {
   return (
     <StyledToday>
       <Row type="horizontal">
-        <Heading as="h2">Today</Heading>
+        <Heading as="h2">今日動態</Heading>
       </Row>
 
       {!isLoading ? (
@@ -56,7 +61,7 @@ function TodayActivity() {
             ))}
           </TodayList>
         ) : (
-          <NoActivity>No activity today...</NoActivity>
+          <NoActivity>今日尚無動態</NoActivity>
         )
       ) : (
         <Spinner />

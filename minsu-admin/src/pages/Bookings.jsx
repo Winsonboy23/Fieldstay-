@@ -23,10 +23,22 @@ const Page = styled.div`
     margin-bottom: 1.6rem;
   }
   & > *:nth-child(2) {
-    margin-bottom: 1.2rem;
-  }
-  & > *:nth-child(3) {
     margin-bottom: 2.4rem;
+  }
+`;
+
+const ControlsRow = styled.div`
+  display: flex;
+  gap: 1.6rem;
+  align-items: center;
+  padding: 1.2rem 1.6rem;
+  background-color: var(--color-grey-0);
+  border: 1px solid var(--color-grey-100);
+  border-radius: var(--border-radius-md);
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+    align-items: stretch;
   }
 `;
 
@@ -45,13 +57,11 @@ const PageSubtitle = styled.p`
 `;
 
 const ToolBar = styled.div`
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 1.2rem;
   align-items: center;
-  padding: 1.6rem;
-  background-color: var(--color-grey-0);
-  border: 1px solid var(--color-grey-100);
-  border-radius: var(--border-radius-md);
 
   @media (max-width: 640px) {
     flex-direction: column;
@@ -75,10 +85,11 @@ const SearchBox = styled.div`
 
   & input {
     width: 100%;
+    height: 4rem;
     background-color: var(--color-grey-50);
     border: 1px solid var(--color-grey-100);
     border-radius: var(--border-radius-md);
-    padding: 1rem 1.2rem 1rem 3.6rem;
+    padding: 0 1.2rem 0 3.6rem;
     font-size: 1.4rem;
     color: var(--color-grey-700);
   }
@@ -97,8 +108,9 @@ const FilterButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
-  padding: 1rem 1.4rem;
-  background-color: var(--color-grey-0);
+  height: 4rem;
+  padding: 0 1.4rem;
+  background-color: var(--color-grey-50);
   border: 1px solid var(--color-grey-100);
   border-radius: var(--border-radius-md);
   color: var(--color-grey-700);
@@ -115,7 +127,7 @@ const FilterButton = styled.button`
   }
 
   &:hover {
-    background-color: var(--color-grey-50);
+    background-color: var(--color-grey-100);
   }
 `;
 
@@ -218,15 +230,17 @@ const ACTIVITY_FILTERS = [
 
 const TypeTabs = styled.div`
   display: inline-flex;
-  background-color: var(--color-grey-0);
+  height: 4rem;
+  background-color: var(--color-grey-50);
   border: 1px solid var(--color-grey-100);
   border-radius: var(--border-radius-md);
-  padding: 0.4rem;
-  gap: 0.4rem;
+  padding: 0.3rem;
+  gap: 0.2rem;
+  flex-shrink: 0;
 `;
 
 const TypeTabButton = styled.button`
-  padding: 0.8rem 1.6rem;
+  padding: 0 1.4rem;
   border: none;
   border-radius: var(--border-radius-sm);
   background: ${(p) =>
@@ -239,7 +253,7 @@ const TypeTabButton = styled.button`
 
   &:hover {
     background: ${(p) =>
-      p.$active ? "var(--color-brand-600)" : "var(--color-grey-50)"};
+      p.$active ? "var(--color-brand-600)" : "var(--color-grey-100)"};
   }
 `;
 
@@ -321,55 +335,57 @@ function Bookings() {
         </StatColumn>
       </TopRow>
 
-      <TypeTabs>
-        <TypeTabButton
-          $active={!isActivity}
-          onClick={() => handleType("room")}
-        >
-          住宿
-        </TypeTabButton>
-        <TypeTabButton
-          $active={isActivity}
-          onClick={() => handleType("activity")}
-        >
-          活動
-        </TypeTabButton>
-      </TypeTabs>
+      <ControlsRow>
+        <TypeTabs>
+          <TypeTabButton
+            $active={!isActivity}
+            onClick={() => handleType("room")}
+          >
+            住宿
+          </TypeTabButton>
+          <TypeTabButton
+            $active={isActivity}
+            onClick={() => handleType("activity")}
+          >
+            活動
+          </TypeTabButton>
+        </TypeTabs>
 
-      <ToolBar>
-            <SearchBox>
-              <HiOutlineMagnifyingGlass />
-              <input
-                type="text"
-                value={search}
-                onChange={handleSearch}
-                placeholder={
-                  isActivity
-                    ? "搜尋報名編號、報名人或活動名稱…"
-                    : "搜尋訂單編號、住客姓名或房間…"
-                }
-              />
-            </SearchBox>
-            <FilterWrap ref={ref}>
-              <FilterButton onClick={() => setOpen((v) => !v)}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem" }}>
-                  <HiOutlineFunnel />
-                  {current.label}
-                </span>
-                <HiOutlineChevronDown />
-              </FilterButton>
-              {open ? (
-                <FilterMenu>
-                  {FILTERS.map((f) => (
-                    <FilterItem key={f.value} onClick={() => handleTab(f.value)}>
-                      <span>{f.label}</span>
-                      {f.value === tab ? <HiOutlineCheck /> : null}
-                    </FilterItem>
-                  ))}
-                </FilterMenu>
-              ) : null}
-            </FilterWrap>
-          </ToolBar>
+        <ToolBar>
+          <SearchBox>
+            <HiOutlineMagnifyingGlass />
+            <input
+              type="text"
+              value={search}
+              onChange={handleSearch}
+              placeholder={
+                isActivity
+                  ? "搜尋報名編號、報名人或活動名稱…"
+                  : "搜尋訂單編號、住客姓名或房間…"
+              }
+            />
+          </SearchBox>
+          <FilterWrap ref={ref}>
+            <FilterButton onClick={() => setOpen((v) => !v)}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem" }}>
+                <HiOutlineFunnel />
+                {current.label}
+              </span>
+              <HiOutlineChevronDown />
+            </FilterButton>
+            {open ? (
+              <FilterMenu>
+                {FILTERS.map((f) => (
+                  <FilterItem key={f.value} onClick={() => handleTab(f.value)}>
+                    <span>{f.label}</span>
+                    {f.value === tab ? <HiOutlineCheck /> : null}
+                  </FilterItem>
+                ))}
+              </FilterMenu>
+            ) : null}
+          </FilterWrap>
+        </ToolBar>
+      </ControlsRow>
 
       {isActivity ? (
         <ActivitySignupTable search={search} />

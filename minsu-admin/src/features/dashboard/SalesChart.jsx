@@ -16,6 +16,10 @@ import { eachDayOfInterval, format, isSameDay, subDays } from "date-fns";
 const StyledSalesChart = styled(DashboardBox)`
   grid-column: 1 / -1;
 
+  & > h2 {
+    font-size: 2.4rem;
+  }
+
   /* Hack to change grid line colors */
   & .recharts-cartesian-grid-horizontal line,
   & .recharts-cartesian-grid-vertical line {
@@ -46,23 +50,23 @@ function SalesChart({ bookings, numDays }) {
 
   const colors = isDarkMode
     ? {
-        totalSales: { stroke: "#4f46e5", fill: "#4f46e5" },
-        extrasSales: { stroke: "#22c55e", fill: "#22c55e" },
+        totalSales: { stroke: "#5a9f80", fill: "#5a9f80" },
+        extrasSales: { stroke: "#c89572", fill: "#c89572" },
         text: "#e5e7eb",
         background: "#18212f",
       }
     : {
-        totalSales: { stroke: "#4f46e5", fill: "#c7d2fe" },
-        extrasSales: { stroke: "#16a34a", fill: "#dcfce7" },
-        text: "#374151",
-        background: "#fff",
+        totalSales: { stroke: "#5a9f80", fill: "#dff3e7" },
+        extrasSales: { stroke: "#c89572", fill: "#f8ead1" },
+        text: "#675c50",
+        background: "#fdfbf8",
       };
 
   return (
     <StyledSalesChart>
       <Heading as="h2">
-        Sales from {format(allDates.at(0), "MM dd yyyy")} &mdash;{" "}
-        {format(allDates.at(-1), "MMM dd yyyy")}
+        銷售概況 · {format(allDates.at(0), "MM/dd")} —{" "}
+        {format(allDates.at(-1), "MM/dd")}
       </Heading>
 
       <ResponsiveContainer height={300} width="100%">
@@ -86,7 +90,7 @@ function SalesChart({ bookings, numDays }) {
             stroke={colors.totalSales.stroke}
             fill={colors.totalSales.fill}
             strokeWidth={2}
-            name="Total sales"
+            name="總營收"
             unit="$"
           />
           <Area
@@ -95,7 +99,7 @@ function SalesChart({ bookings, numDays }) {
             stroke={colors.extrasSales.stroke}
             fill={colors.extrasSales.fill}
             strokeWidth={2}
-            name="Extras sales"
+            name="加購收入"
             unit="$"
           />
         </AreaChart>
