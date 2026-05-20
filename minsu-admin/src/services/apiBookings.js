@@ -117,6 +117,12 @@ export async function updateBooking(id, obj) {
 
   if (error) {
     console.error(error);
+    if (
+      error.code === "23P01" ||
+      String(error.message || "").includes("bookings_no_overlap")
+    ) {
+      throw new Error("該日期與其他訂單衝突，請改其他日期");
+    }
     throw new Error("Booking could not be updated");
   }
   return data;

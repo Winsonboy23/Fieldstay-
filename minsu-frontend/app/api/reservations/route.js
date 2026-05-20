@@ -52,21 +52,36 @@ export async function POST(request) {
     .join("\n")
     .slice(0, 1000);
 
-  const booking = await createGuestBooking({
-    startDate: payload.startDate,
-    endDate: payload.endDate,
-    numNights,
-    numGuests,
-    roomPrice,
-    extrasPrice: CLEANING_FEE + serviceFee,
-    totalPrice,
-    guestId: session.user.guestId,
-    roomId,
-    observations,
-    isPaid: false,
-    hasBreakfast: false,
-    status: "unconfirmed",
-  });
+  try {
+    const booking = await createGuestBooking({
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+      numNights,
+      numGuests,
+      roomPrice,
+      extrasPrice: CLEANING_FEE + serviceFee,
+      totalPrice,
+      guestId: session.user.guestId,
+      roomId,
+      observations,
+      isPaid: false,
+      hasBreakfast: false,
+      status: "unconfirmed",
+    });
 
-  return NextResponse.json({ ok: true, bookingId: booking?.id || null });
+    return NextResponse.json({ ok: true, bookingId: booking?.id || null });
+  } catch (err) {
+    const msg = String(err?.message || "");
+    if (msg.includes("booking_overlap") || err?.code === "23P01") {
+      return NextResponse.json(
+        { error: "該房間在所選日期已被預訂，請挑選其他日期" },
+        { status: 409 }
+      );
+    }
+    if (msg.includes("invalid_dates")) {
+      return NextResponse.json({ error: "invalid_booking" }, { status: 400 });
+    }
+    console.error("reservation failed", err);
+    return NextResponse.json({ error: "booking_failed" }, { status: 500 });
+  }
 }

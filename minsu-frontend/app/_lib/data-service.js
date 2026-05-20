@@ -407,7 +407,10 @@ export async function createGuestBooking(newBooking) {
 
   if (error) {
     console.error("createGuestBooking failed", error);
-    throw new Error("Booking could not be created");
+    const e = new Error(error.message || "Booking could not be created");
+    e.code = error.code;
+    e.details = error.details;
+    throw e;
   }
 
   return data?.[0] ?? null;
