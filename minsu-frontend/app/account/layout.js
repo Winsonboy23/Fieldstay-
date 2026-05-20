@@ -3,6 +3,7 @@ import SignOutButton from "@/app/_components/SignOutButton";
 import { auth } from "@/app/_lib/auth";
 import { getBookings, getGuest } from "@/app/_lib/data-service";
 import Link from "next/link";
+import BrandMark from "@/app/_components/BrandMark";
 
 function splitName(fullName = "") {
   const compactName = fullName.trim() || "會員";
@@ -40,12 +41,7 @@ export default async function Layout({ children }) {
       <header className="border-b border-primary-200 bg-primary-50">
         <div className="mx-auto flex h-16 max-w-[1840px] items-center justify-between px-8">
           <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-accent-700 text-primary-50">
-              <svg width="28" height="28" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-                <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="currentColor" opacity="0.95" />
-                <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="currentColor" />
-              </svg>
-            </span>
+            <BrandMark />
             <span className="flex flex-col leading-none">
               <span className="font-serif text-[15px] font-semibold tracking-[0.08em]">
                 山田寓所

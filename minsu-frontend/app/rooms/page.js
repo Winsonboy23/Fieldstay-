@@ -3,6 +3,8 @@ import RoomList from "../_components/RoomList";
 import Spinner from "../_components/Spinner";
 import Link from "next/link";
 import { auth } from "../_lib/auth";
+import SiteFooter from "../_components/SiteFooter";
+import BrandMark from "../_components/BrandMark";
 
 export const revalidate = 0;
 
@@ -20,12 +22,7 @@ export default async function Page({ searchParams }) {
       <header className="sticky top-0 z-40 border-b border-primary-200 bg-primary-50">
         <div className="mx-auto flex h-20 w-full items-center justify-between px-10">
           <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-accent-700 text-white">
-              <svg width="28" height="28" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-                <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="currentColor" opacity="0.95" />
-                <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="currentColor" />
-              </svg>
-            </span>
+            <BrandMark />
             <span className="flex flex-col leading-none">
               <span className="font-serif text-[15px] font-semibold tracking-[0.08em] text-primary-900">
                 山田寓所
@@ -88,9 +85,7 @@ export default async function Page({ searchParams }) {
         </div>
       </section>
 
-      <footer className="bg-black py-10 text-center text-xs text-white/50">
-        © 2026 山田寓所 FIELDSTAY ・ 隱私政策 ・ 服務條款
-      </footer>
+      <SiteFooter />
     </>
   );
 }

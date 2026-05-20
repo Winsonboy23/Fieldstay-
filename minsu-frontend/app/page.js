@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import { getRooms, getActivities, getSettings } from "./_lib/data-service";
 import { auth } from "./_lib/auth";
+import HomeInteractions from "./_components/HomeInteractions";
+import SiteFooter from "./_components/SiteFooter";
 
 export const metadata = { title: "山田寓所 FIELDSTAY — 田間民宿訂房" };
 
@@ -59,12 +61,6 @@ export default async function Page() {
   const settings = (await getSettings().catch(() => ({}))) || {};
   const brandName = settings.brand_name_zh || "山田寓所";
   const brandTagline = settings.brand_tagline || "FIELDSTAY";
-  const logoUrl = settings.logo_url || "";
-  const lineUrl = settings.line_url || "";
-  const threadsUrl = settings.threads_url || "";
-  const instagramUrl = settings.instagram_url || "";
-  const contactEmail = settings.contact_email || "";
-  const contactPhone = settings.contact_phone || "";
   const settingsBanners = Array.isArray(settings.banner_images)
     ? settings.banner_images.filter(Boolean)
     : [];
@@ -139,62 +135,9 @@ export default async function Page() {
   const heroDuration = Math.max(heroImages.length, 1) * 6;
   const brandNameSafe = escapeHtml(brandName);
   const brandTaglineSafe = escapeHtml(brandTagline);
-  const logoUrlSafe = escapeHtml(logoUrl);
-  const navLogoMarkHtml = logoUrl
-    ? `<img src="${logoUrlSafe}" alt="${brandNameSafe}" style="width:38px;height:38px;object-fit:contain;border-radius:50%;" />`
-    : `<svg width="38" height="38" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-        <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)"/>
-        <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.95"/>
-        <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white"/>
-      </svg>`;
-  const footerLogoMarkHtml = logoUrl
-    ? `<img src="${logoUrlSafe}" alt="${brandNameSafe}" style="width:36px;height:36px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,0.05);" />`
-    : `<svg width="36" height="36" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-        <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)" opacity="0.6"/>
-        <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.8"/>
-        <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white" opacity="0.8"/>
-      </svg>`;
-  const socialItems = [
-    instagramUrl && {
-      href: instagramUrl,
-      label: "Instagram",
-      svg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <rect x="3" y="3" width="18" height="18" rx="5"/>
-        <circle cx="12" cy="12" r="4"/>
-        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-      </svg>`,
-    },
-    threadsUrl && {
-      href: threadsUrl,
-      label: "Threads",
-      svg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <circle cx="12" cy="12" r="4"/>
-        <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>
-      </svg>`,
-    },
-    lineUrl && {
-      href: lineUrl,
-      label: "LINE",
-      svg: `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-        <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.494.25l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.628-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.07 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
-      </svg>`,
-    },
-  ].filter(Boolean);
-  const socialListHtml = socialItems
-    .map(
-      (s) =>
-        `<li><a href="${escapeHtml(s.href)}" target="_blank" rel="noopener noreferrer" aria-label="${s.label}">${s.svg}</a></li>`
-    )
-    .join("");
-  const mailIconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`;
-  const phoneIconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
-  const contactBlockHtml =
-    contactEmail || contactPhone
-      ? `<ul class="footer-contact">
-          ${contactEmail ? `<li><a href="mailto:${escapeHtml(contactEmail)}">${mailIconSvg}<span>${escapeHtml(contactEmail)}</span></a></li>` : ""}
-          ${contactPhone ? `<li><a href="tel:${escapeHtml(contactPhone.replace(/\s+/g, ""))}">${phoneIconSvg}<span>${escapeHtml(contactPhone)}</span></a></li>` : ""}
-        </ul>`
-      : "";
+  const BRAND_LOGO_URL =
+    "https://wnvqbozqsdvaszfgumkg.supabase.co/storage/v1/object/public/site-images/1778689945313-0.1766648174384008-528684274_18019731992746464_3668865358020989427_n--1-.jpg";
+  const navLogoMarkHtml = `<img src="${BRAND_LOGO_URL}" alt="${brandNameSafe}" style="width:38px;height:38px;object-fit:contain;border-radius:50%;" />`;
   const heroSlidesHtml = heroImages
     .map(
       (image, index) => `
@@ -272,6 +215,7 @@ export default async function Page() {
       font-weight: 600;
       letter-spacing: 0.08em;
       color: white;
+      padding-bottom: 0.25rem;
     }
 
     .logo-en {
@@ -429,7 +373,7 @@ export default async function Page() {
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 6rem 2rem 8rem;
+      padding: 2rem;
       overflow: hidden;
       background: oklch(24% 0.08 190);
     }
@@ -484,11 +428,11 @@ export default async function Page() {
       font-size: 11px;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.55);
+      color: white;
       margin-bottom: 1.5rem;
     }
 
-    .hero-eyebrow svg { opacity: 0.6; }
+    .hero-eyebrow svg { opacity: 1; }
 
     .hero h1 {
       font-family: var(--font-serif);
@@ -502,9 +446,8 @@ export default async function Page() {
 
     .hero-sub {
       font-size: 15px;
-      color: rgba(255,255,255,0.68);
+      color: white;
       line-height: 1.9;
-      margin-bottom: 3rem;
       font-weight: 300;
     }
 
@@ -606,7 +549,7 @@ export default async function Page() {
 
     /* ── HAMBURGER ──────────────────────────────── */
     .nav-toggle {
-      display: none;
+      display: none !important;
       width: 40px;
       height: 40px;
       border: 1px solid var(--border);
@@ -913,6 +856,73 @@ export default async function Page() {
       font-weight: 500;
     }
 
+    /* ── TRANSPORT ───────────────────────────────── */
+    .transport-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .transport-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      color: var(--brand-color);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .transport-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 700;
+      color: var(--fg);
+    }
+
+    .transport-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: stretch;
+    }
+
+    .transport-map {
+      position: relative;
+      min-height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .transport-map iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .transport-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .info-block { display: flex; flex-direction: column; gap: 0.5rem; }
+    .info-eyebrow {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .info-main {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .info-sub {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
     /* ── ABOUT BAND ──────────────────────────────── */
     .about-band {
       background: white;
@@ -984,9 +994,10 @@ export default async function Page() {
       transform: translate3d(0, -12%, 0);
     }
 
-    /* About reveal (fade-up stagger) */
+    /* Section reveal (fade-up stagger) */
     .about-band .about-copy > *,
-    .about-band .about-visual {
+    .about-band .about-visual,
+    .section .container > * {
       opacity: 0;
       transform: translateY(18px);
       transition: opacity 0.8s ease, transform 0.8s ease;
@@ -995,7 +1006,8 @@ export default async function Page() {
       transform: translateY(24px) scale(1.04);
       transition: opacity 1s ease, transform 1s ease;
     }
-    .about-band.in-view .about-copy > * {
+    .about-band.in-view .about-copy > *,
+    .section.in-view .container > * {
       opacity: 1;
       transform: none;
     }
@@ -1003,15 +1015,56 @@ export default async function Page() {
       opacity: 1;
       transform: scale(1);
     }
-    .about-band .about-copy > *:nth-child(1) { transition-delay: 0ms; }
-    .about-band .about-copy > *:nth-child(2) { transition-delay: 100ms; }
-    .about-band .about-copy > *:nth-child(3) { transition-delay: 200ms; }
-    .about-band .about-copy > *:nth-child(4) { transition-delay: 300ms; }
+    .about-band .about-copy > *:nth-child(1),
+    .section .container > *:nth-child(1) { transition-delay: 0ms; }
+    .about-band .about-copy > *:nth-child(2),
+    .section .container > *:nth-child(2) { transition-delay: 120ms; }
+    .about-band .about-copy > *:nth-child(3),
+    .section .container > *:nth-child(3) { transition-delay: 240ms; }
+    .about-band .about-copy > *:nth-child(4),
+    .section .container > *:nth-child(4) { transition-delay: 360ms; }
     .about-band .about-visual { transition-delay: 150ms; }
+
+    /* grid 本身不漸入，由內部 cards 自己 stagger */
+    .section .container > .room-grid,
+    .section .container > .exp-grid {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .section .room-grid > *,
+    .section .exp-grid > *,
+    .section .transport-info > * {
+      opacity: 0;
+      transform: translateY(-60px);
+      transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .section.in-view .room-grid > *,
+    .section.in-view .exp-grid > *,
+    .section.in-view .transport-info > * {
+      opacity: 1;
+      transform: none;
+    }
+    .section.in-view .room-grid > *:nth-child(1),
+    .section.in-view .exp-grid > *:nth-child(1),
+    .section.in-view .transport-info > *:nth-child(1) { transition-delay: 200ms; }
+    .section.in-view .room-grid > *:nth-child(2),
+    .section.in-view .exp-grid > *:nth-child(2),
+    .section.in-view .transport-info > *:nth-child(2) { transition-delay: 320ms; }
+    .section.in-view .room-grid > *:nth-child(3),
+    .section.in-view .exp-grid > *:nth-child(3),
+    .section.in-view .transport-info > *:nth-child(3) { transition-delay: 440ms; }
+    .section.in-view .room-grid > *:nth-child(4),
+    .section.in-view .exp-grid > *:nth-child(4),
+    .section.in-view .transport-info > *:nth-child(4) { transition-delay: 560ms; }
 
     @media (prefers-reduced-motion: reduce) {
       .about-band .about-copy > *,
       .about-band .about-visual,
+      .section .container > *,
+      .section .room-grid > *,
+      .section .exp-grid > *,
+      .section .transport-info > *,
       .about-visual img {
         opacity: 1 !important;
         transform: none !important;
@@ -1147,6 +1200,7 @@ export default async function Page() {
       .nav-links { display: none; }
       .nav-actions .btn-ghost { display: none; }
       .nav-toggle { display: inline-flex; }
+      .user-icon { display: none; }
       #rooms, #experience, #transport { padding: 60px 1.25rem; }
       .hero { padding: 4rem 1.25rem 6rem; min-height: 100dvh; }
       .hero h1 { font-size: 2.2rem; }
@@ -1159,12 +1213,119 @@ export default async function Page() {
       .sw-divider { width: 100%; height: 1px; }
       .sw-btn { width: 100%; justify-content: center; margin-inline-start: 0; border-radius: 8px; }
       .section, .about-band { padding: 48px 1.25rem; min-height: auto; display: block; }
-      .room-grid { grid-template-columns: 1fr; }
-      .exp-grid { grid-template-columns: 1fr; }
       .about-inner { grid-template-columns: 1fr; gap: 2rem; }
-      .about-visual { display: none; }
+      .transport-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .transport-map { aspect-ratio: 1 / 1; min-height: 0; }
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
       .footer-bottom { flex-direction: column; gap: 0.5rem; }
+
+      /* about-band: 圖片變整塊背景、文字版型不變直接壓上 */
+      .about-band {
+        position: relative;
+        overflow: hidden;
+        min-height: 70dvh;
+        padding: 48px 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .about-band .about-inner {
+        position: static;
+        display: block;
+        width: 100%;
+      }
+      /* 圖片進場動畫的 scale / translateY 在手機關掉，避免視覺位移 */
+      .about-band .about-visual,
+      .about-band.in-view .about-visual {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        height: 100%;
+        border-radius: 0;
+        background: #000;
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      .about-band .about-visual img {
+        width: 100%;
+        height: 100%;
+        will-change: object-position;
+        object-fit: cover;
+        object-position: 0% center;
+        transform: none;
+      }
+      .about-band .about-copy {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem 1.25rem;
+        border-radius: 8px;
+        background: linear-gradient(180deg,
+          rgba(0,0,0,0.45) 0%,
+          rgba(0,0,0,0.6) 100%);
+      }
+      .about-band .about-copy h2,
+      .about-band .about-copy p,
+      .about-band .about-copy .about-eyebrow {
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+      }
+      .about-band .about-copy .btn-outline {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.8);
+      }
+      .about-band .about-copy .btn-outline:hover {
+        background: white;
+        color: var(--brand-color);
+        border-color: white;
+      }
+
+      /* room / exp 卡片改成手機輪轉，露出下一張 */
+      .room-grid,
+      .exp-grid {
+        display: flex;
+        grid-template-columns: none;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 0.75rem;
+        padding: 0 1.25rem;
+        margin: 0 -1.25rem;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .room-grid::-webkit-scrollbar,
+      .exp-grid::-webkit-scrollbar { display: none; }
+      .room-grid > *,
+      .exp-grid > * {
+        flex: 0 0 85%;
+        scroll-snap-align: start;
+      }
+
+      .carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.4rem;
+      }
+      .carousel-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.15);
+        padding: 0;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+      }
+      .carousel-dot.active {
+        background: var(--brand-color);
+        transform: scale(1.25);
+      }
+    }
+    /* 桌機隱藏 dots */
+    @media (min-width: 769px) {
+      .carousel-dots { display: none; }
     }
   ` }} />
       <div dangerouslySetInnerHTML={{ __html: `
@@ -1223,7 +1384,7 @@ export default async function Page() {
           <circle cx="6" cy="6" r="5" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
           <circle cx="6" cy="6" r="1.5" fill="rgba(255,255,255,0.55)"/>
         </svg>
-        台南市 · 田間民宿 · 體驗農村生活
+        台中大甲 · 田間民宿 · 體驗農村生活
       </div>
 
       <h1>山田之間<br>生活的起點</h1>
@@ -1242,7 +1403,7 @@ export default async function Page() {
         <h2>在老屋裡，讓時間變慢</h2>
         <p class="about-eyebrow">STOP AND SMELL THE EARTH.</p>
         <p>山田寓所是一座結合住宿、咖啡、藝術課程與社區導覽的生活實驗場。我們以設計與美感教育，串起土地、風土飲食與人之間的連結。</p>
-        <a href="#" class="btn-outline">了解我們的故事</a>
+        <a href="/about" class="btn-outline">了解我們的故事</a>
       </div>
       <div class="about-visual">
         <img src="/about-1.jpg" alt="老屋影像" />
@@ -1261,8 +1422,11 @@ export default async function Page() {
         <a href="/rooms" class="see-all">查看全部房型 →</a>
       </div>
 
-      <div class="room-grid" id="roomGrid">
+      <div class="room-grid" id="roomGrid" data-carousel>
         ${roomCardsHtml}
+      </div>
+      <div class="carousel-dots" data-dots-for="roomGrid">
+        ${featuredRooms.map((_, i) => `<button type="button" class="carousel-dot${i === 0 ? " active" : ""}" data-idx="${i}" aria-label="第 ${i + 1} 張"></button>`).join("")}
       </div>
     </div>
   </section>
@@ -1278,60 +1442,62 @@ export default async function Page() {
         <a href="/activities" class="see-all">查看所有活動 →</a>
       </div>
 
-      <div class="exp-grid">
+      <div class="exp-grid" id="expGrid" data-carousel>
         ${activityCardsHtml || '<p style="color:var(--muted);">目前沒有即將舉辦的活動。</p>'}
       </div>
+      ${upcomingActivities.length ? `<div class="carousel-dots" data-dots-for="expGrid">
+        ${upcomingActivities.map((_, i) => `<button type="button" class="carousel-dot${i === 0 ? " active" : ""}" data-idx="${i}" aria-label="第 ${i + 1} 張"></button>`).join("")}
+      </div>` : ""}
     </div>
   </section>
 
   <!-- ═══ TRANSPORT ════════════════════════════════════ -->
   <section class="section" id="transport">
     <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">
-          <small>TRANSPORT · 抵達方式</small>
-          交通資訊
-        </h2>
+      <div class="transport-header">
+        <p class="transport-eyebrow">交通與聯絡 · VISIT US</p>
+        <h2 class="transport-title">交通資訊</h2>
       </div>
-      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface);">
-        <iframe
-          title="山田寓所交通地圖"
-          src="https://www.google.com/maps?q=台南市&output=embed"
-          width="100%"
-          height="420"
-          style="border:0;display:block;"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          allowfullscreen
-        ></iframe>
+
+      <div class="transport-grid">
+        <div class="transport-map">
+          <iframe
+            title="山田寓所地圖"
+            src="https://www.google.com/maps?q=山田寓所&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+        </div>
+
+        <div class="transport-info">
+          <div class="info-block">
+            <p class="info-eyebrow">地址 · ADDRESS</p>
+            <p class="info-main">台南市後壁區後山里田心 23 號</p>
+            <p class="info-sub">抵達前 24 小時將以 LINE 提供詳細導引</p>
+          </div>
+
+          <div class="info-block">
+            <p class="info-eyebrow">聯絡 · CONTACT</p>
+            <p class="info-main">LINE：@fieldstay　・　電話：06-XXX-XXXX</p>
+            <p class="info-sub">週一至週日 09:00–20:00（建議優先以 LINE 聯繫）</p>
+          </div>
+
+          <div class="info-block">
+            <p class="info-eyebrow">大眾運輸 · BY TRANSIT</p>
+            <p class="info-main">新營高鐵站 → 計程車 18 分鐘</p>
+            <p class="info-sub">或搭 7211 公車於「土溝」站下車，步行 12 分鐘</p>
+          </div>
+
+          <div class="info-block">
+            <p class="info-eyebrow">自駕 · BY CAR</p>
+            <p class="info-main">國道 1 號 → 新營交流道 → 172 縣道</p>
+            <p class="info-sub">提供 4 個免費停車位，包棟住客優先</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
-
-  <!-- ═══ FOOTER ════════════════════════════════════════ -->
-  <footer>
-    <div class="footer-grid">
-      <div>
-        <a href="/" class="nav-logo footer-brand-logo" style="text-decoration:none;">
-          ${footerLogoMarkHtml}
-          <div class="logo-wordmark">
-            <span class="logo-zh">${brandNameSafe}</span>
-            ${brandTaglineSafe ? `<span class="logo-en">${brandTaglineSafe}</span>` : ""}
-          </div>
-        </a>
-        <p class="footer-desc">台南農村民宿，提供田間體驗與住宿，感受節氣文化與土地連結。</p>
-      </div>
-
-      <div class="footer-col footer-social">
-        ${socialListHtml ? `<ul class="social-list">${socialListHtml}</ul>` : ""}
-        ${contactBlockHtml}
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <span>© 2026 ${brandNameSafe}${brandTaglineSafe ? ` ${brandTaglineSafe}` : ""} · 版權所有</span>
-    </div>
-  </footer>
 
   <script>
     window.filterRooms = function filterRooms(type, btn) {
@@ -1344,116 +1510,8 @@ export default async function Page() {
 
   </script>
 ` }} />
-      <script dangerouslySetInnerHTML={{ __html: `
-    (function() {
-      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-      var forceTop = function() {
-        if (window.location.hash) return;
-        try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }
-        catch (e) { window.scrollTo(0, 0); }
-      };
-      forceTop();
-      window.addEventListener('pageshow', forceTop);
-
-    function initInteractions() {
-      var nav = document.querySelector('.nav');
-      var hero = document.querySelector('.hero');
-      if (nav && hero) {
-        var onScroll = function() {
-          var bottom = hero.getBoundingClientRect().bottom;
-          if (bottom <= 100) nav.classList.add('scrolled');
-          else nav.classList.remove('scrolled');
-        };
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-      }
-
-      var links = document.querySelectorAll('.nav-links a[href^="#"]');
-      var sectionMap = {};
-      links.forEach(function(a) {
-        var id = a.getAttribute('href').slice(1);
-        var sec = document.getElementById(id);
-        if (sec) sectionMap[id] = { link: a, el: sec };
-      });
-      var ids = Object.keys(sectionMap);
-      if (ids.length) {
-        var setActive = function(id) {
-          ids.forEach(function(k) {
-            sectionMap[k].link.classList.toggle('active', k === id);
-          });
-        };
-        var onSpy = function() {
-          var offset = 120;
-          var current = null;
-          ids.forEach(function(id) {
-            var top = sectionMap[id].el.getBoundingClientRect().top;
-            if (top - offset <= 0) current = id;
-          });
-          if (current) setActive(current);
-          else ids.forEach(function(k) { sectionMap[k].link.classList.remove('active'); });
-        };
-        window.addEventListener('scroll', onSpy, { passive: true });
-        onSpy();
-      }
-
-      var aboutSec = document.querySelector('.about-band');
-      var aboutImg = aboutSec && aboutSec.querySelector('.about-visual img');
-      if (aboutSec) {
-        var io = new IntersectionObserver(function(entries) {
-          entries.forEach(function(en) {
-            if (en.isIntersecting) {
-              aboutSec.classList.add('in-view');
-              io.unobserve(aboutSec);
-            }
-          });
-        }, { threshold: 0.2 });
-        io.observe(aboutSec);
-      }
-      if (aboutSec && aboutImg) {
-        var ticking = false;
-        var update = function() {
-          var rect = aboutSec.getBoundingClientRect();
-          var vh = window.innerHeight;
-          var progress = 1 - rect.bottom / (vh + rect.height);
-          progress = Math.max(0, Math.min(1, progress));
-          var offset = -12 + (progress - 0.5) * 22;
-          aboutImg.style.transform = 'translate3d(0,' + offset + '%,0)';
-          ticking = false;
-        };
-        window.addEventListener('scroll', function() {
-          if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
-        }, { passive: true });
-        update();
-      }
-
-      var btn = document.getElementById('navToggle');
-      var menu = document.getElementById('mobileMenu');
-      if (btn && menu) {
-        btn.addEventListener('click', function() {
-          var open = menu.classList.toggle('open');
-          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-          btn.setAttribute('aria-label', open ? '關閉選單' : '開啟選單');
-        });
-        menu.querySelectorAll('a').forEach(function(a) {
-          a.addEventListener('click', function() {
-            menu.classList.remove('open');
-            btn.setAttribute('aria-expanded', 'false');
-            btn.setAttribute('aria-label', '開啟選單');
-          });
-        });
-      }
-    }
-
-      if (document.readyState === 'complete') {
-        setTimeout(initInteractions, 0);
-      } else {
-        window.addEventListener('load', function() {
-          setTimeout(initInteractions, 0);
-        });
-      }
-    })();
-
-  ` }} />
+      <SiteFooter />
+      <HomeInteractions />
     </>
   );
 }

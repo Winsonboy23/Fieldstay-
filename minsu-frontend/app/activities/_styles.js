@@ -86,7 +86,7 @@ export const pageStyle = `
       content: '';
       position: absolute; bottom: -1px; left: 0; right: 0;
       height: 80px;
-      background: var(--bg);
+      background: var(--warm-block);
       clip-path: ellipse(60% 100% at 50% 100%);
     }
     .hero-inner {

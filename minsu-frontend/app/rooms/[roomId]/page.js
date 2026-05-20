@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/app/_lib/auth";
 import { getRoom } from "@/app/_lib/data-service";
 import BookingSidebar from "./BookingSidebar";
+import BrandMark from "@/app/_components/BrandMark";
 
 export async function generateMetadata({ params }) {
   try {
@@ -128,11 +129,7 @@ export default async function Page({ params }) {
 
       <nav className="nav">
         <Link href="/" className="nav-logo">
-          <svg width="38" height="38" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-            <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)" />
-            <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.95" />
-            <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white" />
-          </svg>
+          <BrandMark size={38} />
           <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
             <span className="logo-zh">山田寓所</span>
             <span className="logo-en">FIELDSTAY</span>

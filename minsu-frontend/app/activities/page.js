@@ -196,20 +196,6 @@ export default async function ActivitiesPage() {
         </div>
       </section>
 
-      {/* CTA BAND */}
-      <section className="cta-band">
-        <div className="container">
-          <h2>
-            每月寄給你的
-            <br />
-            節氣行事曆
-          </h2>
-          <p>
-            每月初寄一封信，整理當月開課、新進活動、與後山的近況。隨時可退訂。
-          </p>
-        </div>
-      </section>
-
       {/* FOOTER */}
       <footer>
         <div className="footer-grid">
@@ -219,7 +205,7 @@ export default async function ActivitiesPage() {
               className="nav-logo footer-brand-logo"
               style={{ textDecoration: "none" }}
             >
-              <Logo small opacity={0.6} />
+              <Logo />
               <div className="logo-wordmark">
                 <span className="logo-zh">山田寓所</span>
                 <span className="logo-en">FIELDSTAY</span>
