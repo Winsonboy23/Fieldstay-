@@ -97,8 +97,8 @@ const Glass = styled.main`
     rgba(255,255,255,0) 0%,
     rgba(255,255,255,0.01) 60%,
     rgba(255,255,255,0.06) 100%);
-  backdrop-filter: blur(4px) saturate(140%) brightness(1.03);
-  -webkit-backdrop-filter: blur(4px) saturate(140%) brightness(1.03);
+  backdrop-filter: blur(16px) saturate(140%) brightness(1.03);
+  -webkit-backdrop-filter: blur(16px) saturate(140%) brightness(1.03);
   border: 1px solid rgba(255,255,255,0.30);
   box-shadow:
     inset 4px 4px 12px 0 rgba(255,255,255,0.25),
@@ -147,7 +147,7 @@ const Glass = styled.main`
 const Title = styled.h1`
   font-family: 'Noto Serif TC', Georgia, serif;
   font-weight: 700;
-  font-size: 2.6rem;
+  font-size: 4.1rem;
   letter-spacing: 0.06em;
   line-height: 1.05;
   margin-bottom: 0.7rem;
@@ -155,7 +155,7 @@ const Title = styled.h1`
   text-shadow: 0 2px 12px rgba(0,0,0,0.3);
 
   @media (max-width: 560px) {
-    font-size: 2rem;
+    font-size: 3.2rem;
   }
 `;
 

@@ -1,3 +1,5 @@
+import BrandMark from "../_components/BrandMark";
+
 export const metadata = { title: "登入 | 山田寓所 FIELDSTAY" };
 
 function getNextPath(next) {
@@ -21,41 +23,45 @@ export default function Page({ searchParams }) {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
+    .login-page {
       --txt: #ffffff;
       --txt-muted: rgba(255,255,255,0.82);
       --txt-soft: rgba(255,255,255,0.6);
       --font-sans: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       --font-serif: 'Noto Serif TC', Georgia, serif;
-    }
-    html, body {
-      width: 100%; min-height: 100vh;
-      color: var(--txt);
-      font-family: var(--font-sans);
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    body {
-      position: relative;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 2rem;
+      color: var(--txt);
+      font-family: var(--font-sans);
       background: #1c1814;
+      overflow-y: auto;
+      -webkit-font-smoothing: antialiased;
     }
-    .bg { position: fixed; inset: 0; z-index: -3; background: url('/banner4.jpg') center/cover no-repeat; }
-    .bg-overlay {
-      position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    .login-page * { box-sizing: border-box; }
+    .login-page .bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: url('/banner4.jpg') center/cover no-repeat;
+    }
+    .login-page .bg-overlay {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
       background: linear-gradient(180deg,
         oklch(38% 0.05 60 / 0.20) 0%,
         oklch(28% 0.06 50 / 0.32) 100%);
     }
-    .bg-noise {
-      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    .login-page .bg-noise {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
       mix-blend-mode: overlay; opacity: 0.5;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
+    .login-page > main { position: relative; z-index: 3; }
+    .login-page > .top-bar { z-index: 5; }
+    .login-page h1, .login-page p, .login-page a, .login-page span, .login-page label, .login-page button { color: inherit; }
+    .login-page input { color: white; }
     .top-bar {
       position: fixed; top: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-between;
@@ -73,8 +79,8 @@ export default function Page({ searchParams }) {
       padding: 2.5rem 2.5rem 2.25rem; border-radius: 32px;
       background: radial-gradient(ellipse 90% 80% at 50% 50%,
         rgba(255,255,255,0) 0%, rgba(255,255,255,0.01) 60%, rgba(255,255,255,0.06) 100%);
-      backdrop-filter: blur(4px) saturate(140%) brightness(1.03);
-      -webkit-backdrop-filter: blur(4px) saturate(140%) brightness(1.03);
+      backdrop-filter: blur(16px) saturate(140%) brightness(1.03);
+      -webkit-backdrop-filter: blur(16px) saturate(140%) brightness(1.03);
       border: 1px solid rgba(255,255,255,0.30);
       box-shadow:
         inset 4px 4px 12px 0 rgba(255,255,255,0.25),
@@ -236,17 +242,14 @@ export default function Page({ searchParams }) {
     }
   ` }} />
 
+      <div className="login-page">
       <div className="bg" aria-hidden="true" />
       <div className="bg-overlay" aria-hidden="true" />
       <div className="bg-noise" aria-hidden="true" />
 
       <header className="top-bar">
         <a href="/" className="brand">
-          <svg width="34" height="34" viewBox="0 0 38 38" fill="none" aria-hidden="true">
-            <circle cx="19" cy="19" r="19" fill="rgba(255,255,255,0.18)"/>
-            <path d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z" fill="white" opacity="0.95"/>
-            <path d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z" fill="white"/>
-          </svg>
+          <BrandMark />
           <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
             <span className="brand-zh">山田寓所</span>
             <span className="brand-en">FIELDSTAY</span>
@@ -318,6 +321,8 @@ export default function Page({ searchParams }) {
           </div>
         </form>
       </main>
+
+      </div>
 
       <script
         dangerouslySetInnerHTML={{
