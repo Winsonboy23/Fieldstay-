@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import CarouselDots from "@/app/_components/CarouselDots";
 
 function fmtPrice(p) {
   return `NT$${Number(p || 0).toLocaleString("zh-TW")}`;
@@ -165,6 +166,7 @@ export default function ActivitiesGrid({ activities }) {
           );
         })}
       </div>
+      <CarouselDots targetId="actGrid" count={sorted.length} />
     </>
   );
 }

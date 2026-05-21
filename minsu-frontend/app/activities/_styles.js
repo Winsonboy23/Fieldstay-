@@ -472,12 +472,35 @@ export const pageStyle = `
       .nav { padding: 0 1.25rem; }
       .nav-links { display: none; }
       .nav-actions .nav-desktop-only { display: none; }
-      .hero { padding: 3.5rem 1.25rem 5rem; }
+      .hero { padding: 3.5rem 1.25rem 4rem; }
+      .hero::after { display: none; }
       .section { padding: 48px 1.25rem; }
       .breadcrumb { padding: 1rem 1.25rem 0; }
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
       .footer-bottom { flex-direction: column; gap: 0.5rem; }
-      .featured-meta { grid-template-columns: 1fr; gap: 0.75rem; }
+      .featured-body { padding: 1.5rem 1.25rem; }
+      .featured-body h2 { font-size: 1.4rem; }
+      .featured-meta { grid-template-columns: 1fr; gap: 0.5rem; padding: 0.75rem 0; margin-bottom: 1.25rem; }
+      .featured-actions { flex-wrap: wrap; }
+      .featured-actions .btn { flex: 1 1 auto; justify-content: center; text-align: center; }
       .info-band, .cta-band { padding: 56px 1.25rem; }
+
+      .activity-grid {
+        display: flex;
+        grid-template-columns: none;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-padding-inline-start: 2.5rem;
+        gap: 0.75rem;
+        padding: 0 2.5rem;
+        margin: 0 -1.25rem;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .activity-grid::-webkit-scrollbar { display: none; }
+      .activity-grid > * {
+        flex: 0 0 85%;
+        scroll-snap-align: start;
+      }
     }
   `;

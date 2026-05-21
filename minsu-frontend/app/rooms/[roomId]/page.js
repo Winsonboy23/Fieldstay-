@@ -72,23 +72,6 @@ function iconForAmenity(label) {
   return AMENITY_ICONS.default;
 }
 
-const REVIEWS = [
-  {
-    initial: "陳",
-    color: "oklch(44% 0.13 183)",
-    name: "陳小姐",
-    date: "2026 年 4 月",
-    text: "真的很有老屋的感覺，不是那種刻意裝潢的，是真實的磚牆跟木窗。早餐很用心，還有當天現做的草仔粿。",
-  },
-  {
-    initial: "林",
-    color: "oklch(40% 0.14 28)",
-    name: "林先生",
-    date: "2026 年 3 月",
-    text: "在台南南部農村待了兩晚，整個節奏都慢下來了。跟著一起去炊粿，是很難忘的體驗。強力推薦！",
-  },
-];
-
 export default async function Page({ params }) {
   const session = await auth();
   const userName = session?.user?.name || session?.user?.email || "";
@@ -244,36 +227,6 @@ export default async function Page({ params }) {
             </div>
           ) : null}
 
-          <div className="info-block">
-            <h2>旅客評價</h2>
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: "3rem", fontWeight: 700, lineHeight: 1 }}>
-                4.9
-              </div>
-              <div>
-                <div style={{ color: "oklch(72% 0.18 75)", fontSize: "1.1rem", letterSpacing: "2px" }}>
-                  ★★★★★
-                </div>
-                <div style={{ fontSize: 13, color: "var(--muted)" }}>共 48 則評價</div>
-              </div>
-            </div>
-            <div className="reviews-grid">
-              {REVIEWS.map((r) => (
-                <div key={r.name} className="review-card">
-                  <div className="review-header">
-                    <div className="review-avatar" style={{ background: r.color }}>{r.initial}</div>
-                    <div className="review-meta">
-                      <div className="review-name">
-                        {r.name} &nbsp; <span className="review-stars">★★★★★</span>
-                      </div>
-                      <div className="review-date">{r.date}</div>
-                    </div>
-                  </div>
-                  <p className="review-text">{r.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         <BookingSidebar
@@ -601,32 +554,6 @@ const PAGE_CSS = `
       width: 100%;
     }
 
-    .avail-check {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 0;
-      margin-bottom: 0.75rem;
-      font-size: 13px;
-    }
-    .avail-indicator {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-weight: 500;
-    }
-    .avail-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
     .price-breakdown { margin-bottom: 1rem; }
     .price-row {
       display: flex;
@@ -666,37 +593,6 @@ const PAGE_CSS = `
       color: var(--muted);
     }
 
-    /* REVIEWS */
-    .reviews-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    .review-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.1rem;
-    }
-    .review-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
-    .review-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: white;
-      flex-shrink: 0;
-    }
-    .review-meta { flex: 1; }
-    .review-name { font-size: 13px; font-weight: 600; }
-    .review-date { font-size: 11px; color: var(--muted); }
-    .review-stars { color: oklch(72% 0.18 75); font-size: 12px; letter-spacing: 1px; }
-    .review-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
-
     /* Mobile-only elements — hidden on desktop */
     .mobile-cta { display: none; }
     .mobile-sheet-handle,
@@ -710,7 +606,6 @@ const PAGE_CSS = `
       .gallery { grid-template-columns: 1fr; grid-template-rows: 240px; height: auto; }
       .gallery-main { grid-row: 1; border-radius: 12px; }
       .gallery-sub { display: none; }
-      .reviews-grid { grid-template-columns: 1fr; }
 
       /* Sidebar 變 bottom sheet：預設藏在畫面下方 */
       .booking-sidebar {

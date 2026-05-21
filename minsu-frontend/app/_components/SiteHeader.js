@@ -1,20 +1,20 @@
 import Link from "next/link";
 
-function BrandMark({ size = 38, opacity = 1 }) {
+const BRAND_LOGO_URL =
+  "https://wnvqbozqsdvaszfgumkg.supabase.co/storage/v1/object/public/site-images/1778689945313-0.1766648174384008-528684274_18019731992746464_3668865358020989427_n--1-.jpg";
+
+function BrandMark() {
   return (
-    <svg width={size} height={size} viewBox="0 0 38 38" fill="none" aria-hidden="true">
-      <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)" opacity={opacity} />
-      <path
-        d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z"
-        fill="white"
-        opacity={opacity * 0.95}
-      />
-      <path
-        d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z"
-        fill="white"
-        opacity={opacity}
-      />
-    </svg>
+    <img
+      src={BRAND_LOGO_URL}
+      alt="山田寓所"
+      style={{
+        width: 38,
+        height: 38,
+        objectFit: "contain",
+        borderRadius: "50%",
+      }}
+    />
   );
 }
 

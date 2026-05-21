@@ -53,10 +53,6 @@ function RoomCard({ room }) {
           />
         ) : null}
         <div className="absolute inset-0 bg-black/10" />
-        <span className="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-primary-800">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          有空房
-        </span>
       </div>
 
       <div className="flex min-h-[330px] flex-col p-5">

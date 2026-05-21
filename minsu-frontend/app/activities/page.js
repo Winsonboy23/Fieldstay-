@@ -13,22 +13,62 @@ function fmtPrice(p) {
   return `NT$${Number(p || 0).toLocaleString("zh-TW")}`;
 }
 
-function Logo({ small = false, opacity = 1 }) {
+const SOLAR_TERMS = [
+  { startMonth: 2, startDay: 4, zh: "立春", en: "Lìchūn" },
+  { startMonth: 2, startDay: 19, zh: "雨水", en: "Yǔshuǐ" },
+  { startMonth: 3, startDay: 5, zh: "驚蟄", en: "Jīngzhé" },
+  { startMonth: 3, startDay: 20, zh: "春分", en: "Chūnfēn" },
+  { startMonth: 4, startDay: 5, zh: "清明", en: "Qīngmíng" },
+  { startMonth: 4, startDay: 20, zh: "穀雨", en: "Gǔyǔ" },
+  { startMonth: 5, startDay: 5, zh: "立夏", en: "Lìxià" },
+  { startMonth: 5, startDay: 21, zh: "小滿", en: "Xiǎomǎn" },
+  { startMonth: 6, startDay: 5, zh: "芒種", en: "Mángzhòng" },
+  { startMonth: 6, startDay: 21, zh: "夏至", en: "Xiàzhì" },
+  { startMonth: 7, startDay: 7, zh: "小暑", en: "Xiǎoshǔ" },
+  { startMonth: 7, startDay: 23, zh: "大暑", en: "Dàshǔ" },
+  { startMonth: 8, startDay: 7, zh: "立秋", en: "Lìqiū" },
+  { startMonth: 8, startDay: 23, zh: "處暑", en: "Chǔshǔ" },
+  { startMonth: 9, startDay: 7, zh: "白露", en: "Báilù" },
+  { startMonth: 9, startDay: 23, zh: "秋分", en: "Qiūfēn" },
+  { startMonth: 10, startDay: 8, zh: "寒露", en: "Hánlù" },
+  { startMonth: 10, startDay: 23, zh: "霜降", en: "Shuāngjiàng" },
+  { startMonth: 11, startDay: 7, zh: "立冬", en: "Lìdōng" },
+  { startMonth: 11, startDay: 22, zh: "小雪", en: "Xiǎoxuě" },
+  { startMonth: 12, startDay: 7, zh: "大雪", en: "Dàxuě" },
+  { startMonth: 12, startDay: 22, zh: "冬至", en: "Dōngzhì" },
+  { startMonth: 1, startDay: 5, zh: "小寒", en: "Xiǎohán" },
+  { startMonth: 1, startDay: 20, zh: "大寒", en: "Dàhán" },
+];
+
+function getCurrentSolarTerm(date = new Date()) {
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const key = m * 100 + d;
+  let current = SOLAR_TERMS.find((t) => t.zh === "冬至");
+  for (const term of SOLAR_TERMS) {
+    if (key >= term.startMonth * 100 + term.startDay) current = term;
+  }
+  return current;
+}
+
+const BRAND_LOGO_URL =
+  "https://wnvqbozqsdvaszfgumkg.supabase.co/storage/v1/object/public/site-images/1778689945313-0.1766648174384008-528684274_18019731992746464_3668865358020989427_n--1-.jpg";
+
+function Logo({ small = false }) {
   const size = small ? 36 : 38;
   return (
-    <svg width={size} height={size} viewBox="0 0 38 38" fill="none" aria-hidden="true">
-      <circle cx="19" cy="19" r="19" fill="oklch(44% 0.13 183)" opacity={opacity} />
-      <path
-        d="M6 28 C9 28 13 16 19 19.5 C25 16 29 28 32 28 Z"
-        fill="white"
-        opacity={opacity * 0.95}
-      />
-      <path
-        d="M23.5 13 L24.4 15.5 L27 16.4 L24.4 17.3 L23.5 19.8 L22.6 17.3 L20 16.4 L22.6 15.5 Z"
-        fill="white"
-        opacity={opacity}
-      />
-    </svg>
+    <img
+      src={BRAND_LOGO_URL}
+      alt="山田寓所"
+      width={size}
+      height={size}
+      style={{
+        width: size,
+        height: size,
+        objectFit: "contain",
+        borderRadius: "50%",
+      }}
+    />
   );
 }
 
@@ -36,6 +76,7 @@ export default async function ActivitiesPage() {
   const session = await auth();
   const userName = session?.user?.name || session?.user?.email || "會員中心";
   const activities = await getActivities();
+  const solarTerm = getCurrentSolarTerm();
   const todayStr = new Date().toISOString().slice(0, 10);
   const upcoming = activities.find((a) => String(a.activity_date) >= todayStr);
   const lastPast = [...activities]
@@ -90,25 +131,19 @@ export default async function ActivitiesPage() {
               過一段田裡的日子
             </h1>
             <p className="hero-sub">
-              每月依時令推出 6–10 場手作課程與田間勞動
-              結合在地長輩、農夫與在地職人
-              讓你在來訪的兩天，留下一份土地的記憶
+              依照節氣與田裡的狀態，
+              不定期安排幾場手作課程、田間勞動與在地小旅行。
             </p>
           </div>
 
           <div className="solar-card" aria-label="當前節氣資訊">
             <div className="solar-card-label">本期節氣 · CURRENT</div>
             <div className="solar-card-name">
-              <span className="zh">立夏</span>
-              <span className="en">Lìxià</span>
-            </div>
-            <div className="solar-card-meta">
-              2026.05.05 — 05.20 &nbsp;·&nbsp; 第 7 個節氣
+              <span className="zh">{solarTerm.zh}</span>
+              <span className="en">{solarTerm.en}</span>
             </div>
             <p className="solar-card-poem">
-              —— 蛙始鳴，蚯蚓出，王瓜生 ——
-              <br />
-              綠蔭漸密，是收筍、製醃菜、釀梅酒的時節。
+              —— 在田邊住下，聽見季節 ——
             </p>
           </div>
         </div>

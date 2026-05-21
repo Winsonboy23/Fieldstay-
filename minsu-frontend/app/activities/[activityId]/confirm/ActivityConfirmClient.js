@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import BookingConfirmLayout from "@/app/_components/BookingConfirmLayout";
 import { createActivitySignupAction } from "@/app/_lib/actions";
 
@@ -13,10 +14,16 @@ export default function ActivityConfirmClient({ activity, user }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const searchParams = useSearchParams();
   const remaining = Math.max(activity.capacity - activity.registered, 0);
   const isFull = remaining === 0;
   const maxQuantity = isFull ? 1 : remaining;
-  const [quantity, setQuantity] = useState(1);
+  const initialQuantity = (() => {
+    const raw = Number(searchParams.get("quantity") || 1);
+    if (!Number.isFinite(raw) || raw < 1) return 1;
+    return Math.min(Math.max(1, Math.floor(raw)), maxQuantity);
+  })();
+  const [quantity, setQuantity] = useState(initialQuantity);
   const totalPrice = Number(activity.price || 0) * quantity;
 
   const summaryRows = useMemo(

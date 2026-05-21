@@ -263,14 +263,6 @@ export default function BookingSidebar({
           ) : null}
         </div>
 
-        <div className="avail-check">
-          <span style={{ fontSize: 13, color: "var(--muted)" }}>空房狀況</span>
-          <div className="avail-indicator" style={{ color: "var(--success)" }}>
-            <div className="avail-dot"></div>
-            有空房
-          </div>
-        </div>
-
         <div className="price-breakdown">
           <div className="price-row">
             <span>

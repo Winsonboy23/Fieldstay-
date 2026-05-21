@@ -1,4 +1,5 @@
 import RoomCard from "@/app/_components/RoomCard";
+import CarouselDots from "@/app/_components/CarouselDots";
 import { getRooms } from "../_lib/data-service";
 import { unstable_noStore } from "next/cache";
 
@@ -22,11 +23,17 @@ async function RoomList({ filter }) {
     displayedRooms = rooms.filter((room) => room.maxCapacity >= 8);
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-      {displayedRooms.map((room) => (
-        <RoomCard room={room} key={room.id} />
-      ))}
-    </div>
+    <>
+      <div
+        id="roomListGrid"
+        className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-10 [scroll-padding-inline-start:2.5rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 xl:grid-cols-3 [&>*]:w-[85%] [&>*]:flex-none [&>*]:snap-start md:[&>*]:w-auto"
+      >
+        {displayedRooms.map((room) => (
+          <RoomCard room={room} key={room.id} />
+        ))}
+      </div>
+      <CarouselDots targetId="roomListGrid" count={displayedRooms.length} />
+    </>
   );
 }
 

@@ -203,3 +203,30 @@
   position: relative;
   z-index: 1;
 }
+
+/* Carousel dots (mobile) */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.4rem;
+}
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.carousel-dot.active {
+  background: oklch(44% 0.13 183);
+  transform: scale(1.25);
+}
+@media (min-width: 769px) {
+  .carousel-dots {
+    display: none;
+  }
+}

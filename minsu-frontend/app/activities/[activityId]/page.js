@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { getActivity } from "@/app/_lib/data-service";
 import { normalizeActivity } from "../_activity-data";
+import ActivitySidebar from "./ActivitySidebar";
 
 export async function generateMetadata({ params }) {
   const raw = await getActivity(params.activityId);
@@ -17,17 +18,10 @@ export async function generateMetadata({ params }) {
   };
 }
 
-function formatPrice(price) {
-  return `NT$${Number(price || 0).toLocaleString("zh-TW")}`;
-}
-
 export default async function ActivityDetailPage({ params }) {
   const raw = await getActivity(params.activityId);
   const activity = normalizeActivity(raw);
   if (!activity) notFound();
-
-  const remaining = Math.max(activity.capacity - activity.registered, 0);
-  const isFull = remaining === 0;
 
   const galleryImages = Array.isArray(activity.gallery_images)
     ? activity.gallery_images
@@ -63,7 +57,7 @@ export default async function ActivityDetailPage({ params }) {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1280px] gap-8 px-6 py-10 lg:grid-cols-[1fr_390px]">
+      <div className="mx-auto grid max-w-[1280px] gap-8 px-6 py-10 pb-28 lg:grid-cols-[1fr_390px] lg:pb-10">
         <section>
           <div
             className={`mb-7 grid h-[390px] grid-cols-1 gap-2 ${
@@ -197,54 +191,7 @@ export default async function ActivityDetailPage({ params }) {
           </section>
         </section>
 
-        <aside className="lg:sticky lg:top-8 lg:self-start">
-          <div className="rounded-2xl border border-[#ddd7cf] bg-white p-6 shadow-sm">
-            <div className="mb-2 font-serif text-4xl font-black">
-              {formatPrice(activity.price)}{" "}
-              <span className="font-sans text-lg font-normal text-slate-600">
-                / {activity.unit}
-              </span>
-            </div>
-            <p
-              className={
-                isFull
-                  ? "mb-7 font-bold text-slate-500"
-                  : "mb-7 font-bold text-red-600"
-              }
-            >
-              {isFull ? "目前已額滿" : `剩餘 ${remaining} 名`}
-            </p>
-            <div className="mb-7 border-y border-[#e5dfd8] py-6 text-sm">
-              <div className="mb-4 flex justify-between gap-5">
-                <span className="text-slate-500">活動日期</span>
-                <strong>{activity.dateLabel}</strong>
-              </div>
-              <div className="mb-4 flex justify-between gap-5">
-                <span className="text-slate-500">活動時間</span>
-                <strong>{activity.time}</strong>
-              </div>
-              <div className="mb-4 flex justify-between gap-5">
-                <span className="text-slate-500">活動時長</span>
-                <strong>{activity.duration}</strong>
-              </div>
-              <div className="flex justify-between gap-5">
-                <span className="text-slate-500">已報名</span>
-                <strong>
-                  {activity.registered} / {activity.capacity} {activity.unit || "人"}
-                </strong>
-              </div>
-            </div>
-            <Link
-              href={`/activities/${activity.id}/confirm`}
-              className="block w-full rounded-lg bg-[#008466] px-5 py-4 text-center text-lg font-bold text-white transition hover:bg-[#006f56]"
-            >
-              {isFull ? "加入候補" : "立即報名"}
-            </Link>
-            <p className="mt-6 text-center text-sm text-slate-500">
-              報名後將收到確認郵件
-            </p>
-          </div>
-        </aside>
+        <ActivitySidebar activity={activity} />
       </div>
     </main>
   );
