@@ -48,7 +48,7 @@ export default function ActivityConfirmClient({ activity, user }) {
       >
         {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((n) => (
           <option key={n} value={n}>
-            {n} {activity.unit}
+            {n} 人
           </option>
         ))}
       </select>

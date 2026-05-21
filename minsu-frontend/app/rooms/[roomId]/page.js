@@ -234,6 +234,7 @@ export default async function Page({ params }) {
           pricePerNight={pricePerNight}
           cleaningFee={cleaningFee}
           serviceFeeRate={serviceFeeRate}
+          maxCapacity={room.maxCapacity || 4}
         />
       </div>
     </>

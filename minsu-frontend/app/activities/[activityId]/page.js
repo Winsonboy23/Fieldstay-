@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   CalendarDaysIcon,
@@ -7,7 +6,9 @@ import {
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { getActivity } from "@/app/_lib/data-service";
+import { auth } from "@/app/_lib/auth";
 import { normalizeActivity } from "../_activity-data";
+import SiteHeader from "@/app/_components/SiteHeader";
 import ActivitySidebar from "./ActivitySidebar";
 
 export async function generateMetadata({ params }) {
@@ -19,7 +20,10 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ActivityDetailPage({ params }) {
-  const raw = await getActivity(params.activityId);
+  const [raw, session] = await Promise.all([
+    getActivity(params.activityId),
+    auth(),
+  ]);
   const activity = normalizeActivity(raw);
   if (!activity) notFound();
 
@@ -33,29 +37,7 @@ export default async function ActivityDetailPage({ params }) {
 
   return (
     <main className="min-h-screen bg-[#f5f3ef] text-[#111827]">
-      <header className="border-b border-[#e4dfd8] bg-white">
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-3 px-6">
-          <Link
-            href="/activities"
-            className="grid h-9 w-9 place-items-center rounded-full bg-[#007d6f] text-white"
-          >
-            <svg
-              width="21"
-              height="21"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M6 3h12l1 5-7 4-7-4 1-5Z" />
-              <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" />
-              <path d="M9 14h6" />
-            </svg>
-          </Link>
-          <span className="font-semibold tracking-wide">活動報名系統</span>
-        </div>
-      </header>
+      <SiteHeader user={session?.user || null} />
 
       <div className="mx-auto grid max-w-[1280px] gap-8 px-6 py-10 pb-28 lg:grid-cols-[1fr_390px] lg:pb-10">
         <section>

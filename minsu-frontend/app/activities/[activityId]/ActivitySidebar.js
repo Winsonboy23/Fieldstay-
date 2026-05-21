@@ -153,7 +153,7 @@ export default function ActivitySidebar({ activity }) {
           >
             {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
-                {n} {activity.unit}
+                {n} 人
               </option>
             ))}
           </select>

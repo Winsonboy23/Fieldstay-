@@ -618,40 +618,6 @@ function CreateRoomForm({ roomToEdit = {}, onCloseModal }) {
             </Field>
           </FieldGrid>
 
-          <FieldGrid cols="1fr 1fr 1fr" style={{ marginTop: "1.2rem" }}>
-            <Field>
-              <span>折扣金額</span>
-              <NumberInput
-                defaultValue={editValues.discount ?? 0}
-                disabled={isWorking}
-                {...register("discount", {
-                  validate: (v) =>
-                    Number(v) <= Number(getValues().regularPrice || 0) ||
-                    "折扣不可大於定價",
-                })}
-              />
-              {errors.discount && (
-                <ErrorText>{errors.discount.message}</ErrorText>
-              )}
-            </Field>
-            <Field>
-              <span>清潔費 (NT$)</span>
-              <NumberInput
-                defaultValue={editValues.cleaning_fee ?? 500}
-                disabled={isWorking}
-                {...register("cleaning_fee", { min: 0 })}
-              />
-            </Field>
-            <Field>
-              <span>服務費率 (0–1)</span>
-              <NumberInput
-                step="0.01"
-                defaultValue={editValues.service_fee_rate ?? 0.05}
-                disabled={isWorking}
-                {...register("service_fee_rate", { min: 0, max: 1 })}
-              />
-            </Field>
-          </FieldGrid>
         </Section>
 
         {/* 房間圖片 */}

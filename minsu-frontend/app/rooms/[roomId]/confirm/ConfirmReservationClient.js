@@ -330,11 +330,11 @@ export default function ConfirmReservationClient({ room, user, booking }) {
                   >
                     {Array.from({ length: maxCapacity }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>
-                        {n} 位
+                        {n} 人
                       </option>
                     ))}
                   </select>
-                  <p className="mt-2 text-xs text-primary-500">最多 {maxCapacity} 位</p>
+                  <p className="mt-2 text-xs text-primary-500">最多 {maxCapacity} 人</p>
                 </label>
               )}
             </div>

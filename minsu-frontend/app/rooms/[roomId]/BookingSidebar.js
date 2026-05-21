@@ -73,6 +73,7 @@ export default function BookingSidebar({
   pricePerNight = 0,
   cleaningFee = 500,
   serviceFeeRate = 0.05,
+  maxCapacity = 4,
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -227,9 +228,13 @@ export default function BookingSidebar({
                 value={guests}
                 onChange={(e) => setGuests(e.target.value)}
               >
-                <option value="1">1 位大人</option>
-                <option value="2">2 位大人</option>
-                <option value="3">2 大人 1 兒童</option>
+                {Array.from({ length: maxCapacity }, (_, i) => i + 1).map(
+                  (n) => (
+                    <option key={n} value={n}>
+                      {n} 人
+                    </option>
+                  )
+                )}
               </select>
             </div>
           </div>
