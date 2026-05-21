@@ -5,7 +5,7 @@ export async function getGuests({ page, search } = {}) {
   let query = supabase
     .from("guests")
     .select(
-      "id, created_at, fullName, email, phone, bookings(count)",
+      "id, created_at, fullName, email, phone, occupation, emergency_contact, bookings(count)",
       { count: "exact" }
     )
     .order("id", { ascending: false });

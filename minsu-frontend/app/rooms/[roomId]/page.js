@@ -355,7 +355,7 @@ const PAGE_CSS = `
 
     /* GALLERY */
     .gallery {
-      max-width: 1200px;
+      width: min(1200px, 100%);
       margin: 0 auto;
       padding: 0 2.5rem 2rem;
       display: grid;
@@ -494,11 +494,84 @@ const PAGE_CSS = `
     }
 
     .date-picker {
+      position: relative;
       border: 1.5px solid var(--border);
       border-radius: 10px;
-      overflow: hidden;
       margin-bottom: 0.75rem;
     }
+
+    /* Day-picker trigger button (looks like the old input) */
+    button.dp-trigger {
+      appearance: none;
+      background: transparent;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    button.dp-trigger:hover { background: oklch(96% 0.010 75); }
+    button.dp-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .dp-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .dp-value {
+      font-size: 14px;
+      color: var(--fg);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Day-picker popover */
+    .dp-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      z-index: 50;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+      padding: 0.5rem 0.5rem 0;
+    }
+    .dp-popover .rdp { --rdp-accent-color: var(--accent); margin: 0; }
+    .dp-popover .rdp-day_selected,
+    .dp-popover .rdp-day_selected:focus-visible,
+    .dp-popover .rdp-day_selected:hover {
+      background-color: var(--accent);
+      color: white;
+    }
+    .dp-popover .rdp-day_range_middle {
+      background-color: oklch(94% 0.04 183);
+      color: var(--fg);
+    }
+    .dp-popover-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem 0.75rem;
+      border-top: 1px solid var(--border);
+      margin-top: 0.25rem;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .dp-close {
+      border: none;
+      background: var(--accent);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .dp-close:hover { background: var(--accent-d); }
     .date-row {
       display: flex;
       border-bottom: 1px solid var(--border);
@@ -624,14 +697,153 @@ const PAGE_CSS = `
     .review-stars { color: oklch(72% 0.18 75); font-size: 12px; letter-spacing: 1px; }
     .review-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
 
+    /* Mobile-only elements — hidden on desktop */
+    .mobile-cta { display: none; }
+    .mobile-sheet-handle,
+    .mobile-sheet-close,
+    .mobile-sheet-backdrop,
+    .mobile-cta-expand { display: none; }
+
     /* MOBILE */
     @media (max-width: 900px) {
-      .room-layout { grid-template-columns: 1fr; }
-      .booking-sidebar { position: static; }
+      .room-layout { grid-template-columns: 1fr; padding-bottom: 6rem; }
       .gallery { grid-template-columns: 1fr; grid-template-rows: 240px; height: auto; }
       .gallery-main { grid-row: 1; border-radius: 12px; }
       .gallery-sub { display: none; }
       .reviews-grid { grid-template-columns: 1fr; }
+
+      /* Sidebar 變 bottom sheet：預設藏在畫面下方 */
+      .booking-sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 85vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-bottom: none;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.18);
+        transform: translateY(110%);
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+                    visibility 0s linear 0.32s;
+        z-index: 110;
+        padding: 1.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+        margin: 0;
+        width: auto;
+        will-change: transform;
+      }
+      .booking-sidebar.is-sheet-open {
+        transform: translateY(0);
+        visibility: visible;
+        pointer-events: auto;
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+                    visibility 0s linear 0s;
+      }
+
+      .mobile-sheet-handle {
+        display: block;
+        width: 44px;
+        height: 4px;
+        background: oklch(82% 0.01 75);
+        border-radius: 2px;
+        margin: 0 auto 1rem;
+      }
+      .mobile-sheet-close {
+        display: grid;
+        place-items: center;
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        font-size: 22px;
+        line-height: 1;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .mobile-sheet-close:hover { color: var(--fg); }
+
+      .mobile-sheet-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 105;
+        background: rgba(0, 0, 0, 0.45);
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        animation: sheetFadeIn 0.2s ease;
+      }
+      @keyframes sheetFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+      /* Sticky CTA */
+      .mobile-cta {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 90;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -6px 22px rgba(0, 0, 0, 0.08);
+      }
+      .mobile-cta-expand {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--fg);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .mobile-cta-expand:hover { background: oklch(96% 0.010 75); }
+      .mobile-cta-info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.25;
+        flex: 1;
+        min-width: 0;
+      }
+      .mobile-cta-price {
+        font-family: var(--font-serif);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--fg);
+      }
+      .mobile-cta-meta {
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mobile-cta-btn {
+        flex-shrink: 0;
+        border: none;
+        background: var(--accent);
+        color: white;
+        padding: 12px 22px;
+        border-radius: 999px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .mobile-cta-btn:hover { background: var(--accent-d); }
     }
     @media (max-width: 640px) {
       .nav { padding: 0 1.25rem; }

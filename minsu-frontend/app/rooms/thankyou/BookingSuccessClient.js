@@ -60,11 +60,11 @@ export default function BookingSuccessClient({ detail, settings = {}, user = nul
     <main className="min-h-screen bg-primary-100 text-primary-900">
       <SiteHeader user={user} />
 
-      <div className="mx-auto max-w-[960px] px-6 py-10">
+      <div className="mx-auto max-w-[960px] px-4 py-6">
         {/* Hero */}
-        <section className="mb-10 text-center">
+        <section className="mb-4 text-center">
           <CheckCircleIcon className="mx-auto mb-5 h-20 w-20 text-emerald-500" />
-          <h1 className="mb-2 font-serif text-3xl font-semibold tracking-wide">
+          <h1 className="mb-2 font-serif text-2xl font-semibold tracking-wide">
             預訂成功
           </h1>
           <p className="text-sm text-primary-500">感謝您的預訂，訂單已確認</p>

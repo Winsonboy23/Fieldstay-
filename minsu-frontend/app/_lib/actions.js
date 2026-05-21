@@ -19,10 +19,14 @@ export async function UpdateGuest(formData) {
   if (!session) throw new Error("You must be signed in");
 
   const occupation = String(formData.get("occupation") || "").trim();
+  const phone = String(formData.get("phone") || "").trim();
+  const emergency_contact = String(formData.get("emergency_contact") || "").trim();
 
   const updateData = {
     email: session.user.email,
     occupation: occupation || null,
+    phone: phone || null,
+    emergency_contact: emergency_contact || null,
   };
 
   await updateGuest(session.user.guestId, updateData);

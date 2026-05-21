@@ -163,6 +163,14 @@ function GuestDetailModal({ guest, onCloseModal }) {
           <dd>{guest.phone || "-"}</dd>
         </div>
         <div>
+          <dt>職業</dt>
+          <dd>{guest.occupation || "-"}</dd>
+        </div>
+        <div>
+          <dt>緊急聯絡人</dt>
+          <dd>{guest.emergency_contact || "-"}</dd>
+        </div>
+        <div>
           <dt>註冊日期</dt>
           <dd>{formatDate(guest.created_at)}</dd>
         </div>

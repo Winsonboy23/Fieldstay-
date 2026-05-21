@@ -198,6 +198,7 @@ function SignupList({ activity }) {
               <th>聯絡方式</th>
               <th>人數</th>
               <th>金額</th>
+              <th>特殊需求</th>
               <th>狀態</th>
               <th>付款</th>
               <th></th>
@@ -217,6 +218,19 @@ function SignupList({ activity }) {
                 </td>
                 <td>{s.quantity}</td>
                 <td>NT${Number(s.total_price || 0).toLocaleString()}</td>
+                <td
+                  title={s.special_request || ""}
+                  style={{
+                    maxWidth: "18rem",
+                    color: s.special_request
+                      ? "var(--color-grey-700)"
+                      : "var(--color-grey-400)",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {s.special_request || "—"}
+                </td>
                 <td>
                   <StyledSelect
                     value={s.status}

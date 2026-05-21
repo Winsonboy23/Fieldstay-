@@ -91,6 +91,8 @@ export default function ActivityConfirmClient({ activity, user }) {
       paymentDescription="活動報名採銀行轉帳。送出後請於 24 小時內完成匯款，逾期視同放棄名額。"
       specialRequestPlaceholder="例如：同行者姓名、飲食限制、兒童年齡等"
       summaryTitle="活動摘要"
+      summaryImage={activity.image}
+      summaryImageAlt={activity.title}
       summaryName={activity.title}
       summaryRows={summaryRows}
       priceRows={[

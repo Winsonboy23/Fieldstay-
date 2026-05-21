@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import {
   CalendarDaysIcon,
   ClockIcon,
-  HeartIcon,
   MapPinIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
@@ -29,6 +28,14 @@ export default async function ActivityDetailPage({ params }) {
 
   const remaining = Math.max(activity.capacity - activity.registered, 0);
   const isFull = remaining === 0;
+
+  const galleryImages = Array.isArray(activity.gallery_images)
+    ? activity.gallery_images
+    : [];
+  const coverImage = activity.image || galleryImages[0];
+  const subImages = galleryImages
+    .filter((url) => url && url !== coverImage)
+    .slice(0, 2);
 
   return (
     <main className="min-h-screen bg-[#f5f3ef] text-[#111827]">
@@ -59,28 +66,47 @@ export default async function ActivityDetailPage({ params }) {
       <div className="mx-auto grid max-w-[1280px] gap-8 px-6 py-10 lg:grid-cols-[1fr_390px]">
         <section>
           <div
-            className="relative mb-7 h-[390px] overflow-hidden rounded-2xl bg-[#0f4d3f]"
-            style={
-              activity.image
-                ? {
-                    backgroundImage: `url(${activity.image})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }
-                : undefined
-            }
+            className={`mb-7 grid h-[390px] grid-cols-1 gap-2 ${
+              subImages.length > 0 ? "md:grid-cols-[2fr_1fr]" : ""
+            }`}
           >
-            {activity.category && (
-              <span className="absolute left-5 top-5 rounded-md bg-white px-3 py-1 text-xs font-bold text-[#007d6f]">
-                {activity.category}
-              </span>
-            )}
-            <button
-              className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-white text-slate-600"
-              aria-label="加入收藏"
+            <div
+              className="relative overflow-hidden rounded-2xl bg-[#0f4d3f]"
+              style={
+                coverImage
+                  ? {
+                      backgroundImage: `url(${coverImage})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : undefined
+              }
             >
-              <HeartIcon className="h-6 w-6" />
-            </button>
+              {activity.category && (
+                <span className="absolute left-5 top-5 rounded-md bg-white px-3 py-1 text-xs font-bold text-[#007d6f]">
+                  {activity.category}
+                </span>
+              )}
+            </div>
+            {subImages.length > 0 && (
+              <div className="hidden flex-col gap-2 md:flex">
+                {[0, 1].map((idx) => (
+                  <div
+                    key={idx}
+                    className="relative flex-1 overflow-hidden rounded-2xl bg-[#0f4d3f]"
+                    style={
+                      subImages[idx]
+                        ? {
+                            backgroundImage: `url(${subImages[idx]})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mb-7 flex gap-4">

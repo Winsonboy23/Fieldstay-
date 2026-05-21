@@ -72,7 +72,7 @@ const Actions = styled.div`
 `;
 
 function EditGuestForm({ guestToEdit, onCloseModal }) {
-  const { id, fullName, email, phone } = guestToEdit;
+  const { id, fullName, email, phone, occupation, emergency_contact } = guestToEdit;
   const { updateGuest, isUpdating } = useUpdateGuest();
   const [sending, setSending] = useState(false);
 
@@ -81,6 +81,8 @@ function EditGuestForm({ guestToEdit, onCloseModal }) {
       fullName: fullName || "",
       email: email || "",
       phone: phone || "",
+      occupation: occupation || "",
+      emergency_contact: emergency_contact || "",
     },
   });
 
@@ -89,6 +91,8 @@ function EditGuestForm({ guestToEdit, onCloseModal }) {
       fullName: data.fullName.trim(),
       email: data.email.trim(),
       phone: data.phone.trim(),
+      occupation: data.occupation.trim() || null,
+      emergency_contact: data.emergency_contact.trim() || null,
     };
     updateGuest(
       { id, updates },
@@ -148,6 +152,25 @@ function EditGuestForm({ guestToEdit, onCloseModal }) {
           {...register("phone", { required: "必填" })}
         />
         {errors.phone && <ErrorText>{errors.phone.message}</ErrorText>}
+      </Field>
+
+      <Field>
+        <label htmlFor="occupation">職業</label>
+        <Input
+          id="occupation"
+          disabled={isUpdating}
+          {...register("occupation")}
+        />
+      </Field>
+
+      <Field>
+        <label htmlFor="emergency_contact">緊急聯絡人</label>
+        <Input
+          id="emergency_contact"
+          disabled={isUpdating}
+          placeholder="姓名 / 關係 / 電話"
+          {...register("emergency_contact")}
+        />
       </Field>
 
       <ResetSection>

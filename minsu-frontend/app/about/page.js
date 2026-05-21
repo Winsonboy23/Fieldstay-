@@ -252,7 +252,10 @@ export default async function AboutPage() {
               我們將它改建為一座小型民宿與共享空間，開放廚房與中庭讓人們在料理與陽光中交流；以自然材質、循環家具與在地工藝延續土地的質感。
             </p>
 
-            <ul className="mt-8 space-y-6 border-l border-primary-200 pl-5">
+            <ul
+              data-reveal-stagger
+              className="timeline-reveal mt-8 space-y-6 border-l border-primary-200 pl-5"
+            >
               {TIMELINE.map((t) => (
                 <li key={t.year} className="relative">
                   <span

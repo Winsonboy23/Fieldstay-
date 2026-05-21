@@ -106,9 +106,13 @@ export const getRooms = async function () {
 
 // Guests are uniquely identified by their email address
 export async function getGuest(email) {
-  const { data, error } = await supabaseAdmin.rpc("get_guest_by_email", {
-    p_email: email,
-  });
+  const { data, error } = await supabaseAdmin
+    .from("guests")
+    .select(
+      'id, created_at, "fullName", email, "nationalID", nationality, "countryFlag", occupation, phone, emergency_contact'
+    )
+    .ilike("email", email)
+    .maybeSingle();
 
   // No error here! We handle the possibility of no guest in the sign in callback
   if (error) {
@@ -116,7 +120,7 @@ export async function getGuest(email) {
     return null;
   }
 
-  return data?.[0] ?? null;
+  return data ?? null;
 }
 
 export async function getBooking(id) {
@@ -421,16 +425,24 @@ export async function createGuestBooking(newBooking) {
 
 // The updatedFields is an object which should ONLY contain the updated data
 export async function updateGuest(id, updatedFields) {
-  const { data, error } = await supabaseAdmin.rpc("update_guest_profile", {
-    p_email: updatedFields.email,
-    p_occupation: updatedFields.occupation || "",
-  });
+  const patch = {};
+  if ("occupation" in updatedFields) patch.occupation = updatedFields.occupation;
+  if ("phone" in updatedFields) patch.phone = updatedFields.phone;
+  if ("emergency_contact" in updatedFields)
+    patch.emergency_contact = updatedFields.emergency_contact;
+
+  const { data, error } = await supabaseAdmin
+    .from("guests")
+    .update(patch)
+    .eq("id", id)
+    .select()
+    .maybeSingle();
 
   if (error) {
     console.error(error);
     throw new Error("Guest could not be updated");
   }
-  return data?.[0] ?? null;
+  return data ?? null;
 }
 
 export async function updateBooking(id, updatedFields) {

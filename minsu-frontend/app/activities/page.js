@@ -3,6 +3,7 @@ import { auth } from "../_lib/auth";
 import { getActivities } from "../_lib/data-service";
 import { pageStyle } from "./_styles";
 import ActivitiesGrid from "./ActivitiesGrid";
+import SiteFooter from "../_components/SiteFooter";
 
 export const metadata = {
   title: "田間體驗 | 山田寓所 FIELDSTAY",
@@ -35,7 +36,13 @@ export default async function ActivitiesPage() {
   const session = await auth();
   const userName = session?.user?.name || session?.user?.email || "會員中心";
   const activities = await getActivities();
-  const featured = activities[0];
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcoming = activities.find((a) => String(a.activity_date) >= todayStr);
+  const lastPast = [...activities]
+    .reverse()
+    .find((a) => String(a.activity_date) < todayStr);
+  const featured = upcoming || lastPast;
+  const isPastFeatured = !upcoming && !!lastPast;
 
   return (
     <>
@@ -140,7 +147,9 @@ export default async function ActivitiesPage() {
                     : undefined
                 }
               >
-                {featured.registered >= featured.capacity ? (
+                {isPastFeatured ? (
+                  <span className="featured-badge">已結束</span>
+                ) : featured.registered >= featured.capacity ? (
                   <span className="featured-badge">已額滿</span>
                 ) : featured.capacity - featured.registered <= 2 ? (
                   <span className="featured-badge">即將額滿</span>
@@ -177,7 +186,9 @@ export default async function ActivitiesPage() {
                     href={`/activities/${featured.id}`}
                     className="btn btn-primary"
                   >
-                    立即報名 · {fmtPrice(featured.price)}
+                    {isPastFeatured
+                      ? `查看活動回顧 · ${fmtPrice(featured.price)}`
+                      : `立即報名 · ${fmtPrice(featured.price)}`}
                   </Link>
                   <a href="#calendar" className="btn btn-ghost">
                     查看其他場次
@@ -196,59 +207,7 @@ export default async function ActivitiesPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer>
-        <div className="footer-grid">
-          <div>
-            <Link
-              href="/"
-              className="nav-logo footer-brand-logo"
-              style={{ textDecoration: "none" }}
-            >
-              <Logo />
-              <div className="logo-wordmark">
-                <span className="logo-zh">山田寓所</span>
-                <span className="logo-en">FIELDSTAY</span>
-              </div>
-            </Link>
-            <p className="footer-desc">
-              台南農村民宿，提供田間體驗與住宿，感受節氣文化與土地連結。
-            </p>
-          </div>
-          <div className="footer-col footer-social">
-            <ul className="social-list">
-              <li>
-                <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="5" />
-                    <circle cx="12" cy="12" r="4" />
-                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-                  </svg>
-                </a>
-              </li>
-              <li>
-                <a href="https://www.threads.net/" target="_blank" rel="noopener noreferrer" aria-label="Threads">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
-                  </svg>
-                </a>
-              </li>
-              <li>
-                <a href="https://line.me/" target="_blank" rel="noopener noreferrer" aria-label="LINE">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.494.25l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.628-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.07 9.436-6.975C23.176 14.393 24 12.458 24 10.314" />
-                  </svg>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>© 2026 山田寓所 FIELDSTAY · 版權所有</span>
-          <span>台南市 · 隱私政策 · 服務條款</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

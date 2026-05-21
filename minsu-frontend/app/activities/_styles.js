@@ -304,19 +304,7 @@ export const pageStyle = `
       background: rgba(255,255,255,0.93);
       color: var(--fg);
     }
-    .act-fav {
-      margin-inline-start: auto;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.93);
-      border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .act-fav:hover { background: white; transform: scale(1.05); }
-    .act-fav.faved svg { fill: var(--accent2); stroke: var(--accent2); }
-
-    .act-body {
+.act-body {
       padding: 1.25rem 1.25rem 0;
       flex: 1;
       display: flex; flex-direction: column;
@@ -458,55 +446,6 @@ export const pageStyle = `
     }
     .cta-form button:hover { background: var(--accent-d); }
 
-    /* ── FOOTER ──────────────────────────────────── */
-    footer {
-      background: oklch(14% 0.014 80);
-      color: rgba(255,255,255,0.55);
-      padding: 64px 2.5rem 36px;
-    }
-    .footer-grid {
-      max-width: 1200px; margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: 3rem;
-      padding-bottom: 2.5rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 2rem;
-    }
-    .footer-brand-logo .logo-zh { color: white; }
-    .footer-brand-logo .logo-en { color: rgba(255,255,255,0.35); }
-    .footer-desc { font-size: 13px; line-height: 1.75; margin-top: 1rem; max-width: 200px; }
-    .footer-col h4 {
-      font-size: 11px; font-weight: 600;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: rgba(255,255,255,0.85); margin-bottom: 1rem;
-    }
-    .footer-col ul { list-style: none; }
-    .footer-col li { margin-bottom: 0.6rem; }
-    .footer-col a {
-      color: rgba(255,255,255,0.45);
-      text-decoration: none; font-size: 13px;
-      transition: color 0.2s;
-    }
-    .footer-col a:hover { color: white; }
-    .footer-social { display: flex; align-items: center; justify-content: flex-end; }
-    .footer-social .social-list { list-style: none; display: flex; gap: 1rem; }
-    .footer-social .social-list a {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.85);
-      text-decoration: none;
-      transition: background 0.2s, color 0.2s;
-    }
-    .footer-social .social-list a:hover { background: rgba(255,255,255,0.18); color: white; }
-    @media (max-width: 768px) { .footer-social { justify-content: flex-start; } }
-    .footer-bottom {
-      max-width: 1200px; margin: 0 auto;
-      display: flex; justify-content: space-between;
-      font-size: 12px; color: var(--muted);
-    }
 
     /* ── TOAST ───────────────────────────────────── */
     .toast {

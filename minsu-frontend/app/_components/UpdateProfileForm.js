@@ -4,7 +4,7 @@ import { useFormStatus } from "react-dom";
 import { UpdateGuest } from "../_lib/actions";
 
 function UpdateProfileForm({ guest }) {
-  const { fullName, email, occupation } = guest;
+  const { fullName, email, occupation, phone, emergency_contact } = guest;
   const nameParts = (fullName || "").trim().split(/\s+/);
   const firstName =
     nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : fullName?.slice(0, 1);
@@ -43,6 +43,8 @@ function UpdateProfileForm({ guest }) {
 
         <Field label="手機號碼" className="md:col-span-2">
           <input
+            name="phone"
+            defaultValue={phone || ""}
             placeholder="0912-345-678"
             className="member-input"
           />
@@ -50,6 +52,8 @@ function UpdateProfileForm({ guest }) {
 
         <Field label="緊急聯絡人" className="md:col-span-2">
           <input
+            name="emergency_contact"
+            defaultValue={emergency_contact || ""}
             placeholder="姓名 / 關係 / 電話"
             className="member-input"
           />

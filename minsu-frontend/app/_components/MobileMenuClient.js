@@ -56,13 +56,6 @@ function UserIcon(props) {
     </svg>
   );
 }
-function ChevronRight(props) {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M9 6l6 6-6 6" />
-    </svg>
-  );
-}
 function CloseIcon(props) {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -141,7 +134,7 @@ export default function MobileMenuClient({ session, featuredRooms = [] }) {
 
       {/* Slide-in panel */}
       <aside
-        className={`fixed right-0 top-0 z-[301] flex h-[100dvh] w-[88%] max-w-sm flex-col bg-gradient-to-b from-[#1c1a16]/95 via-[#15130f]/95 to-[#0d0c0a]/95 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 md:hidden ${
+        className={`menu-glass fixed right-0 top-0 z-[301] flex h-[100dvh] w-[88%] max-w-sm flex-col text-white transition-transform duration-300 md:hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
         aria-hidden={!open}
@@ -211,7 +204,6 @@ export default function MobileMenuClient({ session, featuredRooms = [] }) {
                     >
                       {item.label}
                     </span>
-                    <ChevronRight className="text-white/30" />
                   </Link>
                 </li>
               );
