@@ -20,7 +20,7 @@ export default async function Page({ searchParams }) {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-primary-200 bg-primary-50">
-        <div className="mx-auto flex h-20 w-full items-center justify-between px-10">
+        <div className="mx-auto flex h-20 w-full items-center justify-between px-5 md:px-10">
           <Link href="/" className="flex items-center gap-3">
             <BrandMark />
             <span className="flex flex-col leading-none">
@@ -36,14 +36,14 @@ export default async function Page({ searchParams }) {
           <div className="flex items-center gap-3">
             <Link
               href="/account"
-              className="rounded-md border border-primary-200 bg-primary-50 px-5 py-3 text-sm font-semibold text-primary-900 transition hover:border-primary-400"
+              className="hidden rounded-md border border-primary-200 bg-primary-50 px-5 py-3 text-sm font-semibold text-primary-900 transition hover:border-primary-400 md:inline-flex"
             >
               會員中心
             </Link>
             {session?.user ? (
               <Link
                 href="/account"
-                className="rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800"
+                className="hidden rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800 md:inline-flex"
               >
                 {userName}
               </Link>

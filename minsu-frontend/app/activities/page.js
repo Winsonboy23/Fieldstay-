@@ -61,12 +61,12 @@ export default async function ActivitiesPage() {
         <div className="nav-actions">
           {session?.user ? (
             <>
-              <Link href="/account" className="btn btn-ghost">會員中心</Link>
-              <Link href="/account" className="btn btn-primary">{userName}</Link>
+              <Link href="/account" className="btn btn-ghost nav-desktop-only">會員中心</Link>
+              <Link href="/account" className="btn btn-primary nav-desktop-only">{userName}</Link>
             </>
           ) : (
             <>
-              <Link href="/account" className="btn btn-ghost">會員中心</Link>
+              <Link href="/account" className="btn btn-ghost nav-desktop-only">會員中心</Link>
               <Link href="/login" className="btn btn-primary">登入</Link>
             </>
           )}

@@ -471,6 +471,7 @@ export const pageStyle = `
     @media (max-width: 768px) {
       .nav { padding: 0 1.25rem; }
       .nav-links { display: none; }
+      .nav-actions .nav-desktop-only { display: none; }
       .hero { padding: 3.5rem 1.25rem 5rem; }
       .section { padding: 48px 1.25rem; }
       .breadcrumb { padding: 1rem 1.25rem 0; }

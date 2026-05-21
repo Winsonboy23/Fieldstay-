@@ -312,21 +312,21 @@ function Bookings() {
           </StatRow>
           <StatRow>
             <StatLabel>待確認</StatLabel>
-            <StatValue $color="#f59e0b">{stats.pending}</StatValue>
+            <StatValue>{stats.pending}</StatValue>
           </StatRow>
           <StatRow>
             <StatLabel>已確認</StatLabel>
-            <StatValue $color="#16a34a">{stats.confirmed}</StatValue>
+            <StatValue>{stats.confirmed}</StatValue>
           </StatRow>
           {!isActivity && (
             <StatRow>
               <StatLabel>進行中</StatLabel>
-              <StatValue $color="#2563eb">{stats.inProgress}</StatValue>
+              <StatValue>{stats.inProgress}</StatValue>
             </StatRow>
           )}
           <StatRow>
             <StatLabel>已取消</StatLabel>
-            <StatValue $color="#6b7280">{stats.cancelled}</StatValue>
+            <StatValue>{stats.cancelled}</StatValue>
           </StatRow>
           <StatRow>
             <StatLabel>總營收</StatLabel>
