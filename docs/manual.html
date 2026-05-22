@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HotelBytezz 操作手冊</title>
+<style>
+  :root {
+    --bg: #f7f5f2;
+    --paper: #ffffff;
+    --ink: #1f2937;
+    --ink-soft: #4b5563;
+    --muted: #9ca3af;
+    --line: #e5e7eb;
+    --brand: #6aaedb;
+    --brand-dark: #3f86b8;
+    --accent: #f59e0b;
+    --ok: #10b981;
+    --warn: #ef4444;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* layout */
+  .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+  aside {
+    background: var(--paper);
+    border-right: 1px solid var(--line);
+    padding: 24px 18px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  main { padding: 48px 56px 120px; max-width: 880px; }
+
+  /* brand */
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .brand-dot { width: 28px; height: 28px; border-radius: 8px; background: var(--brand);
+    display: grid; place-items: center; color: white; font-weight: 700; font-size: 14px; }
+  .brand-name { font-weight: 700; letter-spacing: 0.5px; }
+  .brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* tabs */
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #eef0f3;
+    padding: 4px; border-radius: 10px; margin-bottom: 24px; }
+  .tab { padding: 8px 0; text-align: center; border-radius: 7px; font-size: 13px;
+    cursor: pointer; color: var(--ink-soft); font-weight: 500; transition: all .15s; }
+  .tab.active { background: white; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
+  /* nav */
+  nav h4 { font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin: 18px 0 8px; padding-left: 8px; font-weight: 600; }
+  nav a { display: block; padding: 7px 10px; border-radius: 6px;
+    color: var(--ink-soft); text-decoration: none; font-size: 13.5px; }
+  nav a:hover { background: #f3f4f6; color: var(--ink); }
+  nav a.active { background: rgba(106,174,219,.12); color: var(--brand-dark); font-weight: 600; }
+  nav .num { display: inline-block; width: 22px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* content */
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .crumb { font-size: 12px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 8px; }
+  h1 { font-size: 32px; margin: 0 0 8px; letter-spacing: -0.5px; }
+  .lede { color: var(--ink-soft); font-size: 16px; margin: 0 0 32px; }
+  h2 { font-size: 22px; margin: 48px 0 8px; padding-top: 24px; border-top: 1px solid var(--line); }
+  h2:first-of-type { border-top: 0; padding-top: 0; margin-top: 36px; }
+  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--ink); }
+  p { margin: 8px 0; color: var(--ink-soft); }
+
+  /* step list */
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 16px 0; }
+  .steps > li { counter-increment: step; position: relative;
+    padding: 14px 16px 14px 52px; background: var(--paper);
+    border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; }
+  .steps > li::before {
+    content: counter(step); position: absolute; left: 14px; top: 14px;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--brand);
+    color: white; font-weight: 600; font-size: 13px;
+    display: grid; place-items: center;
+  }
+  .steps strong { color: var(--ink); display: block; margin-bottom: 2px; font-weight: 600; }
+  .steps small { color: var(--muted); font-size: 12.5px; }
+
+  /* screenshot placeholders */
+  .shot {
+    background: linear-gradient(135deg, #fafbfc 0%, #f0f3f7 100%);
+    border: 1px dashed #c9d1da; border-radius: 12px;
+    height: 180px; margin: 16px 0;
+    display: grid; place-items: center; color: var(--muted);
+    font-size: 13px; letter-spacing: 1px;
+  }
+  .shot.tall { height: 280px; }
+
+  /* callouts */
+  .note { padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+    font-size: 13.5px; border-left: 3px solid; }
+  .note.tip { background: rgba(106,174,219,.08); border-color: var(--brand); }
+  .note.warn { background: rgba(239,68,68,.06); border-color: var(--warn); }
+  .note strong { color: var(--ink); }
+
+  /* feature cards (overview) */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .card { background: var(--paper); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px; }
+  .card h3 { margin: 0 0 4px; font-size: 14px; }
+  .card p { margin: 0; font-size: 13px; }
+  .card .icon { width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(106,174,219,.12); color: var(--brand-dark);
+    display: grid; place-items: center; margin-bottom: 8px; font-size: 16px; }
+
+  /* keyboard / chip */
+  kbd { background: #eef0f3; border-radius: 4px; padding: 1px 6px;
+    font-family: ui-monospace, monospace; font-size: 12px; }
+
+  /* footer */
+  .foot { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+
+  /* mobile */
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    aside { position: relative; height: auto; }
+    main { padding: 32px 20px 80px; }
+    .grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside>
+    <div class="brand">
+      <div class="brand-dot">H</div>
+      <div>
+        <div class="brand-name">HotelBytezz</div>
+        <div class="brand-sub">操作手冊 v1.0</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="front">前台</div>
+      <div class="tab" data-tab="admin">後台</div>
+    </div>
+
+    <!-- 前台 nav -->
+    <nav class="nav-front">
+      <h4>開始使用</h4>
+      <a href="#f-intro" class="active"><span class="num">00</span>關於本手冊</a>
+      <a href="#f-account"><span class="num">01</span>註冊與登入</a>
+
+      <h4>訂房流程</h4>
+      <a href="#f-browse"><span class="num">02</span>瀏覽房型</a>
+      <a href="#f-book"><span class="num">03</span>建立預約</a>
+      <a href="#f-pay"><span class="num">04</span>付款與確認</a>
+
+      <h4>會員中心</h4>
+      <a href="#f-orders"><span class="num">05</span>查看我的訂單</a>
+      <a href="#f-edit"><span class="num">06</span>修改 / 取消預約</a>
+      <a href="#f-profile"><span class="num">07</span>編輯個人資料</a>
+
+      <h4>其他</h4>
+      <a href="#f-activity"><span class="num">08</span>活動報名</a>
+      <a href="#f-faq"><span class="num">09</span>常見問題</a>
+    </nav>
+
+    <!-- 後台 nav -->
+    <nav class="nav-admin" style="display:none">
+      <h4>開始使用</h4>
+      <a href="#a-intro" class="active"><span class="num">00</span>系統簡介</a>
+      <a href="#a-login"><span class="num">01</span>登入後台</a>
+      <a href="#a-dashboard"><span class="num">02</span>每日工作首頁</a>
+
+      <h4>訂單管理</h4>
+      <a href="#a-bookings"><span class="num">03</span>查詢與篩選訂單</a>
+      <a href="#a-booking-detail"><span class="num">04</span>訂單明細與編輯</a>
+      <a href="#a-checkin"><span class="num">05</span>Check-in 入住</a>
+      <a href="#a-checkout"><span class="num">06</span>Check-out 退房</a>
+
+      <h4>房型與客戶</h4>
+      <a href="#a-rooms"><span class="num">07</span>房型管理</a>
+      <a href="#a-guests"><span class="num">08</span>客戶資料</a>
+      <a href="#a-activities"><span class="num">09</span>活動管理</a>
+
+      <h4>系統</h4>
+      <a href="#a-settings"><span class="num">10</span>系統設定</a>
+      <a href="#a-users"><span class="num">11</span>員工帳號</a>
+      <a href="#a-faq"><span class="num">12</span>疑難排解</a>
+    </nav>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+
+    <!-- ====== 前台 panel ====== -->
+    <section class="panel panel-front active">
+      <div class="crumb">前台 · 給訂房客戶</div>
+      <h1>HotelBytezz 訂房操作手冊</h1>
+      <p class="lede">從找房、訂房到入住前的所有操作，照著步驟做即可完成。</p>
+
+      <h2 id="f-intro">關於本手冊</h2>
+      <p>本手冊說明客戶端網站的所有功能。每個章節對應一個實際情境，建議第一次使用時依序閱讀；之後可從左側目錄直接跳到需要的章節。</p>
+      <div class="grid2">
+        <div class="card"><div class="icon">📱</div><h3>支援裝置</h3><p>手機、平板、桌機皆可使用，建議使用最新版 Chrome / Safari。</p></div>
+        <div class="card"><div class="icon">🔐</div><h3>登入方式</h3><p>Email 註冊或 Google 一鍵登入，兩者可擇一使用。</p></div>
+      </div>
+
+      <h2 id="f-account">01 · 註冊與登入</h2>
+      <p>首次使用請先建立帳號，之後預訂房間、查看訂單都需要先登入。</p>
+      <div class="shot">[ 截圖：登入頁 / 註冊頁 ]</div>
+      <ol class="steps">
+        <li><strong>進入登入頁</strong><small>點右上角「登入」按鈕</small></li>
+        <li><strong>選擇登入方式</strong><small>Google 登入（最快）或使用 Email + 密碼</small></li>
+        <li><strong>驗證 Email（僅 Email 註冊需要）</strong><small>系統會寄一封驗證信，點信中連結即可完成</small></li>
+      </ol>
+      <div class="note tip"><strong>小提示：</strong>Google 登入不需要記密碼，且自動帶入姓名與 Email。</div>
+
+      <h2 id="f-browse">02 · 瀏覽房型</h2>
+      <p>首頁可看到所有房型，包含照片、容納人數、定價與簡介。</p>
+      <div class="shot tall">[ 截圖：房型列表頁 + 房型詳情頁 ]</div>
+      <ol class="steps">
+        <li><strong>選擇日期與人數</strong><small>點選入住與退房日期，輸入入住人數</small></li>
+        <li><strong>瀏覽房型卡片</strong><small>點任一房型可看完整介紹、設施、價格</small></li>
+        <li><strong>確認後點「立即預訂」</strong></li>
+      </ol>
+
+      <h2 id="f-book">03 · 建立預約</h2>
+      <p>系統會帶你進入訂房表單，填寫入住資料即可。</p>
+      <ol class="steps">
+        <li><strong>確認日期與房型</strong><small>頁面上方會顯示預訂摘要</small></li>
+        <li><strong>填寫個資</strong><small>姓名、電話、Email（已登入會自動帶入）</small></li>
+        <li><strong>填寫特殊需求（選填）</strong><small>例如：嬰兒床、過敏需求、晚到時間等</small></li>
+        <li><strong>確認金額並送出</strong></li>
+      </ol>
+      <div class="note warn"><strong>注意：</strong>送出後訂單狀態為「未付款」，需在 24 小時內完成付款，否則系統會自動釋出房間。</div>
+
+      <h2 id="f-pay">04 · 付款與確認</h2>
+      <div class="shot">[ 截圖：付款頁 / 訂單成立確認 ]</div>
+      <p>（依實際金流整合方式撰寫，例如綠界、信用卡、轉帳等。）</p>
+
+      <h2 id="f-orders">05 · 查看我的訂單</h2>
+      <p>點右上角頭像 → 「我的訂單」可看到所有過去與未來的訂單。</p>
+      <ol class="steps">
+        <li><strong>進入會員中心</strong><small>右上角頭像 → 我的訂單</small></li>
+        <li><strong>切換分頁</strong><small>「即將入住」 / 「歷史訂單」</small></li>
+        <li><strong>點任一訂單查看明細</strong></li>
+      </ol>
+
+      <h2 id="f-edit">06 · 修改 / 取消預約</h2>
+      <p>在訂單明細頁可以修改特殊需求或取消訂單。</p>
+      <div class="note warn"><strong>取消政策：</strong>入住前 7 天可全額退款，3-7 天退 50%，3 天內不退款。</div>
+
+      <h2 id="f-profile">07 · 編輯個人資料</h2>
+      <p>會員中心 → 個人資料，可修改姓名、電話、預設特殊需求等。</p>
+
+      <h2 id="f-activity">08 · 活動報名</h2>
+      <p>首頁「活動」分頁顯示近期民宿活動。點任一活動可看詳情與報名表單。</p>
+
+      <h2 id="f-faq">09 · 常見問題</h2>
+      <h3>找不到驗證信怎麼辦？</h3>
+      <p>請檢查垃圾信件夾，或回到登入頁點「重寄驗證信」。</p>
+      <h3>可以幫家人代訂嗎？</h3>
+      <p>可以，請在「入住人姓名」填寫實際入住者姓名。</p>
+
+      <div class="foot">
+        <span>HotelBytezz · 前台操作手冊</span>
+        <span>最後更新：2026-05-21</span>
+      </div>
+    </section>
+
+    <!-- ====== 後台 panel ====== -->
+    <section class="panel panel-admin">
+      <div class="crumb">後台 · 給民宿員工</div>
+      <h1>HotelBytezz 後台操作 SOP</h1>
+      <p class="lede">每日訂單管理、入住退房、房型維護的標準流程。新進員工請從第 01 章開始閱讀。</p>
+
+      <h2 id="a-intro">系統簡介</h2>
+      <p>後台用於管理訂單、入住退房、房型與客戶資料。所有功能依角色權限開放。</p>
+      <div class="grid2">
+        <div class="card"><div class="icon">📊</div><h3>Dashboard</h3><p>每日工作首頁，顯示當日入住 / 退房 / 待處理事項。</p></div>
+        <div class="card"><div class="icon">📅</div><h3>Bookings</h3><p>訂單的核心模組，所有查詢、編輯、入退房都從這裡開始。</p></div>
+        <div class="card"><div class="icon">🛏️</div><h3>Rooms</h3><p>房型、定價、開放日期的設定。</p></div>
+        <div class="card"><div class="icon">👥</div><h3>Guests</h3><p>客戶資料與訂房歷史。</p></div>
+      </div>
+
+      <h2 id="a-login">01 · 登入後台</h2>
+      <div class="shot">[ 截圖：後台登入頁 ]</div>
+      <ol class="steps">
+        <li><strong>開啟後台網址</strong><small>由主管提供，建議加入瀏覽器書籤</small></li>
+        <li><strong>輸入帳號密碼</strong><small>首次登入會強制改密碼</small></li>
+        <li><strong>進入 Dashboard</strong></li>
+      </ol>
+      <div class="note warn"><strong>安全提醒：</strong>請勿與他人共用帳號。離開電腦時務必登出，或使用 <kbd>⌘</kbd> + <kbd>L</kbd> 鎖定螢幕。</div>
+
+      <h2 id="a-dashboard">02 · 每日工作首頁</h2>
+      <p>每天上班第一件事：打開 Dashboard，確認當日工作。</p>
+      <div class="shot tall">[ 截圖：Dashboard 全景 ]</div>
+      <ol class="steps">
+        <li><strong>檢查當日入住名單</strong><small>確認房間是否已整理完畢</small></li>
+        <li><strong>檢查當日退房名單</strong><small>10:00 前完成 check-out 提醒</small></li>
+        <li><strong>查看訂單統計卡</strong><small>本日 / 本週 / 本月 訂單數、入住率</small></li>
+      </ol>
+
+      <h2 id="a-bookings">03 · 查詢與篩選訂單</h2>
+      <p>左側選單「Bookings」進入訂單列表。</p>
+      <ol class="steps">
+        <li><strong>使用篩選器</strong><small>狀態（未入住 / 入住中 / 已退房 / 已取消）、日期區間</small></li>
+        <li><strong>使用排序</strong><small>依入住日、建立時間、金額排序</small></li>
+        <li><strong>搜尋客戶姓名或訂單編號</strong></li>
+      </ol>
+
+      <h2 id="a-booking-detail">04 · 訂單明細與編輯</h2>
+      <p>點任一訂單進入明細頁，可修改入住資訊、特殊需求、付款狀態等。</p>
+      <div class="note tip"><strong>修改記錄：</strong>所有編輯都會記錄修改人與時間，請放心操作。</div>
+
+      <h2 id="a-checkin">05 · Check-in 入住作業</h2>
+      <div class="shot">[ 截圖：Check-in 流程 ]</div>
+      <ol class="steps">
+        <li><strong>找到該訂單</strong><small>從「今日入住」清單或搜尋姓名</small></li>
+        <li><strong>核對證件</strong><small>身分證 / 護照與訂單姓名一致</small></li>
+        <li><strong>確認付款狀態</strong><small>若為現場付款，先收款再 check-in</small></li>
+        <li><strong>點「Check-in」按鈕</strong><small>狀態變為「入住中」</small></li>
+        <li><strong>交付鑰匙 / 房卡並告知注意事項</strong></li>
+      </ol>
+
+      <h2 id="a-checkout">06 · Check-out 退房作業</h2>
+      <ol class="steps">
+        <li><strong>檢查房間狀況</strong><small>請房務確認無損壞、無遺留物</small></li>
+        <li><strong>結算額外費用</strong><small>若有加購、賠償等</small></li>
+        <li><strong>點「Check-out」按鈕</strong></li>
+        <li><strong>通知房務開始整理</strong></li>
+      </ol>
+
+      <h2 id="a-rooms">07 · 房型管理</h2>
+      <p>新增 / 編輯房型、設定價格、上傳照片、調整可訂日期。</p>
+
+      <h2 id="a-guests">08 · 客戶資料</h2>
+      <p>查看客戶歷史訂房、消費總額、特殊需求備註。VIP 客戶可加註標籤。</p>
+
+      <h2 id="a-activities">09 · 活動管理</h2>
+      <p>建立民宿活動、設定報名人數上限、查看報名名單。</p>
+
+      <h2 id="a-settings">10 · 系統設定</h2>
+      <p>民宿基本資料、營業時間、取消政策、Email 範本等。</p>
+
+      <h2 id="a-users">11 · 員工帳號</h2>
+      <p>新增員工帳號、設定角色權限（管理員 / 櫃台 / 房務）。</p>
+      <div class="note warn"><strong>權限說明：</strong>只有管理員可新增 / 停用員工帳號。</div>
+
+      <h2 id="a-faq">12 · 疑難排解</h2>
+      <h3>客戶說已付款但系統顯示未付款？</h3>
+      <p>請至「訂單明細 → 付款記錄」確認，或聯絡會計核對銀行帳。</p>
+      <h3>訂單狀態卡住改不了？</h3>
+      <p>請通知系統管理員，並提供訂單編號。</p>
+
+      <div class="foot">
+        <span>HotelBytezz · 後台操作 SOP</span>
+        <span>最後更新：2026-05-21</span>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const navFront = document.querySelector('.nav-front');
+  const navAdmin = document.querySelector('.nav-admin');
+  const panelFront = document.querySelector('.panel-front');
+  const panelAdmin = document.querySelector('.panel-admin');
+
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const isFront = t.dataset.tab === 'front';
+    navFront.style.display = isFront ? 'block' : 'none';
+    navAdmin.style.display = isFront ? 'none' : 'block';
+    panelFront.classList.toggle('active', isFront);
+    panelAdmin.classList.toggle('active', !isFront);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }));
+
+  // active link on scroll
+  document.querySelectorAll('nav a').forEach(a => {
+    a.addEventListener('click', () => {
+      a.closest('nav').querySelectorAll('a').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

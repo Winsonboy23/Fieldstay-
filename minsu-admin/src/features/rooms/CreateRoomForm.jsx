@@ -50,8 +50,23 @@ const CATEGORY_OPTIONS = [
 const Wrapper = styled.div`
   width: min(820px, 92vw);
   max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+  }
+`;
+
+const ScrollBody = styled.div`
+  flex: 1;
   overflow-y: auto;
-  padding-right: 0.6rem;
+  padding: 0 0.6rem 0.4rem 0;
+  min-height: 0;
 `;
 
 const HeaderRow = styled.div`
@@ -59,7 +74,10 @@ const HeaderRow = styled.div`
   justify-content: space-between;
   align-items: flex-start;
   gap: 1.6rem;
-  margin-bottom: 1.8rem;
+  padding: 0 3.2rem 1.4rem;
+  margin: 0 -3.2rem 0.4rem;
+  background: var(--color-grey-0);
+  flex-shrink: 0;
 
   h2 {
     font-size: 2.4rem;
@@ -75,9 +93,14 @@ const HeaderRow = styled.div`
   }
 `;
 
-const HeaderActions = styled.div`
+const FooterActions = styled.div`
   display: flex;
   gap: 0.8rem;
+  justify-content: flex-end;
+  padding: 1.4rem 3.2rem 0;
+  margin: 0 -3.2rem;
+  background: var(--color-grey-0);
+  flex-shrink: 0;
 `;
 
 const Section = styled.section`
@@ -478,19 +501,9 @@ function CreateRoomForm({ roomToEdit = {}, onCloseModal }) {
             <h2>{isEditSession ? "編輯房間" : "新增房間"}</h2>
             <p>設定房間資訊和規則</p>
           </div>
-          <HeaderActions>
-            <Button
-              type="button"
-              variation="secondary"
-              onClick={() => onCloseModal?.()}
-              disabled={isWorking}
-            >
-              取消
-            </Button>
-            <Button disabled={isWorking}>儲存</Button>
-          </HeaderActions>
         </HeaderRow>
 
+        <ScrollBody>
         {/* 基本資訊 */}
         <Section>
           <h3>基本資訊</h3>
@@ -838,6 +851,19 @@ function CreateRoomForm({ roomToEdit = {}, onCloseModal }) {
 
           <Hint>提示：清楚的入住規則有助於避免糾紛</Hint>
         </Section>
+        </ScrollBody>
+
+        <FooterActions>
+          <Button
+            type="button"
+            variation="secondary"
+            onClick={() => onCloseModal?.()}
+            disabled={isWorking}
+          >
+            取消
+          </Button>
+          <Button disabled={isWorking}>儲存</Button>
+        </FooterActions>
       </form>
     </Wrapper>
   );
