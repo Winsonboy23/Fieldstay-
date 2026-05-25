@@ -26,7 +26,7 @@ const FilterButton = styled.button`
   }
 
   ${(props) =>
-    props.active === "true" &&
+    props.$active === "true" &&
     css`
       background: var(--color-grey-900);
       color: var(--color-grey-0);
@@ -59,7 +59,7 @@ function DashboardFilter() {
         <FilterButton
           key={option.value}
           onClick={() => handleClick(option.value)}
-          active={String(option.value === current)}
+          $active={String(option.value === current)}
           disabled={option.value === current}
         >
           {option.label}

@@ -5,13 +5,11 @@ import { useRecentStays } from "./useRecentStays";
 import Stats from "./Stats";
 import { useRooms } from "../rooms/useRooms";
 import SalesChart from "./SalesChart";
-import DurationChart from "./DurationChart";
-import TodayActivity from "../check-in-out/TodayActivity";
 
 const StyledDashboardLayout = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto;
   gap: 2.4rem;
 `;
 
@@ -30,8 +28,6 @@ function DashboardLayout() {
         numDays={numDays}
         roomCount={rooms.length}
       />
-      <TodayActivity />
-      <DurationChart confirmedStays={confirmedStays} />
       <SalesChart bookings={bookings} numDays={numDays} />
     </StyledDashboardLayout>
   );

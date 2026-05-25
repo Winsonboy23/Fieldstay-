@@ -1,4 +1,5 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import Sidebar from "./Sidebar";
@@ -25,7 +26,7 @@ const Main = styled.main`
     padding-left: calc(20rem + 4.8rem);
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     padding: 2rem;
     padding-left: 2rem;
   }
@@ -46,18 +47,47 @@ const HeaderWrap = styled.div`
     padding-left: 20rem;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     padding-left: 0;
   }
 `;
 
+const Backdrop = styled.div`
+  display: none;
+
+  @media (max-width: 1024px) {
+    display: ${(props) => (props.$open ? "block" : "none")};
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998;
+  }
+`;
+
 function AppLayout() {
+  const [navOpen, setNavOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [navOpen]);
+
   return (
     <StyledAppLayout>
       <HeaderWrap>
-        <Header />
+        <Header onMenuToggle={() => setNavOpen((v) => !v)} navOpen={navOpen} />
       </HeaderWrap>
-      <Sidebar />
+      <Backdrop $open={navOpen} onClick={() => setNavOpen(false)} />
+      <Sidebar open={navOpen} />
       <Main>
         <Container>
           <Outlet />

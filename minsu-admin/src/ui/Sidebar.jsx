@@ -20,11 +20,19 @@ const StyledSidebar = styled.aside`
   @media (max-width: 1440px) {
     width: 20rem;
   }
+
+  @media (max-width: 1024px) {
+    width: 24rem;
+    transform: translateX(${(props) => (props.$open ? "0" : "-100%")});
+    transition: transform 0.25s ease;
+    box-shadow: ${(props) =>
+      props.$open ? "0 10px 30px rgba(0, 0, 0, 0.18)" : "none"};
+  }
 `;
 
-function Sidebar() {
+function Sidebar({ open = false }) {
   return (
-    <StyledSidebar>
+    <StyledSidebar $open={open}>
       <Logo />
       <MainNav />
     </StyledSidebar>
