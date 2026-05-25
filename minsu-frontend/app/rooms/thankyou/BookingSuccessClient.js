@@ -7,6 +7,7 @@ import {
   ArrowDownTrayIcon,
   BanknotesIcon,
   CalendarDaysIcon,
+  ChatBubbleLeftRightIcon,
   CheckCircleIcon,
   EnvelopeIcon,
   InformationCircleIcon,
@@ -50,6 +51,7 @@ export default function BookingSuccessClient({ detail, settings = {}, user = nul
   const bankAccountNumber = settings.bank_account_number || "—";
   const contactEmail = settings.contact_email || "—";
   const contactPhone = settings.contact_phone || "—";
+  const lineUrl = settings.line_url || "";
 
   function handleCancel() {
     if (!confirm("確定要取消這筆訂單嗎？")) return;
@@ -190,6 +192,50 @@ export default function BookingSuccessClient({ detail, settings = {}, user = nul
               重要提醒：請於 24 小時內完成轉帳，轉帳後請提供訂單編號以便我們確認您的付款。
             </p>
           </div>
+        </section>
+
+        {/* LINE follow-up */}
+        <section className="mt-6 rounded-2xl border border-[#06c755]/30 bg-[#06c755]/5 p-6 md:p-8">
+          <h2 className="mb-4 flex items-center gap-2 font-serif text-lg font-semibold text-primary-900">
+            <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#06c755]" />
+            完成付款後，加官方 LINE 取得入住導引
+          </h2>
+          <ol className="mb-5 space-y-2 text-sm leading-7 text-primary-700">
+            <li>
+              <span className="mr-2 inline-block min-w-5 font-semibold text-[#06c755]">1.</span>
+              完成銀行轉帳
+            </li>
+            <li>
+              <span className="mr-2 inline-block min-w-5 font-semibold text-[#06c755]">2.</span>
+              加入我們的官方 LINE
+            </li>
+            <li>
+              <span className="mr-2 inline-block min-w-5 font-semibold text-[#06c755]">3.</span>
+              於對話中提供您的訂單編號：
+              <span className="ml-1 rounded bg-white px-2 py-0.5 font-mono text-sm font-semibold text-red-600">
+                {orderCode}
+              </span>
+            </li>
+            <li>
+              <span className="mr-2 inline-block min-w-5 font-semibold text-[#06c755]">4.</span>
+              抵達前 24 小時，我們將透過 LINE 提供詳細導引
+            </li>
+          </ol>
+          {lineUrl ? (
+            <a
+              href={lineUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#06c755] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#05a847]"
+            >
+              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+              加入官方 LINE
+            </a>
+          ) : (
+            <p className="text-xs text-primary-500">
+              LINE 連結尚未設定，請先聯繫客服：{contactPhone}
+            </p>
+          )}
         </section>
 
         {/* Notice */}

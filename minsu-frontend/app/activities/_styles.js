@@ -152,7 +152,7 @@ export const pageStyle = `
     .breadcrumb span { opacity: 0.4; }
 
     /* ── SECTIONS ─────────────────────────────────── */
-    .section { padding: 64px 2.5rem; background: var(--warm-block); }
+    .section { padding: 64px 1rem; background: var(--warm-block); }
     .section-alt { background: var(--surface); }
     .container { max-width: 1200px; margin: 0 auto; }
 
@@ -474,7 +474,7 @@ export const pageStyle = `
       .nav-actions .nav-desktop-only { display: none; }
       .hero { padding: 3.5rem 1.25rem 4rem; }
       .hero::after { display: none; }
-      .section { padding: 48px 1.25rem; }
+      .section { padding: 48px 1rem; }
       .breadcrumb { padding: 1rem 1.25rem 0; }
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
       .footer-bottom { flex-direction: column; gap: 0.5rem; }
@@ -490,10 +490,10 @@ export const pageStyle = `
         grid-template-columns: none;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
-        scroll-padding-inline-start: 2.5rem;
+        scroll-padding-inline-start: 1rem;
         gap: 0.75rem;
-        padding: 0 2.5rem;
-        margin: 0 -1.25rem;
+        padding: 0 1rem;
+        margin: 0 -1rem;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
       }

@@ -158,7 +158,7 @@ export default function ActivitiesGrid({ activities }) {
                   <span
                     className={`btn ${isFull ? "btn-ghost" : "btn-primary"} btn-sm`}
                   >
-                    {isFull ? "候補" : "報名"}
+                    {isFull ? "已額滿" : "報名"}
                   </span>
                 </div>
               </Link>

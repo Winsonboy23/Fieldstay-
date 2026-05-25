@@ -268,7 +268,6 @@ export default function ConfirmReservationClient({ room, user, booking }) {
         mobileDateNote={`入住時間：${checkInTime} 後 ・ 退房時間：${checkOutTime} 前`}
         mobileGuestsLine={`${draft.numGuests} 位房客`}
         cancellationPolicy="入住日前 7 天可全額退款；7 天內取消酌收 30% 手續費。"
-        cancellationPolicyHref="#"
         onEditDate={() => setEditMode("date")}
         onEditGuests={() => setEditMode("guests")}
         onClose={() => router.back()}

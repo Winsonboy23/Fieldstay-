@@ -679,6 +679,7 @@ export default async function Page() {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
       gap: 1.5rem;
+      margin-left: 1.25rem;
     }
 
     .room-card {
@@ -771,6 +772,7 @@ export default async function Page() {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
+      margin-left: 1.25rem;
     }
 
     .exp-card {
@@ -1290,7 +1292,7 @@ export default async function Page() {
         scroll-snap-type: x mandatory;
         gap: 0.75rem;
         padding: 0 1.25rem;
-        margin: 0 -1.25rem;
+        margin: 0 0.1rem;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
       }
@@ -1300,6 +1302,10 @@ export default async function Page() {
       .exp-grid > * {
         flex: 0 0 85%;
         scroll-snap-align: start;
+      }
+      .room-grid > *:first-child,
+      .exp-grid > *:first-child {
+        margin-left: 1.25rem;
       }
 
       .carousel-dots {
@@ -1345,6 +1351,7 @@ export default async function Page() {
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
       <li><a href="#transport">交通資訊</a></li>
+      <li><a href="/faq">FAQ</a></li>
     </ul>
 
     <div class="nav-actions">
@@ -1366,6 +1373,7 @@ export default async function Page() {
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
       <li><a href="#transport">交通資訊</a></li>
+      <li><a href="/faq">FAQ</a></li>
     </ul>
     <div class="mobile-actions">
       <a href="/account" class="btn btn-ghost">會員中心</a>

@@ -69,12 +69,22 @@ export default function ActivitySidebar({ activity }) {
               last
             />
           </div>
-          <Link
-            href={`/activities/${activity.id}/confirm`}
-            className="block w-full rounded-lg bg-[#008466] px-5 py-4 text-center text-lg font-bold text-white transition hover:bg-[#006f56]"
-          >
-            {isFull ? "加入候補" : "立即報名"}
-          </Link>
+          {isFull ? (
+            <button
+              type="button"
+              disabled
+              className="block w-full cursor-not-allowed rounded-lg bg-slate-300 px-5 py-4 text-center text-lg font-bold text-slate-600"
+            >
+              已額滿
+            </button>
+          ) : (
+            <Link
+              href={`/activities/${activity.id}/confirm`}
+              className="block w-full rounded-lg bg-[#008466] px-5 py-4 text-center text-lg font-bold text-white transition hover:bg-[#006f56]"
+            >
+              立即報名
+            </Link>
+          )}
           <p className="mt-6 text-center text-sm text-slate-500">
             報名後將收到確認郵件
           </p>
@@ -169,9 +179,10 @@ export default function ActivitySidebar({ activity }) {
         <button
           type="button"
           onClick={goConfirm}
-          className="block w-full rounded-lg bg-[#008466] px-5 py-4 text-center text-lg font-bold text-white"
+          disabled={isFull}
+          className="block w-full rounded-lg bg-[#008466] px-5 py-4 text-center text-lg font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
         >
-          {isFull ? "確認加入候補" : "確認報名"}
+          {isFull ? "已額滿" : "確認報名"}
         </button>
       </div>
 
@@ -209,9 +220,10 @@ export default function ActivitySidebar({ activity }) {
         <button
           type="button"
           onClick={goConfirm}
-          className="shrink-0 rounded-full bg-[#008466] px-5 py-3 text-sm font-semibold text-white"
+          disabled={isFull}
+          className="shrink-0 rounded-full bg-[#008466] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
         >
-          {isFull ? "加入候補" : "立即報名"}
+          {isFull ? "已額滿" : "立即報名"}
         </button>
       </div>
     </>

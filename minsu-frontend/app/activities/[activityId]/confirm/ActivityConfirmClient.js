@@ -32,7 +32,7 @@ export default function ActivityConfirmClient({ activity, user }) {
       { label: "活動時間", value: activity.time },
       { label: "活動地點", value: activity.location },
       { label: "報名人數", value: `${quantity} ${activity.unit}` },
-      { label: "剩餘名額", value: isFull ? "目前已額滿（候補）" : `${remaining} 名` },
+      { label: "剩餘名額", value: isFull ? "目前已額滿" : `${remaining} 名` },
     ],
     [activity.dateLabel, activity.location, activity.time, activity.unit, isFull, remaining, quantity]
   );
@@ -91,11 +91,12 @@ export default function ActivityConfirmClient({ activity, user }) {
       user={user}
       onSubmit={handleSubmit}
       isSubmitting={isPending}
-      submitLabel={isFull ? "確認加入候補" : "確認報名"}
-      submittingLabel={isFull ? "送出候補中..." : "送出報名中..."}
+      submitLabel={isFull ? "已額滿，無法報名" : "確認報名"}
+      submittingLabel="送出報名中..."
+      submitDisabled={isFull}
       error={error}
       success={success}
-      paymentDescription="活動報名採銀行轉帳。送出後請於 24 小時內完成匯款，逾期視同放棄名額。"
+      paymentDescription="活動報名採銀行轉帳。送出後請於 24 小時內完成匯款，逾期視同放棄名額。後台確認款項後，付款狀態會更新為已付款。"
       specialRequestPlaceholder="例如：同行者姓名、飲食限制、兒童年齡等"
       summaryTitle="活動摘要"
       summaryImage={activity.image}

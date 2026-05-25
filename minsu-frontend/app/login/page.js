@@ -1,4 +1,5 @@
 import BrandMark from "../_components/BrandMark";
+import PasswordField from "../_components/PasswordField";
 
 export const metadata = { title: "登入 | 山田寓所 FIELDSTAY" };
 
@@ -288,13 +289,7 @@ export default function Page({ searchParams }) {
             <input type="email" id="email" name="email" placeholder="電子信箱" autoComplete="email" required />
           </div>
           <div className="field">
-            <input type="password" id="password" name="password" placeholder="密碼" autoComplete="current-password" required />
-            <button type="button" className="eye" data-eye aria-label="顯示密碼">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
+            <PasswordField />
           </div>
 
           <div className="row-flex">
@@ -324,11 +319,6 @@ export default function Page({ searchParams }) {
 
       </div>
 
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.querySelectorAll('[data-eye]').forEach(function(b){b.addEventListener('click',function(){var i=b.parentNode.querySelector('input');i.type=i.type==='password'?'text':'password';});});`,
-        }}
-      />
     </>
   );
 }

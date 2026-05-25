@@ -26,7 +26,7 @@ async function RoomList({ filter }) {
     <>
       <div
         id="roomListGrid"
-        className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-10 [scroll-padding-inline-start:2.5rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 xl:grid-cols-3 [&>*]:w-[85%] [&>*]:flex-none [&>*]:snap-start md:[&>*]:w-auto"
+        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 [scroll-padding-inline-start:1rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 xl:grid-cols-3 [&>*]:w-[85%] [&>*]:flex-none [&>*]:snap-start md:[&>*]:w-auto"
       >
         {displayedRooms.map((room) => (
           <RoomCard room={room} key={room.id} />

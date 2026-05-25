@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { auth } from "../_lib/auth";
-import FaqAccordion from "./FaqAccordion";
 import AboutInteractions from "./AboutInteractions";
 import SiteFooter from "../_components/SiteFooter";
 import BrandMark from "../_components/BrandMark";
@@ -400,22 +399,6 @@ export default async function AboutPage() {
             />
             <span className="relative z-10">— 田間採集 · 土地風味 —</span>
           </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section data-reveal id="faq" className="px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[1100px]">
-          <div className="mx-auto mb-8 max-w-[580px] text-center">
-            <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.22em] text-accent-700">
-              常見問題 · FAQ
-            </p>
-            <h2 className="font-serif text-2xl font-bold leading-tight tracking-wide md:text-3xl lg:text-[2.2rem]">
-              入住前你可能會問
-            </h2>
-          </div>
-
-          <FaqAccordion />
         </div>
       </section>
 

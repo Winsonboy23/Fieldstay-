@@ -171,7 +171,7 @@ export async function registerAction(formData) {
     redirect("/register?error=register_failed");
   }
 
-  redirect("/login?registered=1");
+  redirect(`/register/sent?email=${encodeURIComponent(email)}`);
 }
 
 export async function forgotPasswordAction(formData) {

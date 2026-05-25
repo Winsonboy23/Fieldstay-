@@ -14,6 +14,7 @@ export default function BookingConfirmLayout({
   isSubmitting,
   submitLabel,
   submittingLabel,
+  submitDisabled = false,
   error,
   success,
   paymentDescription,
@@ -33,7 +34,7 @@ export default function BookingConfirmLayout({
   mobileDateNote,
   mobileGuestsLine,
   cancellationPolicy,
-  cancellationPolicyHref = "#",
+  cancellationPolicyDetail,
   onEditDate,
   onEditGuests,
   onClose,
@@ -41,6 +42,27 @@ export default function BookingConfirmLayout({
   const hasMobileFlow = Boolean(mobileDateLine);
   const [mobileStep, setMobileStep] = useState(0);
   const [showPriceDetails, setShowPriceDetails] = useState(false);
+  const [showPolicy, setShowPolicy] = useState(false);
+
+  const defaultPolicyDetail = (
+    <>
+      <p>
+        <strong>入住日前 7 天（含）以上取消：</strong>
+        全額退款，不收任何手續費。
+      </p>
+      <p>
+        <strong>入住日前 1 ~ 6 天取消：</strong>
+        酌收訂單總金額 30% 作為手續費，其餘金額退還。
+      </p>
+      <p>
+        <strong>入住當日或未通知缺席：</strong>
+        恕無法退款。
+      </p>
+      <p>
+        若因天災或政府公告之不可抗力事件無法入住，請聯繫客服協助處理。
+      </p>
+    </>
+  );
 
   // 桌機版的完整 form (lg+)
   const desktopForm = (
@@ -55,6 +77,7 @@ export default function BookingConfirmLayout({
         isSubmitting,
         submitLabel,
         submittingLabel,
+        submitDisabled,
       })}</div>
 
       <aside className="h-fit rounded-2xl border border-primary-200 bg-primary-50 p-6 shadow-sm lg:sticky lg:top-8">
@@ -158,12 +181,13 @@ export default function BookingConfirmLayout({
         {cancellationPolicy ? (
           <div className="mt-6 text-sm leading-7 text-primary-600">
             {cancellationPolicy}
-            <a
-              href={cancellationPolicyHref}
+            <button
+              type="button"
+              onClick={() => setShowPolicy(true)}
               className="ml-1 underline underline-offset-2 hover:text-accent-700"
             >
               完整政策
-            </a>
+            </button>
           </div>
         ) : null}
       </div>
@@ -188,20 +212,31 @@ export default function BookingConfirmLayout({
   );
 
   // 手機版 step 1 — 既有 form
+  const handleMobileBack = () => {
+    if (hasMobileFlow) {
+      setMobileStep(0);
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   const mobileStep1 = (
-    <div className="px-5 pt-2 pb-10">
-      <div className="-mx-5 mb-4 flex items-center gap-2 px-5">
+    <div className="px-5 pb-10">
+      <div
+        className="sticky top-0 z-20 -mx-5 mb-4 flex items-center gap-2 border-b border-primary-200 bg-primary-100 px-3 py-2"
+        style={{ paddingTop: "max(8px, env(safe-area-inset-top))" }}
+      >
         <button
           type="button"
-          onClick={() => setMobileStep(0)}
-          className="grid h-9 w-9 place-items-center rounded-full text-primary-700 hover:bg-primary-100"
+          onClick={handleMobileBack}
+          className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full text-primary-700 active:bg-primary-200"
           aria-label="返回上一步"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h1 className="font-serif text-2xl font-bold tracking-wide">填寫聯絡資訊</h1>
+        <h1 className="font-serif text-xl font-bold tracking-wide">填寫聯絡資訊</h1>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
@@ -215,6 +250,7 @@ export default function BookingConfirmLayout({
           isSubmitting,
           submitLabel,
           submittingLabel,
+          submitDisabled,
         })}
       </form>
     </div>
@@ -238,6 +274,39 @@ export default function BookingConfirmLayout({
       <div className="lg:hidden">
         {hasMobileFlow && mobileStep === 0 ? mobileStep0 : mobileStep1}
       </div>
+
+      {showPolicy ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 lg:items-center"
+          onClick={() => setShowPolicy(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-t-2xl bg-white shadow-2xl lg:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-primary-200 px-5 py-4">
+              <h3 className="font-serif text-lg font-semibold">取消政策</h3>
+              <button
+                type="button"
+                onClick={() => setShowPolicy(false)}
+                className="grid h-9 w-9 place-items-center rounded-full text-primary-700 hover:bg-primary-100"
+                aria-label="關閉"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div
+              className="space-y-4 px-5 py-5 text-sm leading-7 text-primary-700"
+              style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
+            >
+              {cancellationPolicyDetail || defaultPolicyDetail}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
@@ -273,6 +342,7 @@ function formSections({
   isSubmitting,
   submitLabel,
   submittingLabel,
+  submitDisabled = false,
 }) {
   return (
     <>
@@ -352,7 +422,7 @@ function formSections({
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || submitDisabled}
         className="w-full rounded-lg bg-accent-700 px-6 py-4 font-serif text-lg font-semibold text-white transition hover:bg-accent-800 disabled:cursor-not-allowed disabled:bg-primary-300"
       >
         {isSubmitting ? submittingLabel : submitLabel}

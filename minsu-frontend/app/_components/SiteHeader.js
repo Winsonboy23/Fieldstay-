@@ -48,6 +48,12 @@ export default function SiteHeader({ user = null }) {
       </Link>
 
       <div className="flex items-center gap-3">
+        <Link
+          href="/faq"
+          className="hidden text-sm font-medium text-primary-700 transition hover:text-accent-700 md:inline-flex"
+        >
+          FAQ
+        </Link>
         {user ? (
           <>
             <Link
