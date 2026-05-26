@@ -155,6 +155,22 @@ export default async function Page({ params }) {
 
       <div className="room-layout">
         <div>
+          {room.is_active === false ? (
+            <div
+              role="status"
+              style={{
+                marginBottom: "1.25rem",
+                padding: "0.85rem 1rem",
+                borderRadius: "0.5rem",
+                border: "1px solid oklch(80% 0.05 65)",
+                background: "oklch(95% 0.04 65)",
+                color: "oklch(35% 0.12 65)",
+                fontSize: "0.9rem",
+              }}
+            >
+              此房型目前暫停接受訂房，敬請見諒。
+            </div>
+          ) : null}
           <h1>{room.name}</h1>
           {room.subtitle ? (
             <p className="room-tagline">{room.subtitle}</p>
@@ -235,6 +251,7 @@ export default async function Page({ params }) {
           cleaningFee={cleaningFee}
           serviceFeeRate={serviceFeeRate}
           maxCapacity={room.maxCapacity || 4}
+          isActive={room.is_active !== false}
         />
       </div>
     </>

@@ -145,3 +145,19 @@ export async function deleteRoom(id) {
 
   return data;
 }
+
+export async function toggleRoomActive(id, isActive) {
+  const { data, error } = await supabase
+    .from("rooms")
+    .update({ is_active: isActive })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Room status could not be updated");
+  }
+
+  return data;
+}

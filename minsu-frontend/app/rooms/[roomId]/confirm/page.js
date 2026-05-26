@@ -28,6 +28,9 @@ export default async function Page({ params, searchParams }) {
   }
 
   const room = await getRoom(roomId);
+  if (!room || room.is_active === false) {
+    redirect(`/rooms/${roomId}`);
+  }
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);

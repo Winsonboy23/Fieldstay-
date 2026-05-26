@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/_lib/auth";
-import { createGuestBooking } from "@/app/_lib/data-service";
+import { createGuestBooking, getRoom } from "@/app/_lib/data-service";
 
 const CLEANING_FEE = 500;
 const SERVICE_RATE = 0.05;
@@ -35,6 +35,14 @@ export async function POST(request) {
 
   if (!contactName || !contactEmail || !contactPhone) {
     return NextResponse.json({ error: "missing_contact" }, { status: 400 });
+  }
+
+  const targetRoom = await getRoom(roomId).catch(() => null);
+  if (!targetRoom || targetRoom.is_active === false) {
+    return NextResponse.json(
+      { error: "此房型目前暫停接受訂房" },
+      { status: 403 }
+    );
   }
 
   const numNights = Math.round((endDate - startDate) / 86400000);

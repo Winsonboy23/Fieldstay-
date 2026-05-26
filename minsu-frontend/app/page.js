@@ -115,6 +115,9 @@ export default async function Page() {
       const displayPrice = Number(room.regularPrice) - Number(room.discount || 0);
       const roomName = escapeHtml(room.name);
       const roomImage = escapeHtml(room.image || "");
+      const isActive = room.is_active !== false;
+      const ctaText = isActive ? getRoomBadge(type) : "暫不開放";
+      const ctaClass = isActive ? "btn btn-primary btn-sm" : "btn btn-disabled btn-sm";
 
       return `
         <a class="room-card" href="/rooms/${room.id}" data-type="${type}" aria-label="${roomName}，NT$${displayPrice}起">
@@ -124,7 +127,7 @@ export default async function Page() {
             <p class="room-meta">最多 ${room.maxCapacity} 位</p>
             <div class="room-foot">
               <div class="room-price">NT$${displayPrice} <sub>/ 夜</sub></div>
-              <span class="btn btn-primary btn-sm">${getRoomBadge(type)}</span>
+              <span class="${ctaClass}">${ctaText}</span>
             </div>
           </div>
         </a>
@@ -298,6 +301,13 @@ export default async function Page() {
     }
 
     .btn-primary:hover { background: var(--accent-d); }
+
+    .btn-disabled {
+      background: oklch(86% 0.005 75);
+      color: oklch(50% 0.010 80);
+      border: 1px solid transparent;
+      cursor: not-allowed;
+    }
 
     .nav .btn-ghost {
       border-color: rgba(255, 255, 255, 0.45);

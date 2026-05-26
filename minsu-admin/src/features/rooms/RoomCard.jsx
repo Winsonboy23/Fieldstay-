@@ -5,6 +5,7 @@ import Modal from "../../ui/Modal";
 import ConfirmDelete from "../../ui/ConfirmDelete";
 import CreateRoomForm from "./CreateRoomForm";
 import { useDeleteRoom } from "./useDeleteRoom";
+import { useToggleRoomActive } from "./useToggleRoomActive";
 import { formatCurrency } from "../../utils/helpers";
 
 const Card = styled.article`
@@ -18,10 +19,68 @@ const Card = styled.article`
 `;
 
 const Cover = styled.div`
+  position: relative;
   aspect-ratio: 16 / 9;
   background-color: var(--color-grey-100);
   background-size: cover;
   background-position: center;
+`;
+
+const StatusBadge = styled.span`
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: ${(props) =>
+    props.$active ? "rgba(22, 101, 52, 0.92)" : "rgba(120, 113, 108, 0.92)"};
+  color: white;
+  letter-spacing: 0.05em;
+`;
+
+const StatusRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--color-grey-100);
+  border-bottom: 1px solid var(--color-grey-100);
+  font-size: 1.4rem;
+  color: var(--color-grey-500);
+`;
+
+const ToggleSwitch = styled.button`
+  position: relative;
+  width: 4.4rem;
+  height: 2.4rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  background: ${(props) =>
+    props.$on ? "var(--color-brand-600)" : "var(--color-grey-300)"};
+  transition: background 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0.3rem;
+    left: ${(props) => (props.$on ? "2.3rem" : "0.3rem")};
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: white;
+    transition: left 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
 `;
 
 const Body = styled.div`
@@ -96,14 +155,20 @@ const DeleteButton = styled(ActionButton)`
 
 function RoomCard({ room }) {
   const { isDeleting, deleteRoom } = useDeleteRoom();
+  const { toggleActive, isToggling } = useToggleRoomActive();
   const price = room.regularPrice - (room.discount || 0);
+  const isActive = room.is_active !== false;
 
   return (
     <Modal>
-      <Card>
+      <Card style={{ opacity: isActive ? 1 : 0.7 }}>
         <Cover
           style={room.image ? { backgroundImage: `url(${room.image})` } : undefined}
-        />
+        >
+          <StatusBadge $active={isActive}>
+            {isActive ? "開放中" : "暫不開放"}
+          </StatusBadge>
+        </Cover>
         <Body>
           <Title>{room.name}</Title>
 
@@ -121,6 +186,20 @@ function RoomCard({ room }) {
               <strong>{room.bookingsCount || 0} 筆</strong>
             </StatRow>
           </div>
+
+          <StatusRow>
+            <span>{isActive ? "前台開放預訂" : "前台暫停預訂"}</span>
+            <ToggleSwitch
+              type="button"
+              $on={isActive}
+              disabled={isToggling}
+              onClick={() =>
+                toggleActive({ id: room.id, isActive: !isActive })
+              }
+              aria-label={isActive ? "點擊以暫停此房型" : "點擊以開放此房型"}
+              aria-pressed={isActive}
+            />
+          </StatusRow>
 
           <Actions>
             <ActionButton

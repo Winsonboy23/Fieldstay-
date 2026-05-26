@@ -89,7 +89,7 @@ export const getRooms = async function () {
   const { data, error } = await supabase
     .from("rooms")
     .select(
-      "id, name, subtitle, maxCapacity, regularPrice, discount, image, description, area_sqm, bed_text, bathroom_text, category, amenities, gallery_images"
+      "id, name, subtitle, maxCapacity, regularPrice, discount, image, description, area_sqm, bed_text, bathroom_text, category, amenities, gallery_images, is_active"
     )
     .order("name");
 

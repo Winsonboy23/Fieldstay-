@@ -16,6 +16,7 @@ function RoomCard({ room }) {
     bathroom_text,
     category,
     amenities,
+    is_active = true,
   } = room;
 
   const finalPrice = Number(regularPrice) - Number(discount || 0);
@@ -99,12 +100,21 @@ function RoomCard({ room }) {
             >
               查看詳情
             </Link>
-            <Link
-              href={`/rooms/${id}`}
-              className="inline-flex flex-1 items-center justify-center rounded-md bg-accent-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-800"
-            >
-              立即訂房
-            </Link>
+            {is_active ? (
+              <Link
+                href={`/rooms/${id}`}
+                className="inline-flex flex-1 items-center justify-center rounded-md bg-accent-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-800"
+              >
+                立即訂房
+              </Link>
+            ) : (
+              <span
+                aria-disabled="true"
+                className="inline-flex flex-1 cursor-not-allowed items-center justify-center rounded-md bg-primary-200 px-4 py-2 text-sm font-semibold text-primary-500"
+              >
+                暫不開放
+              </span>
+            )}
           </div>
         </div>
       </div>

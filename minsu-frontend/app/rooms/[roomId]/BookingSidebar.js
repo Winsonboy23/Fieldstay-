@@ -74,6 +74,7 @@ export default function BookingSidebar({
   cleaningFee = 500,
   serviceFeeRate = 0.05,
   maxCapacity = 4,
+  isActive = true,
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -155,6 +156,7 @@ export default function BookingSidebar({
   }
 
   function handleBook() {
+    if (!isActive) return;
     if (!range?.from || !range?.to || nights <= 0) {
       setNote("請選擇正確的入住與退房日期。付款方式：轉帳");
       setSheetOpen(true);
@@ -293,10 +295,16 @@ export default function BookingSidebar({
           </div>
         </div>
 
-        <button type="button" className="sidebar-btn" onClick={handleBook}>
-          確認訂房
+        <button
+          type="button"
+          className="sidebar-btn"
+          onClick={handleBook}
+          disabled={!isActive}
+          style={!isActive ? { background: "#cfc8c0", color: "#7a7269", cursor: "not-allowed" } : undefined}
+        >
+          {isActive ? "確認訂房" : "暫不開放"}
         </button>
-        <p className="sidebar-note">{note}</p>
+        <p className="sidebar-note">{isActive ? note : "此房型目前暫停接受訂房，敬請見諒。"}</p>
       </div>
 
       {/* Mobile-only sticky CTA (sibling of sidebar — never hidden when sheet collapses) */}
@@ -330,8 +338,14 @@ export default function BookingSidebar({
               : "請先選擇日期"}
           </div>
         </div>
-        <button type="button" className="mobile-cta-btn" onClick={handleBook}>
-          立即預約
+        <button
+          type="button"
+          className="mobile-cta-btn"
+          onClick={handleBook}
+          disabled={!isActive}
+          style={!isActive ? { background: "#cfc8c0", color: "#7a7269", cursor: "not-allowed" } : undefined}
+        >
+          {isActive ? "立即預約" : "暫不開放"}
         </button>
       </div>
     </>
