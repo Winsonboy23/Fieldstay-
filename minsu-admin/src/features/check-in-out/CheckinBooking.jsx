@@ -52,9 +52,12 @@ function CheckinBooking() {
   function handleCheckin() {
     if (!confirmPaid) return;
 
+    const wasUnpaid = !booking?.isPaid;
+
     if (addBreakfast) {
       checkin({
         bookingId,
+        wasUnpaid,
         breakfast: {
           hasBreakfast: true,
           extrasPrice: optionalBreakfastPrice,
@@ -62,7 +65,7 @@ function CheckinBooking() {
         },
       });
     } else {
-      checkin({ bookingId, breakfast: {} });
+      checkin({ bookingId, wasUnpaid, breakfast: {} });
     }
   }
 

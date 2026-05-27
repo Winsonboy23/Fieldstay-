@@ -94,12 +94,6 @@ export default async function Page() {
                       <span>
                         {s.quantity} {activity.unit}
                       </span>
-                      {s.status === "waitlist" && (
-                        <>
-                          <span>・</span>
-                          <span className="text-amber-700 font-semibold">候補</span>
-                        </>
-                      )}
                     </p>
                   )}
                 </div>

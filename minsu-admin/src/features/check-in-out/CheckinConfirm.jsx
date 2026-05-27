@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import Button from "../../ui/Button";
 import { formatCurrency } from "../../utils/helpers";
 import { updateBooking } from "../../services/apiBookings";
+import { notifyBookingPaid } from "../../services/apiNotify";
 
 const Wrap = styled.div`
   width: 44rem;
@@ -65,6 +66,7 @@ function CheckinConfirm({ booking, onCloseModal }) {
       updateBooking(booking.id, { status: "checked-in", isPaid: true }),
     onSuccess: () => {
       toast.success("已 Check-in，訂單狀態為進行中");
+      if (!booking.isPaid) notifyBookingPaid(booking.id);
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["booking"] });
       queryClient.invalidateQueries({ queryKey: ["bookingStats"] });

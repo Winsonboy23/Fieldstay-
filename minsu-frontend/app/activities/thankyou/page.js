@@ -51,7 +51,6 @@ export default async function Page({ searchParams }) {
     quantity,
     totalPrice,
     paymentStatus: signup.payment_status || "unpaid",
-    isWaitlist: signup.status === "waitlist",
     contactName: signup.contact_name || "",
     contactEmail: signup.contact_email || "",
     contactPhone: signup.contact_phone || "",

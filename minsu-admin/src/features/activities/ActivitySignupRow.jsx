@@ -1,9 +1,11 @@
 import styled from "styled-components";
 import {
   HiOutlineBanknotes,
+  HiOutlineEnvelope,
   HiOutlineTrash,
   HiOutlineXCircle,
 } from "react-icons/hi2";
+import toast from "react-hot-toast";
 
 import Table from "../../ui/Table";
 import Menus from "../../ui/Menus";
@@ -11,6 +13,10 @@ import Modal from "../../ui/Modal";
 import ConfirmDelete from "../../ui/ConfirmDelete";
 import { formatCurrency } from "../../utils/helpers";
 import { useUpdateAnySignup, useDeleteAnySignup } from "./useAllSignups";
+import {
+  notifyActivityCancelled,
+  resendActivityNotification,
+} from "../../services/apiNotify";
 
 const OrderCode = styled.span`
   font-family: "Noto Sans TC", sans-serif;
@@ -94,12 +100,32 @@ function ActivitySignupRow({ signup }) {
 
   function handleConfirmPaid() {
     if (!window.confirm("確認此筆活動報名已收到款項？")) return;
-    updateSignup({ id: signup.id, patch: { payment_status: "paid" } });
+    updateSignup(
+      { id: signup.id, patch: { payment_status: "paid" } },
+      {
+        onSuccess: () => {
+          import("../../services/apiNotify").then(({ notifyActivityPaid }) =>
+            notifyActivityPaid(signup.id)
+          );
+        },
+      }
+    );
   }
 
   function handleCancel() {
     if (!window.confirm("確定要取消此筆報名？")) return;
-    updateSignup({ id: signup.id, patch: { status: "cancelled" } });
+    updateSignup(
+      { id: signup.id, patch: { status: "cancelled" } },
+      { onSuccess: () => notifyActivityCancelled(signup.id) }
+    );
+  }
+
+  async function handleResend() {
+    const label = isPaid ? "「匯款已確認」通知信" : "「報名成功」通知信";
+    if (!window.confirm(`確定要重寄${label}給報名者？`)) return;
+    const res = await resendActivityNotification(signup.id);
+    if (res.ok) toast.success(`已重寄${label}`);
+    else toast.error("重寄失敗，請查看 console");
   }
 
   return (
@@ -134,6 +160,16 @@ function ActivitySignupRow({ signup }) {
                 disabled={isUpdating}
               >
                 確認轉帳
+              </Menus.Button>
+            )}
+
+            {!isCancelled && (
+              <Menus.Button
+                icon={<HiOutlineEnvelope />}
+                onClick={handleResend}
+                disabled={isUpdating}
+              >
+                重寄通知
               </Menus.Button>
             )}
 

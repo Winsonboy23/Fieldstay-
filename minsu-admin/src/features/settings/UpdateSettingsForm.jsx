@@ -417,6 +417,52 @@ function UpdateSettingsForm() {
               onBlur={(e) => handleBlur(e, "bank_account_number")}
             />
           </Field>
+          <Field>
+            <span>匯款期限（小時）</span>
+            <TextInput
+              type="number"
+              min="1"
+              placeholder="48"
+              defaultValue={settings.payment_deadline_hours ?? 48}
+              disabled={disabled}
+              onBlur={(e) =>
+                updateSetting({
+                  payment_deadline_hours: Number(e.target.value) || 48,
+                })
+              }
+            />
+          </Field>
+        </FieldGrid>
+        <p className="hint" style={{ marginTop: "0.8rem" }}>
+          客戶完成預約後，將在通知信中告知需於此時數內完成匯款。
+        </p>
+      </Section>
+
+      {/* 入住通用資訊 */}
+      <Section>
+        <h3>入住通用資訊</h3>
+        <p className="hint">
+          匯款確認後寄給客戶的通知信中會顯示。各房型的地址、入住/退房時間請至「房型管理」設定。
+        </p>
+        <FieldGrid cols="1fr 1fr">
+          <Field>
+            <span>Wi-Fi 資訊（選填）</span>
+            <TextInput
+              placeholder="例：SSID: FIELDSTAY / 密碼: xxxx"
+              defaultValue={settings.wifi_info ?? ""}
+              disabled={disabled}
+              onBlur={(e) => handleBlur(e, "wifi_info")}
+            />
+          </Field>
+          <Field>
+            <span>其他注意事項（選填）</span>
+            <TextInput
+              placeholder="例：禁帶寵物、請勿吸菸"
+              defaultValue={settings.house_notes ?? ""}
+              disabled={disabled}
+              onBlur={(e) => handleBlur(e, "house_notes")}
+            />
+          </Field>
         </FieldGrid>
       </Section>
 

@@ -3,6 +3,7 @@ import {
   HiOutlineArrowUpOnSquare,
   HiOutlineBanknotes,
   HiOutlineCheckCircle,
+  HiOutlineEnvelope,
   HiOutlinePencilSquare,
   HiOutlineXCircle,
 } from "react-icons/hi2";
@@ -17,6 +18,10 @@ import EditBookingForm from "./EditBookingForm";
 import CheckinConfirm from "../check-in-out/CheckinConfirm";
 import { useUpdateBooking } from "./useUpdateBooking";
 import { useCheckout } from "../check-in-out/useCheckout";
+import {
+  notifyBookingCancelled,
+  resendBookingNotification,
+} from "../../services/apiNotify";
 
 const OrderCode = styled.a`
   font-family: "Noto Sans TC", sans-serif;
@@ -167,20 +172,42 @@ function BookingRow({ booking }) {
 
   function handleConfirmTransfer() {
     if (!window.confirm("確認此筆訂單已收到轉帳款項？")) return;
-    updateBooking({ id: bookingId, updates: { isPaid: true } });
+    updateBooking(
+      { id: bookingId, updates: { isPaid: true } },
+      {
+        onSuccess: () => {
+          import("../../services/apiNotify").then(({ notifyBookingPaid }) =>
+            notifyBookingPaid(bookingId)
+          );
+        },
+      }
+    );
   }
 
   function handleCancel() {
     if (!window.confirm("確定要取消此筆訂單？取消後將無法復原。")) return;
     updateBooking(
       { id: bookingId, updates: { status: "cancelled" } },
-      { onSuccess: () => toast.success("訂單已取消") }
+      {
+        onSuccess: () => {
+          toast.success("訂單已取消");
+          notifyBookingCancelled(bookingId);
+        },
+      }
     );
   }
 
   function handleCheckout() {
     if (!window.confirm("確認辦理退房？")) return;
     checkout(bookingId);
+  }
+
+  async function handleResend() {
+    const label = isPaid ? "「匯款已確認」通知信" : "「訂房成功」通知信";
+    if (!window.confirm(`確定要重寄${label}給訂房者？`)) return;
+    const res = await resendBookingNotification(bookingId);
+    if (res.ok) toast.success(`已重寄${label}`);
+    else toast.error("重寄失敗，請查看 console");
   }
 
   return (
@@ -260,6 +287,16 @@ function BookingRow({ booking }) {
             <Modal.Open opens="edit">
               <Menus.Button icon={<HiOutlinePencilSquare />}>編輯訂單</Menus.Button>
             </Modal.Open>
+
+            {(isPendingConfirm || isConfirmed || isCheckedIn) && (
+              <Menus.Button
+                icon={<HiOutlineEnvelope />}
+                onClick={handleResend}
+                disabled={isUpdating}
+              >
+                重寄通知
+              </Menus.Button>
+            )}
 
             {(isPendingConfirm || isConfirmed) && (
               <Menus.Button

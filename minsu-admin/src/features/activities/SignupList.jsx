@@ -82,18 +82,8 @@ const StatusPill = styled.span`
   border-radius: 999px;
   font-size: 1.1rem;
   font-weight: 600;
-  background: ${(p) =>
-    p.$kind === "confirmed"
-      ? "#dcfce7"
-      : p.$kind === "waitlist"
-      ? "#fef3c7"
-      : "#f3f4f6"};
-  color: ${(p) =>
-    p.$kind === "confirmed"
-      ? "#166534"
-      : p.$kind === "waitlist"
-      ? "#92400e"
-      : "#6b7280"};
+  background: ${(p) => (p.$kind === "confirmed" ? "#dcfce7" : "#f3f4f6")};
+  color: ${(p) => (p.$kind === "confirmed" ? "#166534" : "#6b7280")};
 `;
 
 const Empty = styled.p`
@@ -140,7 +130,6 @@ function fmtDate(s) {
 
 const STATUS_LABELS = {
   confirmed: "已確認",
-  waitlist: "候補",
   cancelled: "取消",
 };
 
@@ -156,7 +145,6 @@ function SignupList({ activity }) {
   const { deleteSignup, isDeleting } = useDeleteSignup(activity.id);
 
   const confirmed = (signups || []).filter((s) => s.status === "confirmed");
-  const waitlist = (signups || []).filter((s) => s.status === "waitlist");
   const totalRevenue = confirmed.reduce((sum, s) => sum + (s.total_price || 0), 0);
 
   return (
@@ -174,10 +162,6 @@ function SignupList({ activity }) {
         <div>
           <small>已確認</small>
           <strong>{confirmed.length}</strong>
-        </div>
-        <div>
-          <small>候補</small>
-          <strong>{waitlist.length}</strong>
         </div>
         <div>
           <small>已確認營收</small>
@@ -235,9 +219,23 @@ function SignupList({ activity }) {
                   <StyledSelect
                     value={s.status}
                     disabled={isUpdating}
-                    onChange={(e) =>
-                      updateSignup({ id: s.id, patch: { status: e.target.value } })
-                    }
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      const wasActive = s.status !== "cancelled";
+                      updateSignup(
+                        { id: s.id, patch: { status: next } },
+                        {
+                          onSuccess: () => {
+                            if (next === "cancelled" && wasActive) {
+                              import("../../services/apiNotify").then(
+                                ({ notifyActivityCancelled }) =>
+                                  notifyActivityCancelled(s.id)
+                              );
+                            }
+                          },
+                        }
+                      );
+                    }}
                   >
                     {Object.entries(STATUS_LABELS).map(([v, lbl]) => (
                       <option key={v} value={v}>
@@ -255,12 +253,23 @@ function SignupList({ activity }) {
                   <StyledSelect
                     value={s.payment_status}
                     disabled={isUpdating}
-                    onChange={(e) =>
-                      updateSignup({
-                        id: s.id,
-                        patch: { payment_status: e.target.value },
-                      })
-                    }
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      const wasUnpaid = s.payment_status !== "paid";
+                      updateSignup(
+                        { id: s.id, patch: { payment_status: next } },
+                        {
+                          onSuccess: () => {
+                            if (next === "paid" && wasUnpaid) {
+                              import("../../services/apiNotify").then(
+                                ({ notifyActivityPaid }) =>
+                                  notifyActivityPaid(s.id)
+                              );
+                            }
+                          },
+                        }
+                      );
+                    }}
                   >
                     {Object.entries(PAY_LABELS).map(([v, lbl]) => (
                       <option key={v} value={v}>

@@ -97,11 +97,6 @@ export default async function Page({ params }) {
             <p className="font-mono text-2xl font-bold tracking-wider text-accent-900">
               {code}
             </p>
-            {signup?.status === "waitlist" && (
-              <p className="mt-2 text-sm font-semibold text-amber-700">
-                此次報名為候補名單
-              </p>
-            )}
           </div>
 
           <div className="grid gap-8 border-y border-primary-200 py-7 lg:grid-cols-2">

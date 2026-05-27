@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/_lib/auth";
-import { createGuestBooking, getRoom } from "@/app/_lib/data-service";
+import {
+  createGuestBooking,
+  getRoom,
+  getSettings,
+} from "@/app/_lib/data-service";
+import { sendMail } from "@/app/_lib/mailer";
+import { bookingCreatedEmail } from "@/app/_lib/emailTemplates";
 
 const CLEANING_FEE = 500;
 const SERVICE_RATE = 0.05;
@@ -76,6 +82,32 @@ export async function POST(request) {
       hasBreakfast: false,
       status: "unconfirmed",
     });
+
+    // 寄出「訂房成功，請完成匯款」通知信（失敗不擋訂單）
+    if (booking?.id && contactEmail) {
+      try {
+        const settings = await getSettings().catch(() => ({}));
+        const siteUrl =
+          process.env.NEXTAUTH_URL || "http://localhost:3000";
+        const { subject, html } = bookingCreatedEmail({
+          booking: {
+            id: booking.id,
+            startDate: payload.startDate,
+            endDate: payload.endDate,
+            numNights,
+            numGuests,
+            totalPrice,
+          },
+          room: targetRoom,
+          contactName,
+          settings: settings || {},
+          siteUrl,
+        });
+        await sendMail({ to: contactEmail, subject, html });
+      } catch (mailErr) {
+        console.error("booking confirmation mail failed", mailErr);
+      }
+    }
 
     return NextResponse.json({ ok: true, bookingId: booking?.id || null });
   } catch (err) {

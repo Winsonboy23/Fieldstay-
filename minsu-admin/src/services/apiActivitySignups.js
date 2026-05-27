@@ -28,6 +28,18 @@ export async function getSignupsByActivity(activityId) {
 }
 
 export async function updateSignup(id, patch) {
+  // 取消時走 RPC 才會還回活動 capacity
+  if (patch?.status === "cancelled") {
+    const { data, error } = await supabase.rpc("cancel_activity_signup", {
+      p_signup_id: id,
+    });
+    if (error) {
+      console.error(error);
+      throw new Error("Signup could not be cancelled");
+    }
+    return data;
+  }
+
   const { data, error } = await supabase
     .from("activity_signups")
     .update(patch)

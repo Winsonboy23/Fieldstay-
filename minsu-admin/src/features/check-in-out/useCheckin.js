@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateBooking } from "../../services/apiBookings";
+import { notifyBookingPaid } from "../../services/apiNotify";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -14,8 +15,12 @@ export function useCheckin() {
         isPaid: true,
         ...breakfast,
       }),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success(`Booking #${data.id} successfully checked in.`);
+      // 如果 check-in 之前尚未付款，現在才標記為已付款 → 寄已收款通知
+      if (variables?.wasUnpaid) {
+        notifyBookingPaid(data.id);
+      }
       queryClient.invalidateQueries({ active: true });
       navigate("/");
     },

@@ -6,12 +6,20 @@ import {
   createActivitySignup,
   createBooking,
   deleteBooking,
+  getActivity,
   getBookings,
+  getSettings,
   registerGuest,
   requestPasswordReset,
   updateBooking,
   updateGuest,
 } from "./data-service";
+import { supabaseAdmin } from "./supabase-admin";
+import { sendMail } from "./mailer";
+import {
+  activityCreatedEmail,
+  bookingCancelledEmail,
+} from "./emailTemplates";
 import { redirect } from "next/navigation";
 
 export async function UpdateGuest(formData) {
@@ -61,20 +69,53 @@ export async function createReservation(bookingData, formData) {
 ////////////////////////
 
 export async function deleteReservation(bookingId) {
-  // await new Promise((resolve) => setTimeout(resolve, 2000));
-
   const session = await auth();
   if (!session) throw new Error("You must be signed in");
 
-  /// This checking is to ensure that the user can only delete their own reservations. This is a security measure to prevent unauthorized deletion of reservations by malicious users.
+  // 驗證是本人的訂單
   const guestBookings = await getBookings(session.user.guestId);
   const guestBookingIds = guestBookings.map((booking) => booking.id);
+  if (!guestBookingIds.includes(bookingId)) {
+    throw new Error("You don't have permission to cancel this reservation");
+  }
 
-  if (!guestBookingIds.includes(bookingId))
-    throw new Error("You don't have permission to delete this reservation");
-  ///
+  // 改成「取消」而非刪除：標記 status=cancelled，並寄取消通知信
+  const { data: booking } = await supabaseAdmin
+    .from("bookings")
+    .update({ status: "cancelled" })
+    .eq("id", bookingId)
+    .select("*, rooms(*), guests(fullName, email)")
+    .maybeSingle();
 
-  await deleteBooking(bookingId);
+  if (booking && !booking.cancelled_email_sent_at) {
+    try {
+      const obs = String(booking.observations || "");
+      const m = obs.match(/聯絡\s*Email[：: ]\s*([^\s\n]+)/i);
+      const contactEmail = m?.[1] || booking.guests?.email;
+      const nameMatch = obs.match(/訂房聯絡人[：: ]\s*([^\n]+)/);
+      const contactName =
+        nameMatch?.[1]?.trim() || booking.guests?.fullName;
+      if (contactEmail) {
+        const settings = await getSettings().catch(() => ({}));
+        const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+        const { subject, html } = bookingCancelledEmail({
+          booking,
+          room: booking.rooms,
+          contactName,
+          settings: settings || {},
+          siteUrl,
+        });
+        await sendMail({ to: contactEmail, subject, html });
+        await supabaseAdmin
+          .from("bookings")
+          .update({ cancelled_email_sent_at: new Date().toISOString() })
+          .eq("id", bookingId);
+      }
+    } catch (err) {
+      console.error("booking cancel mail failed", err);
+    }
+  }
+
   revalidatePath("/account/reservations");
 }
 
@@ -121,20 +162,56 @@ export async function createActivitySignupAction(activityId, formData) {
     throw new Error("請填寫姓名、電子郵件與電話號碼");
   }
 
-  const signup = await createActivitySignup({
-    activityId,
-    guestId: session.user.guestId || null,
-    contactName,
-    contactEmail,
-    contactPhone,
-    quantity: Math.max(1, quantity),
-    specialRequest: specialRequest || null,
-    paymentMethod: "transfer",
-  });
+  let signup;
+  try {
+    signup = await createActivitySignup({
+      activityId,
+      guestId: session.user.guestId || null,
+      contactName,
+      contactEmail,
+      contactPhone,
+      quantity: Math.max(1, quantity),
+      specialRequest: specialRequest || null,
+      paymentMethod: "transfer",
+    });
+  } catch (err) {
+    const msg = String(err?.message || "");
+    if (msg.includes("ACTIVITY_FULL")) {
+      throw new Error("此活動已額滿，無法報名");
+    }
+    if (msg.includes("ACTIVITY_NOT_FOUND")) {
+      throw new Error("找不到此活動");
+    }
+    throw err;
+  }
+
+  // 寄出「報名成功，請完成匯款」通知信（失敗不擋報名）
+  if (signup?.id && contactEmail) {
+    try {
+      const [activity, settings] = await Promise.all([
+        getActivity(activityId).catch(() => null),
+        getSettings().catch(() => ({})),
+      ]);
+      const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+      const { subject, html } = activityCreatedEmail({
+        signup: {
+          id: signup.id,
+          contactName,
+          quantity: Math.max(1, quantity),
+        },
+        activity,
+        settings: settings || {},
+        siteUrl,
+      });
+      await sendMail({ to: contactEmail, subject, html });
+    } catch (mailErr) {
+      console.error("activity signup mail failed", mailErr);
+    }
+  }
 
   revalidatePath(`/activities/${activityId}`);
   revalidatePath("/account/experiences");
-  redirect(`/account/experiences/${activityId}`);
+  redirect(`/activities/thankyou?signupId=${signup.id}`);
 }
 
 ///////////////////////

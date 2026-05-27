@@ -7,6 +7,7 @@ import {
   BanknotesIcon,
   CalendarDaysIcon,
   CheckCircleIcon,
+  ClockIcon,
   EnvelopeIcon,
   InformationCircleIcon,
   MapPinIcon,
@@ -52,10 +53,12 @@ export default function ActivitySuccessClient({ detail, settings = {}, user = nu
   const paymentLabel =
     PAYMENT_LABEL[detail.paymentStatus] || PAYMENT_LABEL.unpaid;
   const isUnpaid = detail.paymentStatus !== "paid";
-  const heroTitle = detail.isWaitlist ? "已加入候補名單" : "報名成功";
-  const heroSubtitle = detail.isWaitlist
-    ? "活動目前額滿，已為您加入候補，釋出名額時將通知您"
+  const heroTitle = isUnpaid ? "待匯款" : "報名成功";
+  const heroSubtitle = isUnpaid
+    ? "報名已成立，請依下方資訊完成匯款，款項確認後即正式報名成功"
     : "感謝您的報名，活動已確認";
+  const HeroIcon = isUnpaid ? ClockIcon : CheckCircleIcon;
+  const heroIconColor = isUnpaid ? "text-amber-500" : "text-emerald-500";
 
   return (
     <main className="min-h-screen bg-primary-100 text-primary-900">
@@ -63,7 +66,7 @@ export default function ActivitySuccessClient({ detail, settings = {}, user = nu
 
       <div className="mx-auto max-w-[960px] px-6 py-10">
         <section className="mb-10 text-center">
-          <CheckCircleIcon className="mx-auto mb-5 h-20 w-20 text-emerald-500" />
+          <HeroIcon className={`mx-auto mb-5 h-20 w-20 ${heroIconColor}`} />
           <h1 className="mb-2 font-serif text-3xl font-semibold tracking-wide">
             {heroTitle}
           </h1>
@@ -88,11 +91,6 @@ export default function ActivitySuccessClient({ detail, settings = {}, user = nu
             <p className="font-mono text-xl font-bold tracking-wider text-accent-900">
               {orderCode}
             </p>
-            {detail.isWaitlist && (
-              <p className="mt-2 text-sm font-semibold text-amber-700">
-                此次報名為候補名單
-              </p>
-            )}
           </div>
 
           <div className="grid gap-8 border-y border-primary-200 py-6 md:grid-cols-2">
