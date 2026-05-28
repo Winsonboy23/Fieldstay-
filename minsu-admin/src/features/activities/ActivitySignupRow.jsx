@@ -18,11 +18,17 @@ import {
   resendActivityNotification,
 } from "../../services/apiNotify";
 
-const OrderCode = styled.span`
+const OrderCode = styled.a`
   font-family: "Noto Sans TC", sans-serif;
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--color-brand-700);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 const Cell = styled.div`
@@ -46,6 +52,42 @@ const Stacked = styled.div`
   & span:last-child {
     color: var(--color-grey-500);
     font-size: 1.2rem;
+  }
+`;
+
+const QuantityStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-weight: 500;
+  color: var(--color-grey-700);
+`;
+
+const CustomFieldList = styled.dl`
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 1.15rem;
+  color: var(--color-grey-500);
+
+  div {
+    display: flex;
+    gap: 0.3rem;
+    line-height: 1.3;
+  }
+
+  dt {
+    font-weight: 500;
+    color: var(--color-grey-600);
+
+    &::after {
+      content: "：";
+    }
+  }
+
+  dd {
+    margin: 0;
   }
 `;
 
@@ -130,7 +172,13 @@ function ActivitySignupRow({ signup }) {
 
   return (
     <Table.Row>
-      <OrderCode>{signupCode(signup.id)}</OrderCode>
+      <OrderCode
+        href={`http://localhost:3000/activities/thankyou?signupId=${signup.id}&admin=1`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {signupCode(signup.id)}
+      </OrderCode>
 
       <Cell>{activityTitle}</Cell>
 
@@ -141,7 +189,26 @@ function ActivitySignupRow({ signup }) {
 
       <Cell>{activityDate}</Cell>
 
-      <div>{signup.quantity || 1} 人</div>
+      <QuantityStack>
+        <div>{signup.quantity || 1} 人</div>
+        {(() => {
+          const definitions = Array.isArray(signup.activities?.custom_fields)
+            ? signup.activities.custom_fields
+            : [];
+          if (definitions.length === 0) return null;
+          const answers = signup.custom_field_answers || {};
+          return (
+            <CustomFieldList>
+              {definitions.map((f) => (
+                <div key={f.label}>
+                  <dt>{f.label}</dt>
+                  <dd>{answers[f.label] ? answers[f.label] : "—"}</dd>
+                </div>
+              ))}
+            </CustomFieldList>
+          );
+        })()}
+      </QuantityStack>
 
       <Amount>{formatCurrency(signup.total_price || 0)}</Amount>
 

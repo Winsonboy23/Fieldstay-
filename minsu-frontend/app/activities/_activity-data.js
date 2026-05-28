@@ -23,6 +23,9 @@ export function normalizeActivity(a) {
   const d = new Date(a.activity_date + "T00:00:00");
   const start = (a.start_time || "").slice(0, 5);
   const end = (a.end_time || "").slice(0, 5);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPast = d < today;
   return {
     ...a,
     shortTitle: a.short_title || a.title,
@@ -31,5 +34,6 @@ export function normalizeActivity(a) {
     weekday: WEEKDAYS[d.getDay()],
     dateLabel: `${d.getDate()} ${MONTHS[d.getMonth()]} (${WEEKDAYS[d.getDay()]})`,
     time: `${start} - ${end}`,
+    isPast,
   };
 }

@@ -178,6 +178,22 @@ export default async function Page({ params }) {
                   </p>
                 </div>
               </div>
+              {Array.isArray(activity.custom_fields) && activity.custom_fields.length > 0 ? (
+                <div className="mt-4 border-t border-primary-200 pt-4 text-sm leading-7 text-primary-600">
+                  <p className="mb-3 font-semibold text-primary-900">報名資訊</p>
+                  <dl className="grid gap-2 md:grid-cols-[140px_1fr]">
+                    {activity.custom_fields.map((f) => (
+                      <div key={f.label} className="contents">
+                        <dt className="text-primary-500">{f.label}</dt>
+                        <dd className="font-semibold text-primary-900">
+                          {signup.custom_field_answers?.[f.label] || "—"}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ) : null}
+
               {signup.special_request ? (
                 <div className="mt-4 border-t border-primary-200 pt-4 text-sm leading-7 text-primary-600">
                   <p className="mb-1 font-semibold text-primary-900">特殊需求</p>

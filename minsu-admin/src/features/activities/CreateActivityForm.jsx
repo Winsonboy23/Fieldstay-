@@ -281,6 +281,11 @@ function CreateActivityForm({ activityToEdit = {}, onCloseModal }) {
   );
   const [newNote, setNewNote] = useState("");
 
+  const [customFields, setCustomFields] = useState(
+    Array.isArray(editValues.custom_fields) ? editValues.custom_fields : []
+  );
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+
   const [coverFile, setCoverFile] = useState(null);
   const [coverUrl, setCoverUrl] = useState(editValues.image || "");
   const coverPreview = useMemo(
@@ -324,6 +329,23 @@ function CreateActivityForm({ activityToEdit = {}, onCloseModal }) {
     setNewNote("");
   }
 
+  function addCustomField() {
+    const label = newFieldLabel.trim();
+    if (!label) return;
+    if (customFields.some((f) => f.label === label)) {
+      alert("欄位名稱不可重複");
+      return;
+    }
+    setCustomFields((p) => [...p, { label, required: false }]);
+    setNewFieldLabel("");
+  }
+
+  function toggleCustomFieldRequired(label) {
+    setCustomFields((p) =>
+      p.map((f) => (f.label === label ? { ...f, required: !f.required } : f))
+    );
+  }
+
   function handleCoverPick(e) {
     const file = e.target.files?.[0];
     if (file) {
@@ -354,6 +376,7 @@ function CreateActivityForm({ activityToEdit = {}, onCloseModal }) {
       image: coverImage,
       highlights,
       notes,
+      custom_fields: customFields,
       gallery_images: existingGalleryUrls,
       gallery_files: newGalleryFiles,
     };
@@ -736,6 +759,70 @@ function CreateActivityForm({ activityToEdit = {}, onCloseModal }) {
               />
             </label>
             <Button type="button" onClick={addNote} disabled={isWorking}>
+              <HiOutlinePlus /> 新增
+            </Button>
+          </InlineAdder>
+        </Section>
+
+        {/* 自訂報名欄位 */}
+        <Section>
+          <h3>自訂報名欄位</h3>
+          {customFields.length === 0 ? (
+            <EmptyMsg>尚未新增自訂欄位</EmptyMsg>
+          ) : (
+            <ChipList>
+              {customFields.map((f) => (
+                <li key={f.label}>
+                  <span>{f.label}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.4rem",
+                        fontSize: "1.2rem",
+                        color: "var(--color-grey-600)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={f.required}
+                        onChange={() => toggleCustomFieldRequired(f.label)}
+                      />
+                      必填
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCustomFields((p) => p.filter((x) => x.label !== f.label))
+                      }
+                    >
+                      ×
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ChipList>
+          )}
+          <InlineAdder>
+            <label>
+              新增欄位
+              <input
+                type="text"
+                placeholder="例如：緊急聯絡人、飲食限制"
+                value={newFieldLabel}
+                onChange={(e) => setNewFieldLabel(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomField();
+                  }
+                }}
+                disabled={isWorking}
+              />
+            </label>
+            <Button type="button" onClick={addCustomField} disabled={isWorking}>
               <HiOutlinePlus /> 新增
             </Button>
           </InlineAdder>

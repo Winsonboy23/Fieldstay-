@@ -12,7 +12,19 @@ export default function ActivitySidebar({ activity }) {
   const router = useRouter();
   const remaining = Math.max(activity.capacity - activity.registered, 0);
   const isFull = remaining === 0;
-  const maxQuantity = isFull ? 1 : remaining;
+  const isPast = Boolean(activity.isPast);
+  const disabled = isFull || isPast;
+  const maxQuantity = disabled ? 1 : remaining;
+  const statusLabel = isPast
+    ? "已截止"
+    : isFull
+    ? "已額滿"
+    : null;
+  const ctaLabel = isPast
+    ? "活動已截止"
+    : isFull
+    ? "已額滿"
+    : "立即報名";
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -50,12 +62,16 @@ export default function ActivitySidebar({ activity }) {
           </div>
           <p
             className={
-              isFull
+              disabled
                 ? "mb-7 font-bold text-slate-500"
                 : "mb-7 font-bold text-red-600"
             }
           >
-            {isFull ? "目前已額滿" : `剩餘 ${remaining} 名`}
+            {isPast
+              ? "活動已截止"
+              : isFull
+              ? "目前已額滿"
+              : `剩餘 ${remaining} 名`}
           </p>
           <div className="mb-7 border-y border-[#e5dfd8] py-6 text-sm">
             <Row label="活動日期" value={activity.dateLabel} />
@@ -69,13 +85,13 @@ export default function ActivitySidebar({ activity }) {
               last
             />
           </div>
-          {isFull ? (
+          {disabled ? (
             <button
               type="button"
               disabled
               className="block w-full cursor-not-allowed rounded-lg bg-slate-300 px-5 py-4 text-center text-lg font-bold text-slate-600"
             >
-              已額滿
+              {ctaLabel}
             </button>
           ) : (
             <Link
@@ -132,12 +148,16 @@ export default function ActivitySidebar({ activity }) {
         </div>
         <p
           className={
-            isFull
+            disabled
               ? "mb-5 font-bold text-slate-500"
               : "mb-5 font-bold text-red-600"
           }
         >
-          {isFull ? "目前已額滿" : `剩餘 ${remaining} 名`}
+          {isPast
+            ? "活動已截止"
+            : isFull
+            ? "目前已額滿"
+            : `剩餘 ${remaining} 名`}
         </p>
 
         <div className="mb-5 border-y border-[#e5dfd8] py-4 text-sm">
@@ -158,7 +178,7 @@ export default function ActivitySidebar({ activity }) {
           <select
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
-            disabled={isFull}
+            disabled={disabled}
             className="w-full rounded-lg border border-[#ddd7cf] bg-white px-3 py-3 text-base outline-none focus:border-[#008466]"
           >
             {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((n) => (
@@ -179,10 +199,10 @@ export default function ActivitySidebar({ activity }) {
         <button
           type="button"
           onClick={goConfirm}
-          disabled={isFull}
+          disabled={disabled}
           className="block w-full rounded-lg bg-[#008466] px-5 py-4 text-center text-lg font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
         >
-          {isFull ? "已額滿" : "確認報名"}
+          {isPast ? "活動已截止" : isFull ? "已額滿" : "確認報名"}
         </button>
       </div>
 
@@ -220,10 +240,10 @@ export default function ActivitySidebar({ activity }) {
         <button
           type="button"
           onClick={goConfirm}
-          disabled={isFull}
+          disabled={disabled}
           className="shrink-0 rounded-full bg-[#008466] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
         >
-          {isFull ? "已額滿" : "立即報名"}
+          {ctaLabel}
         </button>
       </div>
     </>

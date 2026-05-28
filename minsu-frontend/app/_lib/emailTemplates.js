@@ -74,7 +74,7 @@ function infoCard({ title, rows, accent = false }) {
       };background:${
         accent ? BRAND_BLUE : "transparent"
       };font-weight:700;padding:${
-        accent ? "10px 16px" : "0 0 8px"
+        accent ? "10px 16px" : "12px 16px 8px"
       };border-radius:${accent ? "8px 8px 0 0" : "0"};">${title}</td></tr>`
     : "";
   const trs = rows
@@ -110,6 +110,16 @@ function escape(s) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function customFieldRows(activity, signup) {
+  const defs = Array.isArray(activity?.custom_fields) ? activity.custom_fields : [];
+  if (defs.length === 0) return [];
+  const answers = signup?.customFieldAnswers || signup?.custom_field_answers || {};
+  return defs.map((f) => ({
+    label: escape(f.label),
+    value: escape(answers[f.label] || "—"),
+  }));
 }
 
 // ============================================================
@@ -201,6 +211,7 @@ export function activityCreatedEmail({
       },
       { label: "人數", value: `${signup.quantity} 位` },
       { label: "總金額", value: formatPrice(totalPrice) },
+      ...customFieldRows(activity, signup),
     ],
   });
 
@@ -377,6 +388,7 @@ export function activityCancelledEmail({
         label: "狀態",
         value: `<span style="color:#b91c1c;font-weight:700;">已取消</span>`,
       },
+      ...customFieldRows(activity, signup),
     ],
   });
 
@@ -430,6 +442,7 @@ export function activityPaidEmail({
           totalPrice
         )} ✓</span>`,
       },
+      ...customFieldRows(activity, signup),
     ],
   });
 

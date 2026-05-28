@@ -66,6 +66,7 @@ export async function POST(request) {
       id: signup.id,
       contactName: signup.contact_name,
       quantity: signup.quantity,
+      customFieldAnswers: signup.custom_field_answers || {},
     },
     activity: signup.activities,
     settings: settings || {},

@@ -206,6 +206,22 @@ export default function ActivitySuccessClient({ detail, settings = {}, user = nu
             </div>
           )}
 
+          {Array.isArray(detail.customFields) && detail.customFields.length > 0 ? (
+            <div className="mt-6 rounded-xl border border-primary-200 bg-primary-100 p-5 text-sm leading-7 text-primary-700">
+              <p className="mb-3 font-semibold text-primary-900">報名資訊</p>
+              <dl className="grid gap-2 md:grid-cols-[140px_1fr]">
+                {detail.customFields.map((f) => (
+                  <div key={f.label} className="contents">
+                    <dt className="text-primary-500">{f.label}</dt>
+                    <dd className="font-semibold text-primary-900">
+                      {detail.customFieldAnswers?.[f.label] || "—"}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : null}
+
           {detail.specialRequest ? (
             <div className="mt-6 rounded-xl border border-primary-200 bg-primary-100 p-5 text-sm leading-7 text-primary-700">
               <p className="mb-1 font-semibold text-primary-900">特殊需求</p>

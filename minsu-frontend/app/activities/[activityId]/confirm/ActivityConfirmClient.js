@@ -17,6 +17,7 @@ export default function ActivityConfirmClient({ activity, user }) {
   const searchParams = useSearchParams();
   const remaining = Math.max(activity.capacity - activity.registered, 0);
   const isFull = remaining === 0;
+  const isPast = Boolean(activity.isPast);
   const maxQuantity = isFull ? 1 : remaining;
   const initialQuantity = (() => {
     const raw = Number(searchParams.get("quantity") || 1);
@@ -25,6 +26,13 @@ export default function ActivityConfirmClient({ activity, user }) {
   })();
   const [quantity, setQuantity] = useState(initialQuantity);
   const totalPrice = Number(activity.price || 0) * quantity;
+
+  const customFields = Array.isArray(activity.custom_fields)
+    ? activity.custom_fields
+    : [];
+  const [customAnswers, setCustomAnswers] = useState(() =>
+    customFields.reduce((acc, f) => ({ ...acc, [f.label]: "" }), {})
+  );
 
   const summaryRows = useMemo(
     () => [
@@ -37,22 +45,43 @@ export default function ActivityConfirmClient({ activity, user }) {
     [activity.dateLabel, activity.location, activity.time, activity.unit, isFull, remaining, quantity]
   );
 
+  const inputClass =
+    "w-full rounded-lg border border-transparent bg-primary-100 px-4 py-3 outline-none transition focus:border-accent-600 focus:bg-primary-50";
+
   const quantityField = (
-    <label className="block">
-      <span className="mb-2 block text-sm font-semibold">報名人數 *</span>
-      <select
-        value={quantity}
-        onChange={(e) => setQuantity(Number(e.target.value))}
-        disabled={isFull}
-        className="w-full rounded-lg border border-transparent bg-primary-100 px-4 py-3 outline-none transition focus:border-accent-600 focus:bg-primary-50"
-      >
-        {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((n) => (
-          <option key={n} value={n}>
-            {n} 人
-          </option>
-        ))}
-      </select>
-    </label>
+    <>
+      <label className="block">
+        <span className="mb-2 block text-sm font-semibold">報名人數 *</span>
+        <select
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          disabled={isFull}
+          className={inputClass}
+        >
+          {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((n) => (
+            <option key={n} value={n}>
+              {n} 人
+            </option>
+          ))}
+        </select>
+      </label>
+      {customFields.map((field) => (
+        <label key={field.label} className="block">
+          <span className="mb-2 block text-sm font-semibold">
+            {field.label} {field.required && "*"}
+          </span>
+          <input
+            type="text"
+            value={customAnswers[field.label] || ""}
+            onChange={(e) =>
+              setCustomAnswers((p) => ({ ...p, [field.label]: e.target.value }))
+            }
+            required={field.required}
+            className={inputClass}
+          />
+        </label>
+      ))}
+    </>
   );
 
   function handleSubmit(event) {
@@ -69,20 +98,37 @@ export default function ActivityConfirmClient({ activity, user }) {
       setError("請填寫姓名、電子郵件與電話號碼。");
       return;
     }
+
+    const trimmedAnswers = {};
+    for (const field of customFields) {
+      const val = String(customAnswers[field.label] || "").trim();
+      if (field.required && !val) {
+        setError(`請填寫「${field.label}」`);
+        return;
+      }
+      if (val) trimmedAnswers[field.label] = val;
+    }
+
     formData.set("quantity", String(quantity));
+    formData.set("customFieldAnswers", JSON.stringify(trimmedAnswers));
 
     startTransition(async () => {
       try {
         await createActivitySignupAction(activity.id, formData);
-        // server action redirects on success; if we get here without redirect just show success
         setSuccess("已送出報名");
       } catch (err) {
-        // Next redirect throws a special error — swallow it
         if (err?.digest?.startsWith?.("NEXT_REDIRECT")) return;
         setError(err?.message || "送出失敗，請稍後再試。");
       }
     });
   }
+
+  const disabled = isFull || isPast;
+  const submitLabel = isPast
+    ? "活動已截止，無法報名"
+    : isFull
+    ? "已額滿，無法報名"
+    : "確認報名";
 
   return (
     <BookingConfirmLayout
@@ -91,9 +137,9 @@ export default function ActivityConfirmClient({ activity, user }) {
       user={user}
       onSubmit={handleSubmit}
       isSubmitting={isPending}
-      submitLabel={isFull ? "已額滿，無法報名" : "確認報名"}
+      submitLabel={submitLabel}
       submittingLabel="送出報名中..."
-      submitDisabled={isFull}
+      submitDisabled={disabled}
       error={error}
       success={success}
       paymentDescription="活動報名採銀行轉帳。送出後請於 24 小時內完成匯款，逾期視同放棄名額。後台確認款項後，付款狀態會更新為已付款。"

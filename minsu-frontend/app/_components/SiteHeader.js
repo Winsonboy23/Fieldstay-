@@ -18,7 +18,7 @@ function BrandMark() {
   );
 }
 
-export default function SiteHeader({ user = null }) {
+export default function SiteHeader({ user = null, hideFaq = false }) {
   const userName = user?.name || user?.email || "會員中心";
 
   return (
@@ -48,12 +48,14 @@ export default function SiteHeader({ user = null }) {
       </Link>
 
       <div className="flex items-center gap-3">
-        <Link
-          href="/faq"
-          className="hidden text-sm font-medium text-primary-700 transition hover:text-accent-700 md:inline-flex"
-        >
-          FAQ
-        </Link>
+        {!hideFaq && (
+          <Link
+            href="/faq"
+            className="hidden text-sm font-medium text-primary-700 transition hover:text-accent-700 md:inline-flex"
+          >
+            FAQ
+          </Link>
+        )}
         {user ? (
           <>
             <Link

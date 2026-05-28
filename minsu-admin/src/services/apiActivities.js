@@ -102,6 +102,7 @@ export async function createEditActivity(payload, id) {
     gallery_images: [...existingGalleryUrls, ...uploadedGallery],
     highlights: Array.isArray(payload.highlights) ? payload.highlights : [],
     notes: Array.isArray(payload.notes) ? payload.notes : [],
+    custom_fields: Array.isArray(payload.custom_fields) ? payload.custom_fields : [],
     is_published: payload.is_published !== false,
   };
 

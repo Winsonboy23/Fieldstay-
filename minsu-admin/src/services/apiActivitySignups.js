@@ -3,7 +3,7 @@ import supabase from "./supabase";
 export async function getAllSignups() {
   const { data, error } = await supabase
     .from("activity_signups")
-    .select("*, activities(id, title, activity_date)")
+    .select("*, activities(id, title, activity_date, custom_fields)")
     .order("created_at", { ascending: false });
 
   if (error) {

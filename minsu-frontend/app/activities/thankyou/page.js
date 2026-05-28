@@ -55,6 +55,8 @@ export default async function Page({ searchParams }) {
     contactEmail: signup.contact_email || "",
     contactPhone: signup.contact_phone || "",
     specialRequest: signup.special_request || "",
+    customFields: Array.isArray(activity.custom_fields) ? activity.custom_fields : [],
+    customFieldAnswers: signup.custom_field_answers || {},
   };
 
   const settings = await getSettings().catch(() => ({}));

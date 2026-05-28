@@ -35,7 +35,15 @@ function parts(activity) {
   };
 }
 
+function isPastActivity(a) {
+  if (!a.activity_date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(a.activity_date + "T00:00:00") < today;
+}
+
 function seatTagClass(a) {
+  if (isPastActivity(a)) return "full";
   const remaining = (a.capacity || 0) - (a.registered || 0);
   if (remaining <= 0) return "full";
   if (remaining <= 2) return "few";
@@ -43,6 +51,7 @@ function seatTagClass(a) {
 }
 
 function seatTagText(a) {
+  if (isPastActivity(a)) return "已截止";
   const remaining = (a.capacity || 0) - (a.registered || 0);
   if (remaining <= 0) return "已額滿";
   if (remaining <= 2) return `僅餘 ${remaining} 名`;
@@ -99,7 +108,9 @@ export default function ActivitiesGrid({ activities }) {
         {sorted.map((a) => {
           const p = parts(a);
           const tagClass = seatTagClass(a);
+          const isPast = isPastActivity(a);
           const isFull = tagClass === "full";
+          const ctaLabel = isPast ? "已截止" : isFull ? "已額滿" : "報名";
           return (
             <article className="act-card" key={a.id}>
               <Link
@@ -158,7 +169,7 @@ export default function ActivitiesGrid({ activities }) {
                   <span
                     className={`btn ${isFull ? "btn-ghost" : "btn-primary"} btn-sm`}
                   >
-                    {isFull ? "已額滿" : "報名"}
+                    {ctaLabel}
                   </span>
                 </div>
               </Link>

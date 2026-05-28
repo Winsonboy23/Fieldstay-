@@ -158,6 +158,14 @@ export async function createActivitySignupAction(activityId, formData) {
   const specialRequest = String(formData.get("specialRequest") || "").trim();
   const quantity = Number(formData.get("quantity") || 1);
 
+  let customFieldAnswers = {};
+  try {
+    const raw = formData.get("customFieldAnswers");
+    if (raw) customFieldAnswers = JSON.parse(String(raw)) || {};
+  } catch {
+    customFieldAnswers = {};
+  }
+
   if (!contactName || !contactEmail || !contactPhone) {
     throw new Error("請填寫姓名、電子郵件與電話號碼");
   }
@@ -173,6 +181,7 @@ export async function createActivitySignupAction(activityId, formData) {
       quantity: Math.max(1, quantity),
       specialRequest: specialRequest || null,
       paymentMethod: "transfer",
+      customFieldAnswers,
     });
   } catch (err) {
     const msg = String(err?.message || "");
@@ -198,6 +207,7 @@ export async function createActivitySignupAction(activityId, formData) {
           id: signup.id,
           contactName,
           quantity: Math.max(1, quantity),
+          customFieldAnswers,
         },
         activity,
         settings: settings || {},

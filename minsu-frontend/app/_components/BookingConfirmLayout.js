@@ -259,7 +259,7 @@ export default function BookingConfirmLayout({
   return (
     <main className="min-h-screen bg-primary-100 text-primary-900">
       <div className="hidden lg:block">
-        <SiteHeader user={user} />
+        <SiteHeader user={user} hideFaq />
       </div>
 
       {/* Desktop */}

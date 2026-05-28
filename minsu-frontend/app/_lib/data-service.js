@@ -292,6 +292,7 @@ export async function createActivitySignup({
   quantity = 1,
   specialRequest = null,
   paymentMethod = "transfer",
+  customFieldAnswers = {},
 }) {
   const { data, error } = await supabaseAdmin.rpc("create_activity_signup", {
     p_activity_id: activityId,
@@ -308,6 +309,16 @@ export async function createActivitySignup({
     console.error(error);
     throw new Error(`Activity signup failed: ${error.message}`);
   }
+
+  const signupId = data?.id || data;
+  if (signupId && customFieldAnswers && Object.keys(customFieldAnswers).length > 0) {
+    const { error: updErr } = await supabaseAdmin
+      .from("activity_signups")
+      .update({ custom_field_answers: customFieldAnswers })
+      .eq("id", signupId);
+    if (updErr) console.error("custom_field_answers update failed", updErr);
+  }
+
   return data;
 }
 

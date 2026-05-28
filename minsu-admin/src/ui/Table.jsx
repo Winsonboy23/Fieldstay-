@@ -16,7 +16,7 @@ const ScrollArea = styled.div`
 
 const CommonRow = styled.div`
   display: grid;
-  grid-template-columns: ${(props) => props.columns};
+  grid-template-columns: ${(props) => props.$columns};
   column-gap: 2.4rem;
   align-items: center;
   transition: none;
@@ -83,7 +83,7 @@ function Table({ columns, minWidth, children }) {
 function Header({ children }) {
   const { columns, minWidth } = useContext(TableContext);
   return (
-    <StyledHeader role="row" columns={columns} $minWidth={minWidth} as="header">
+    <StyledHeader role="row" $columns={columns} $minWidth={minWidth} as="header">
       {children}
     </StyledHeader>
   );
@@ -91,7 +91,7 @@ function Header({ children }) {
 function Row({ children }) {
   const { columns, minWidth } = useContext(TableContext);
   return (
-    <StyledRow role="row" columns={columns} $minWidth={minWidth}>
+    <StyledRow role="row" $columns={columns} $minWidth={minWidth}>
       {children}
     </StyledRow>
   );
