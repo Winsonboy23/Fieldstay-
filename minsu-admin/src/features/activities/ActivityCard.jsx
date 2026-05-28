@@ -19,6 +19,25 @@ const Card = styled.article`
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-sm);
+
+  ${(p) =>
+    p.$past &&
+    `
+    opacity: 0.6;
+    filter: grayscale(0.5);
+  `}
+`;
+
+const PastBadge = styled.span`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.3rem 0.8rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
 `;
 
 const Cover = styled.div`
@@ -137,19 +156,28 @@ function formatDateLabel(dateStr) {
   return `${day} ${months[d.getMonth()]} (${wd})`;
 }
 
+function isPastActivity(activity) {
+  if (!activity?.activity_date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(activity.activity_date + "T00:00:00") < today;
+}
+
 function ActivityCard({ activity }) {
   const { isDeleting, deleteActivity } = useDeleteActivity();
   const isFull = activity.signupsCount >= activity.capacity;
+  const past = isPastActivity(activity);
 
   return (
     <Modal>
-      <Card>
+      <Card $past={past}>
         <Cover
           style={
             activity.image ? { backgroundImage: `url(${activity.image})` } : undefined
           }
         >
           <CategoryBadge>{activity.category || "—"}</CategoryBadge>
+          {past && <PastBadge>已截止</PastBadge>}
         </Cover>
         <Body>
           <Title>{activity.title}</Title>

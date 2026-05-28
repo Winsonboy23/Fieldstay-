@@ -43,10 +43,30 @@ const AddButton = styled(Button)`
   gap: 0.6rem;
 `;
 
+function isPast(activity) {
+  if (!activity?.activity_date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(activity.activity_date + "T00:00:00") < today;
+}
+
 function Activities() {
   const { isLoading, activities } = useActivities();
 
   if (isLoading) return <Spinner />;
+
+  const sorted = (() => {
+    const list = [...(activities || [])];
+    const upcoming = list.filter((a) => !isPast(a));
+    const past = list.filter((a) => isPast(a));
+    upcoming.sort((a, b) =>
+      String(a.activity_date).localeCompare(String(b.activity_date))
+    );
+    past.sort((a, b) =>
+      String(b.activity_date).localeCompare(String(a.activity_date))
+    );
+    return [...upcoming, ...past];
+  })();
 
   return (
     <Modal>
@@ -63,11 +83,11 @@ function Activities() {
         </Modal.Open>
       </PageHeader>
 
-      {!activities?.length ? (
+      {!sorted.length ? (
         <Empty resourceName="activities" />
       ) : (
         <Grid>
-          {activities.map((activity) => (
+          {sorted.map((activity) => (
             <ActivityCard activity={activity} key={activity.id} />
           ))}
         </Grid>

@@ -83,10 +83,17 @@ export default function ActivitiesGrid({ activities }) {
     const list = [...(activities || [])];
     if (sortKey === "price-asc") list.sort((a, b) => a.price - b.price);
     else if (sortKey === "price-desc") list.sort((a, b) => b.price - a.price);
-    else
-      list.sort((a, b) =>
+    else {
+      const upcoming = list.filter((a) => !isPastActivity(a));
+      const past = list.filter((a) => isPastActivity(a));
+      upcoming.sort((a, b) =>
         String(a.activity_date).localeCompare(String(b.activity_date))
       );
+      past.sort((a, b) =>
+        String(b.activity_date).localeCompare(String(a.activity_date))
+      );
+      return [...upcoming, ...past];
+    }
     return list;
   }, [activities, sortKey]);
 
@@ -112,7 +119,11 @@ export default function ActivitiesGrid({ activities }) {
           const isFull = tagClass === "full";
           const ctaLabel = isPast ? "已截止" : isFull ? "已額滿" : "報名";
           return (
-            <article className="act-card" key={a.id}>
+            <article
+              className="act-card"
+              key={a.id}
+              style={isPast ? { opacity: 0.55, filter: "grayscale(0.4)" } : undefined}
+            >
               <Link
                 href={`/activities/${a.id}`}
                 style={{ display: "contents", textDecoration: "none", color: "inherit" }}
