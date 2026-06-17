@@ -12,6 +12,7 @@ import Menus from "../../ui/Menus";
 import Modal from "../../ui/Modal";
 import ConfirmDelete from "../../ui/ConfirmDelete";
 import { formatCurrency } from "../../utils/helpers";
+import { getFrontendUrl } from "../../utils/frontendUrl";
 import { useUpdateAnySignup, useDeleteAnySignup } from "./useAllSignups";
 import {
   notifyActivityCancelled,
@@ -173,7 +174,9 @@ function ActivitySignupRow({ signup }) {
   return (
     <Table.Row>
       <OrderCode
-        href={`http://localhost:3000/activities/thankyou?signupId=${signup.id}&admin=1`}
+        href={getFrontendUrl(
+          `/activities/thankyou?signupId=${signup.id}&admin=1`
+        )}
         target="_blank"
         rel="noopener noreferrer"
       >

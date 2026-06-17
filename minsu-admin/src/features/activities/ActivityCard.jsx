@@ -10,6 +10,7 @@ import ConfirmDelete from "../../ui/ConfirmDelete";
 import CreateActivityForm from "./CreateActivityForm";
 import { useDeleteActivity } from "./useDeleteActivity";
 import { formatCurrency } from "../../utils/helpers";
+import { getFrontendUrl } from "../../utils/frontendUrl";
 
 const Card = styled.article`
   background: var(--color-grey-0);
@@ -215,7 +216,7 @@ function ActivityCard({ activity }) {
           <Actions>
             <ActionButton
               as="a"
-              href={`http://localhost:3000/activities/${activity.id}`}
+              href={getFrontendUrl(`/activities/${activity.id}`)}
               target="_blank"
               rel="noopener noreferrer"
             >

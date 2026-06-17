@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { getFrontendUrl } from "../utils/frontendUrl";
 
 const BRAND_LOGO_URL =
   "https://wnvqbozqsdvaszfgumkg.supabase.co/storage/v1/object/public/site-images/1778689945313-0.1766648174384008-528684274_18019731992746464_3668865358020989427_n--1-.jpg";
@@ -43,11 +44,8 @@ const Sub = styled.div`
 `;
 
 function Logo() {
-  const frontendUrl =
-    import.meta.env.VITE_FRONTEND_URL || "http://localhost:3000";
-
   return (
-    <StyledLogo href={frontendUrl} title="前往前台首頁">
+    <StyledLogo href={getFrontendUrl()} title="前往前台首頁">
       <Mark src={BRAND_LOGO_URL} alt="山田寓所" />
       <Text>
         <Name>山田寓所</Name>

@@ -13,6 +13,7 @@ import Table from "../../ui/Table";
 import Menus from "../../ui/Menus";
 import Modal from "../../ui/Modal";
 import { formatCurrency } from "../../utils/helpers";
+import { getFrontendUrl } from "../../utils/frontendUrl";
 
 import EditBookingForm from "./EditBookingForm";
 import CheckinConfirm from "../check-in-out/CheckinConfirm";
@@ -213,7 +214,9 @@ function BookingRow({ booking }) {
   return (
     <Table.Row>
       <OrderCode
-        href={`http://localhost:3000/rooms/thankyou?bookingId=${bookingId}&admin=1`}
+        href={getFrontendUrl(
+          `/rooms/thankyou?bookingId=${bookingId}&admin=1`
+        )}
         target="_blank"
         rel="noopener noreferrer"
       >

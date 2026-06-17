@@ -1,4 +1,5 @@
 import { PAGE_SIZE } from "../utils/constants";
+import { getFrontendUrl } from "../utils/frontendUrl";
 import supabase from "./supabase";
 
 export async function getGuests({ page, search } = {}) {
@@ -98,10 +99,8 @@ export async function updateGuest({ id, updates }) {
 }
 
 export async function sendPasswordResetForGuest(email) {
-  const siteUrl =
-    import.meta.env.VITE_FRONTEND_URL || "http://localhost:3000";
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/reset-password`,
+    redirectTo: getFrontendUrl("/reset-password"),
   });
   if (error) {
     console.error(error);

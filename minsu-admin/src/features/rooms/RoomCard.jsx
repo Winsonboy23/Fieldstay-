@@ -7,6 +7,7 @@ import CreateRoomForm from "./CreateRoomForm";
 import { useDeleteRoom } from "./useDeleteRoom";
 import { useToggleRoomActive } from "./useToggleRoomActive";
 import { formatCurrency } from "../../utils/helpers";
+import { getFrontendUrl } from "../../utils/frontendUrl";
 
 const Card = styled.article`
   background: var(--color-grey-0);
@@ -204,7 +205,7 @@ function RoomCard({ room }) {
           <Actions>
             <ActionButton
               as="a"
-              href={`http://localhost:3000/rooms/${room.id}`}
+              href={getFrontendUrl(`/rooms/${room.id}`)}
               target="_blank"
               rel="noopener noreferrer"
             >
