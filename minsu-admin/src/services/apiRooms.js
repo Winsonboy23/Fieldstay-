@@ -1,9 +1,12 @@
 import supabase from "./supabase";
+import { getCurrentBrandId } from "./brandContext";
 
 export async function getRooms() {
+  const brandId = await getCurrentBrandId();
   const { data, error } = await supabase
     .from("rooms")
     .select("*, bookings(count)")
+    .eq("brand_id", brandId)
     .order("id", { ascending: true });
 
   if (error) {
@@ -86,7 +89,9 @@ export async function createEditRoom(newRoom, id) {
         .map((s) => s.trim())
         .filter(Boolean);
 
+  const brandId = await getCurrentBrandId();
   const roomPayload = {
+    brand_id: brandId,
     name: newRoom.name,
     subtitle: newRoom.subtitle || null,
     category: newRoom.category || "double",
@@ -116,7 +121,7 @@ export async function createEditRoom(newRoom, id) {
   // --- DB write ---
   let query = supabase.from("rooms");
   if (!id) query = query.insert([roomPayload]);
-  else query = query.update(roomPayload).eq("id", id);
+  else query = query.update(roomPayload).eq("id", id).eq("brand_id", brandId);
 
   const { data, error } = await query.select().single();
 
@@ -136,7 +141,12 @@ export async function createEditRoom(newRoom, id) {
 }
 
 export async function deleteRoom(id) {
-  const { data, error } = await supabase.from("rooms").delete().eq("id", id);
+  const brandId = await getCurrentBrandId();
+  const { data, error } = await supabase
+    .from("rooms")
+    .delete()
+    .eq("id", id)
+    .eq("brand_id", brandId);
 
   if (error) {
     console.error(error);
@@ -147,10 +157,12 @@ export async function deleteRoom(id) {
 }
 
 export async function toggleRoomActive(id, isActive) {
+  const brandId = await getCurrentBrandId();
   const { data, error } = await supabase
     .from("rooms")
     .update({ is_active: isActive })
     .eq("id", id)
+    .eq("brand_id", brandId)
     .select()
     .single();
 

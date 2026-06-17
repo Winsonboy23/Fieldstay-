@@ -1,4 +1,5 @@
 import supabase, { supabaseUrl } from "./supabase";
+import { clearBrandCache } from "./brandContext";
 
 export async function signup({ fullName, email, password }) {
   const { data, error } = await supabase.auth.signUp({
@@ -62,6 +63,7 @@ export async function getCurrentUser() {
 export async function logout() {
   const { error } = await supabase.auth.signOut();
   if (error) throw new Error(error.message);
+  clearBrandCache();
 }
 
 export async function updateCurrentUser({ password, fullName, avatar }) {

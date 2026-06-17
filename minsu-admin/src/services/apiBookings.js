@@ -1,14 +1,17 @@
 import { PAGE_SIZE } from "../utils/constants";
 import { getToday } from "../utils/helpers";
 import supabase from "./supabase";
+import { getCurrentBrandId } from "./brandContext";
 
 export async function getBookings({ filter, sortBy, page }) {
+  const brandId = await getCurrentBrandId();
   let query = supabase
     .from("bookings")
     .select(
       "id, created_at, startDate, endDate, numNights, numGuests, status, totalPrice, isPaid, payment_method, observations, guestId, rooms(name), guests(fullName, email)",
       { count: "exact" }
-    );
+    )
+    .eq("brand_id", brandId);
   //FILTER (supports single object or array of {field, value, method?})
   const filters = Array.isArray(filter) ? filter : filter ? [filter] : [];
   const hasStatusFilter = filters.some((f) => f.field === "status");
@@ -41,10 +44,12 @@ export async function getBookings({ filter, sortBy, page }) {
 }
 
 export async function getBooking(id) {
+  const brandId = await getCurrentBrandId();
   const { data, error } = await supabase
     .from("bookings")
     .select("*, rooms(*), guests(*)")
     .eq("id", id)
+    .eq("brand_id", brandId)
     .single();
 
   if (error) {
@@ -57,9 +62,11 @@ export async function getBooking(id) {
 
 // Returns all BOOKINGS that are were created after the given date. Useful to get bookings created in the last 30 days, for example.
 export async function getBookingsAfterDate(date) {
+  const brandId = await getCurrentBrandId();
   const { data, error } = await supabase
     .from("bookings")
     .select("created_at, totalPrice, extrasPrice")
+    .eq("brand_id", brandId)
     .gte("created_at", date)
     .lte("created_at", getToday({ end: true }));
 
@@ -73,9 +80,11 @@ export async function getBookingsAfterDate(date) {
 
 // Returns all STAYS that are were created after the given date
 export async function getStaysAfterDate(date) {
+  const brandId = await getCurrentBrandId();
   const { data, error } = await supabase
     .from("bookings")
     .select("*, guests(fullName)")
+    .eq("brand_id", brandId)
     .gte("startDate", date)
     .lte("startDate", getToday());
 
@@ -89,9 +98,11 @@ export async function getStaysAfterDate(date) {
 
 // Activity means that there is a check in or a check out today
 export async function getStaysTodayActivity() {
+  const brandId = await getCurrentBrandId();
   const { data, error } = await supabase
     .from("bookings")
     .select("*, guests(fullName, nationality, countryFlag)")
+    .eq("brand_id", brandId)
     .or(
       `and(status.eq.unconfirmed,startDate.eq.${getToday()}),and(status.eq.checked-in,endDate.eq.${getToday()})`
     )
@@ -108,10 +119,12 @@ export async function getStaysTodayActivity() {
 }
 
 export async function updateBooking(id, obj) {
+  const brandId = await getCurrentBrandId();
   const { data, error } = await supabase
     .from("bookings")
     .update(obj)
     .eq("id", id)
+    .eq("brand_id", brandId)
     .select()
     .single();
 
@@ -129,11 +142,13 @@ export async function updateBooking(id, obj) {
 }
 
 export async function deleteBooking(bookingId) {
+  const brandId = await getCurrentBrandId();
   // REMEMBER RLS POLICIES
   const { data, error } = await supabase
     .from("bookings")
     .delete()
-    .eq("id", bookingId);
+    .eq("id", bookingId)
+    .eq("brand_id", brandId);
 
   if (error) {
     console.error(error);
