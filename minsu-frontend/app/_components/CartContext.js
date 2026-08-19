@@ -10,7 +10,9 @@ import {
 } from "react";
 
 const CartContext = createContext();
-const STORAGE_KEY = "fieldstay-cart";
+// v2：購物車改以「規格」為單位，舊格式（以商品為單位）無法對應，換 key 讓它自然作廢
+const STORAGE_KEY = "fieldstay-cart-v2";
+const LEGACY_STORAGE_KEY = "fieldstay-cart";
 
 function readStorage() {
   try {
@@ -19,8 +21,11 @@ function readStorage() {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .map((item) => ({ id: Number(item.id), qty: Number(item.qty) }))
-      .filter((item) => Number.isFinite(item.id) && item.qty > 0);
+      .map((item) => ({
+        variantId: Number(item.variantId),
+        qty: Number(item.qty),
+      }))
+      .filter((item) => Number.isFinite(item.variantId) && item.qty > 0);
   } catch {
     return [];
   }
@@ -34,6 +39,12 @@ function CartProvider({ children }) {
   useEffect(() => {
     setItems(readStorage());
     setIsLoaded(true);
+    // 清掉舊版購物車，避免殘留佔用空間
+    try {
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    } catch {
+      // 忽略
+    }
   }, []);
 
   useEffect(() => {
@@ -55,32 +66,32 @@ function CartProvider({ children }) {
   }, []);
 
   const addItem = useCallback((id, qty = 1) => {
-    const productId = Number(id);
+    const variantId = Number(id);
     const amount = Math.max(Number(qty) || 1, 1);
     setItems((prev) => {
-      const existing = prev.find((item) => item.id === productId);
-      if (!existing) return [...prev, { id: productId, qty: amount }];
+      const existing = prev.find((item) => item.variantId === variantId);
+      if (!existing) return [...prev, { variantId, qty: amount }];
       return prev.map((item) =>
-        item.id === productId ? { ...item, qty: item.qty + amount } : item
+        item.variantId === variantId ? { ...item, qty: item.qty + amount } : item
       );
     });
   }, []);
 
   const setQty = useCallback((id, qty) => {
-    const productId = Number(id);
+    const variantId = Number(id);
     const amount = Number(qty);
     setItems((prev) =>
       amount <= 0
-        ? prev.filter((item) => item.id !== productId)
+        ? prev.filter((item) => item.variantId !== variantId)
         : prev.map((item) =>
-            item.id === productId ? { ...item, qty: amount } : item
+            item.variantId === variantId ? { ...item, qty: amount } : item
           )
     );
   }, []);
 
   const removeItem = useCallback((id) => {
-    const productId = Number(id);
-    setItems((prev) => prev.filter((item) => item.id !== productId));
+    const variantId = Number(id);
+    setItems((prev) => prev.filter((item) => item.variantId !== variantId));
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);

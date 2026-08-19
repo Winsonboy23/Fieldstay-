@@ -210,8 +210,19 @@ export async function getSettings() {
 }
 
 // Products
+// 價格／庫存／重量在 product_variants，商品層只留共用資訊
 const PRODUCT_COLUMNS =
-  "id, name, subtitle, description, price, discount, temperature, stock, weight_g, image, gallery_images, sort_order, features, notes, spec_content, spec_origin, spec_ingredients, spec_shelf_life, spec_storage";
+  "id, name, subtitle, description, temperature, image, gallery_images, sort_order, features, notes, spec_content, spec_origin, spec_ingredients, spec_shelf_life, spec_storage, product_variants(id, name, price, discount, stock, weight_g, sort_order, is_active)";
+
+// 只留上架中的規格，並依 sort_order 排序
+function normalizeProduct(product) {
+  const variants = (
+    Array.isArray(product.product_variants) ? product.product_variants : []
+  )
+    .filter((v) => v.is_active !== false)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id);
+  return { ...product, variants };
+}
 
 export async function getProducts() {
   const { data, error } = await supabase
@@ -225,7 +236,8 @@ export async function getProducts() {
     console.error(error);
     throw new Error("Products could not be loaded");
   }
-  return data;
+  // 沒有任何可販售規格的商品不顯示
+  return data.map(normalizeProduct).filter((p) => p.variants.length > 0);
 }
 
 export async function getProduct(id) {
@@ -240,7 +252,7 @@ export async function getProduct(id) {
     console.error(error);
     throw new Error("Product could not be loaded");
   }
-  return data;
+  return data ? normalizeProduct(data) : null;
 }
 
 // Shop orders

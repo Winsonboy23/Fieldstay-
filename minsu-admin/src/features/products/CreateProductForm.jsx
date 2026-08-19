@@ -288,6 +288,60 @@ const EmptyMsg = styled.p`
   margin: 0 0 0.6rem;
 `;
 
+const VariantRow = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 0.8rem;
+  padding: 1.2rem;
+  margin-bottom: 0.8rem;
+  background: var(--color-grey-50);
+  border: 1px solid var(--color-grey-100);
+  border-radius: var(--border-radius-md);
+`;
+
+const VariantGrid = styled.div`
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr;
+  gap: 0.8rem;
+  min-width: 0;
+`;
+
+const RemoveVariantBtn = styled.button`
+  flex-shrink: 0;
+  width: 3.4rem;
+  height: 3.6rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-grey-200);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-grey-0);
+  color: var(--color-red-700);
+  cursor: pointer;
+
+  svg { width: 1.6rem; height: 1.6rem; }
+
+  &:hover:not(:disabled) {
+    background: var(--color-red-100);
+    border-color: var(--color-red-700);
+  }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+`;
+
+// 表單內部用的規格列；key 只在前端排序用，id 有值代表是既有規格
+function toFormVariant(v, index) {
+  return {
+    key: v?.id ? `v-${v.id}` : `new-${index}-${Math.random().toString(36).slice(2)}`,
+    id: v?.id ?? null,
+    name: v?.name ?? "",
+    price: v?.price ?? "",
+    discount: v?.discount ?? 0,
+    stock: v?.stock ?? "",
+    weight_g: v?.weight_g ?? "",
+  };
+}
+
 function CreateProductForm({ productToEdit = {}, onCloseModal }) {
   const { isCreating, createProduct } = useCreateProduct();
   const { isEditing, editProduct } = useEditProduct();
@@ -304,6 +358,13 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
     Array.isArray(editValues.notes) ? editValues.notes : []
   );
   const [newNote, setNewNote] = useState("");
+
+  const [variants, setVariants] = useState(() => {
+    const existing = Array.isArray(editValues.variants) ? editValues.variants : [];
+    return existing.length > 0
+      ? existing.map(toFormVariant)
+      : [toFormVariant(null, 0)];
+  });
 
   const [coverFile, setCoverFile] = useState(null);
   const [coverUrl, setCoverUrl] = useState(editValues.image || "");
@@ -354,6 +415,20 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
     setNotes((prev) => prev.filter((n) => n !== note));
   }
 
+  function updateVariant(index, field, value) {
+    setVariants((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, [field]: value } : v))
+    );
+  }
+
+  function addVariant() {
+    setVariants((prev) => [...prev, toFormVariant(null, prev.length)]);
+  }
+
+  function removeVariant(index) {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  }
+
   function handleCoverPick(e) {
     const file = e.target.files?.[0];
     if (file) {
@@ -391,6 +466,30 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       return;
     }
 
+    const cleanVariants = variants.filter(
+      (v) => String(v.price).trim() !== "" || v.name.trim() !== ""
+    );
+    if (cleanVariants.length === 0) {
+      alert("請至少設定一組規格的售價");
+      return;
+    }
+    const invalid = cleanVariants.find((v) => !(Number(v.price) > 0));
+    if (invalid) {
+      alert("每組規格都要填售價（需大於 0）");
+      return;
+    }
+    if (cleanVariants.length > 1) {
+      const names = cleanVariants.map((v) => v.name.trim());
+      if (names.some((n) => !n)) {
+        alert("有多組規格時，每組都要填規格名稱");
+        return;
+      }
+      if (new Set(names).size !== names.length) {
+        alert("規格名稱不可重複");
+        return;
+      }
+    }
+
     const payload = {
       ...data,
       image: coverImage,
@@ -398,6 +497,7 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       gallery_files: newGalleryFiles,
       features,
       notes,
+      variants: cleanVariants,
     };
 
     const onSuccess = () => {
@@ -407,6 +507,7 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       setNewGalleryFiles([]);
       setFeatures([]);
       setNotes([]);
+      setVariants([toFormVariant(null, 0)]);
       onCloseModal?.();
     };
 
@@ -469,31 +570,14 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
               )}
             </Field>
 
-            <FieldGrid style={{ marginTop: "1.2rem" }}>
-              <Field>
-                <span className="req">售價 (NT$)</span>
-                <NumberInput
-                  placeholder="380"
-                  disabled={isWorking}
-                  {...register("price", {
-                    required: "請輸入售價",
-                    min: { value: 1, message: "至少 1" },
-                  })}
-                />
-                {errors.price && <ErrorText>{errors.price.message}</ErrorText>}
-              </Field>
-              <Field>
-                <span>折扣金額 (NT$)</span>
-                <NumberInput
-                  placeholder="0"
-                  disabled={isWorking}
-                  {...register("discount", { min: { value: 0, message: "不可為負" } })}
-                />
-                {errors.discount && (
-                  <ErrorText>{errors.discount.message}</ErrorText>
-                )}
-              </Field>
-            </FieldGrid>
+            <Field style={{ marginTop: "1.2rem", maxWidth: "18rem" }}>
+              <span>排序</span>
+              <NumberInput
+                placeholder="0"
+                disabled={isWorking}
+                {...register("sort_order")}
+              />
+            </Field>
           </Section>
 
           {/* 溫層與配送 */}
@@ -661,45 +745,91 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
             </div>
           </Section>
 
-          {/* 庫存與排序 */}
+          {/* 規格與價格 */}
           <Section>
-            <h3>庫存與排序</h3>
+            <h3>規格與價格</h3>
+            <HelpText style={{ margin: "0 0 1.4rem" }}>
+              價格與庫存以「規格」為單位。只賣一種的話留一列、規格名稱留空即可，
+              前台不會顯示規格選擇器。要分尺寸就按下方新增（例如 300ml、600ml），
+              每個規格各自有價格與庫存。
+            </HelpText>
 
-            <FieldGrid cols="1fr 1fr 1fr">
-              <Field>
-                <span>庫存數量</span>
-                <NumberInput
-                  placeholder="留空 = 不限量"
-                  disabled={isWorking}
-                  {...register("stock", { min: { value: 0, message: "不可為負" } })}
-                />
-                {errors.stock && <ErrorText>{errors.stock.message}</ErrorText>}
-              </Field>
-              <Field>
-                <span>商品重量 (公克)</span>
-                <NumberInput
-                  placeholder="選填"
-                  disabled={isWorking}
-                  {...register("weight_g", { min: { value: 0, message: "不可為負" } })}
-                />
-                {errors.weight_g && (
-                  <ErrorText>{errors.weight_g.message}</ErrorText>
+            {variants.map((variant, index) => (
+              <VariantRow key={variant.key}>
+                <VariantGrid>
+                  <Field>
+                    <span>規格名稱</span>
+                    <TextInput
+                      placeholder={variants.length > 1 ? "例如：600ml" : "留空 = 無規格區分"}
+                      value={variant.name}
+                      disabled={isWorking}
+                      onChange={(e) => updateVariant(index, "name", e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <span className="req">售價</span>
+                    <NumberInput
+                      placeholder="380"
+                      value={variant.price}
+                      disabled={isWorking}
+                      onChange={(e) => updateVariant(index, "price", e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <span>折扣</span>
+                    <NumberInput
+                      placeholder="0"
+                      value={variant.discount}
+                      disabled={isWorking}
+                      onChange={(e) => updateVariant(index, "discount", e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <span>庫存</span>
+                    <NumberInput
+                      placeholder="留空=不限"
+                      value={variant.stock}
+                      disabled={isWorking}
+                      onChange={(e) => updateVariant(index, "stock", e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <span>重量 (克)</span>
+                    <NumberInput
+                      placeholder="選填"
+                      value={variant.weight_g}
+                      disabled={isWorking}
+                      onChange={(e) => updateVariant(index, "weight_g", e.target.value)}
+                    />
+                  </Field>
+                </VariantGrid>
+                {variants.length > 1 && (
+                  <RemoveVariantBtn
+                    type="button"
+                    onClick={() => removeVariant(index)}
+                    disabled={isWorking}
+                    aria-label="移除此規格"
+                  >
+                    <HiOutlineXMark />
+                  </RemoveVariantBtn>
                 )}
-              </Field>
-              <Field>
-                <span>排序</span>
-                <NumberInput
-                  placeholder="0"
-                  disabled={isWorking}
-                  {...register("sort_order")}
-                />
-              </Field>
-            </FieldGrid>
+              </VariantRow>
+            ))}
+
+            <Button
+              type="button"
+              variation="secondary"
+              onClick={addVariant}
+              disabled={isWorking}
+              style={{ marginTop: "1.2rem" }}
+            >
+              <HiOutlinePlus /> 新增規格
+            </Button>
 
             <HelpText>
-              庫存留空代表不限量；設為 0 則前台顯示「售完」但商品仍會出現。
-              下架請用商品卡片上的開關。排序數字小的排前面。
-              重量為選填，用於超商包裹重量限制提醒（常溫 5kg、冷凍 10kg）。
+              庫存留空代表不限量；設為 0 則該規格前台顯示「售完」。
+              整個商品下架請用商品卡片上的開關。
+              重量用於超商包裹限制提醒（常溫 5kg、冷凍 10kg）。
             </HelpText>
           </Section>
 

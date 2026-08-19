@@ -8,8 +8,8 @@ import {
   getFreeShippingGap,
   getShippingFee,
   getTemperature,
-  isSoldOut,
-  unitPrice,
+  isProductSoldOut,
+  variantsOf,
 } from "../../_lib/product-utils";
 import SiteHeader from "../../_components/SiteHeader";
 import SiteFooter from "../../_components/SiteFooter";
@@ -33,9 +33,8 @@ export default async function ProductPage({ params }) {
   if (!product) notFound();
 
   const temp = getTemperature(product.temperature);
-  const price = unitPrice(product);
-  const soldOut = isSoldOut(product);
-  const hasDiscount = Number(product.discount) > 0;
+  const soldOut = isProductSoldOut(product);
+  const variants = variantsOf(product);
   const shippingFee = getShippingFee(product.temperature, 0, settings);
   const freeGap = getFreeShippingGap(product.temperature, 0, settings);
   // 封面＋附圖組成圖庫，去除空值與重複
@@ -128,15 +127,9 @@ export default async function ProductPage({ params }) {
               </ul>
             )}
 
-            <div className="mt-6 flex items-baseline gap-3">
-              <span className="text-3xl font-semibold text-primary-900">
-                {formatPrice(price)}
-              </span>
-              {hasDiscount && (
-                <span className="text-base text-primary-400 line-through">
-                  {formatPrice(product.price)}
-                </span>
-              )}
+            {/* 價格與庫存隨所選規格變動，統一由 ProductPurchase 呈現 */}
+            <div className="mt-8">
+              <ProductPurchase product={product} />
             </div>
 
             {product.description && (
@@ -169,29 +162,15 @@ export default async function ProductPage({ params }) {
                   )}
                 </dd>
               </div>
-              <div className="flex justify-between py-3">
-                <dt className="text-primary-500">庫存</dt>
-                <dd className="font-medium text-primary-900">
-                  {product.stock === null || product.stock === undefined
-                    ? "供應中"
-                    : soldOut
-                    ? "已售完"
-                    : `尚有 ${product.stock} 件`}
-                </dd>
-              </div>
-              {product.weight_g && (
+              {variants.length > 1 && (
                 <div className="flex justify-between py-3">
-                  <dt className="text-primary-500">商品重量</dt>
-                  <dd className="font-medium text-primary-900">
-                    約 {product.weight_g} 公克
+                  <dt className="text-primary-500">可選規格</dt>
+                  <dd className="text-right font-medium text-primary-900">
+                    {variants.map((v) => v.name).filter(Boolean).join("、")}
                   </dd>
                 </div>
               )}
             </dl>
-
-            <div className="mt-8">
-              <ProductPurchase product={product} soldOut={soldOut} />
-            </div>
 
             <div className="mt-6 rounded-lg bg-primary-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-primary-900">購買須知</h2>

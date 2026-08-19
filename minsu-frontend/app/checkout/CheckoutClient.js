@@ -70,15 +70,23 @@ export default function CheckoutClient({ products, settings, guest }) {
   }
 
   // 以伺服器端最新商品資料核對購物車
-  const byId = new Map(products.map((p) => [Number(p.id), p]));
+  const byVariantId = new Map();
+  products.forEach((product) => {
+    (product.variants || []).forEach((variant) => {
+      byVariantId.set(Number(variant.id), { product, variant });
+    });
+  });
   const validLines = items
-    .map((item) => ({ ...item, product: byId.get(item.id) }))
-    .filter((line) => line.product);
+    .map((item) => {
+      const hit = byVariantId.get(item.variantId);
+      return hit ? { ...item, product: hit.product, variant: hit.variant } : null;
+    })
+    .filter(Boolean);
 
   const groups = TEMPERATURE_ORDER.map((value) => {
     const lines = validLines.filter((line) => line.product.temperature === value);
     const itemsTotal = lines.reduce(
-      (sum, line) => sum + unitPrice(line.product) * line.qty,
+      (sum, line) => sum + unitPrice(line.variant) * line.qty,
       0
     );
     return {
@@ -89,10 +97,10 @@ export default function CheckoutClient({ products, settings, guest }) {
       freeGap: getFreeShippingGap(value, itemsTotal, settings),
       hasProblem: lines.some(
         (line) =>
-          isSoldOut(line.product) ||
-          (line.product.stock !== null &&
-            line.product.stock !== undefined &&
-            line.qty > line.product.stock)
+          isSoldOut(line.variant) ||
+          (line.variant.stock !== null &&
+            line.variant.stock !== undefined &&
+            line.qty > line.variant.stock)
       ),
     };
   }).filter((group) => group.lines.length > 0);
@@ -153,7 +161,7 @@ export default function CheckoutClient({ products, settings, guest }) {
           contactPhone: form.contactPhone,
           temperature: active.temp.value,
           items: active.lines.map((line) => ({
-            productId: line.product.id,
+            variantId: line.variant.id,
             quantity: line.qty,
           })),
           cvsBrand: isCvs ? form.cvsBrand : null,
@@ -173,7 +181,7 @@ export default function CheckoutClient({ products, settings, guest }) {
       }
 
       // 下單成功才把這組商品移出購物車
-      active.lines.forEach((line) => removeItem(line.product.id));
+      active.lines.forEach((line) => removeItem(line.variant.id));
       router.push(`/shop/thankyou?orderId=${data.orderId}`);
     } catch {
       setError("連線失敗，請稍後再試");
@@ -395,33 +403,36 @@ export default function CheckoutClient({ products, settings, guest }) {
 
         <ul className="mt-4 flex flex-col gap-3">
           {active.lines.map((line) => {
-            const soldOut = isSoldOut(line.product);
+            const soldOut = isSoldOut(line.variant);
             const overStock =
-              line.product.stock !== null &&
-              line.product.stock !== undefined &&
-              line.qty > line.product.stock;
+              line.variant.stock !== null &&
+              line.variant.stock !== undefined &&
+              line.qty > line.variant.stock;
             return (
-              <li key={line.product.id} className="text-sm">
+              <li key={line.variant.id} className="text-sm">
                 <div className="flex justify-between gap-3">
                   <span className="text-primary-700">
                     {line.product.name}
+                    {line.variant.name && (
+                      <span className="text-primary-600"> {line.variant.name}</span>
+                    )}
                     <span className="text-primary-500"> × {line.qty}</span>
                   </span>
                   <span className="whitespace-nowrap font-medium text-primary-900">
-                    {formatPrice(unitPrice(line.product) * line.qty)}
+                    {formatPrice(unitPrice(line.variant) * line.qty)}
                   </span>
                 </div>
                 {(soldOut || overStock) && (
                   <p className="mt-1 flex items-center gap-2 text-xs text-clay-500">
                     {soldOut
                       ? "已售完"
-                      : `庫存僅剩 ${line.product.stock} 件`}
+                      : `庫存僅剩 ${line.variant.stock} 件`}
                     <button
                       type="button"
                       onClick={() =>
                         soldOut
-                          ? removeItem(line.product.id)
-                          : setQty(line.product.id, line.product.stock)
+                          ? removeItem(line.variant.id)
+                          : setQty(line.variant.id, line.variant.stock)
                       }
                       className="underline transition hover:text-clay-700"
                     >

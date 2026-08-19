@@ -5,7 +5,7 @@ const BUCKET = "product-images";
 export async function getProducts() {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, product_variants(*)")
     .order("sort_order", { ascending: true })
     .order("id", { ascending: true });
 
@@ -14,7 +14,12 @@ export async function getProducts() {
     throw new Error("Products could not be loaded");
   }
 
-  return data;
+  return data.map((product) => ({
+    ...product,
+    variants: (product.product_variants || []).sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id
+    ),
+  }));
 }
 
 function safeFileName(file) {
@@ -85,12 +90,7 @@ export async function createEditProduct(newProduct, id) {
     name: newProduct.name,
     subtitle: newProduct.subtitle || null,
     description: newProduct.description || "",
-    price: Number(newProduct.price) || 0,
-    discount: Number(newProduct.discount) || 0,
     temperature: newProduct.temperature || "normal",
-    // 留空 = 不限量
-    stock: isBlank(newProduct.stock) ? null : Number(newProduct.stock),
-    weight_g: isBlank(newProduct.weight_g) ? null : Number(newProduct.weight_g),
     sort_order: Number(newProduct.sort_order) || 0,
     image: imagePath,
     gallery_images: [...existingGalleryUrls, ...uploadedGallery],
@@ -120,6 +120,46 @@ export async function createEditProduct(newProduct, id) {
     }
     console.error(error);
     throw new Error(`Product could not be saved: ${error.message}`);
+  }
+
+  // --- 規格（價格與庫存所在層）---
+  const variants = Array.isArray(newProduct.variants) ? newProduct.variants : [];
+  if (variants.length === 0) {
+    throw new Error("請至少設定一組規格");
+  }
+
+  const keepIds = variants.map((v) => v.id).filter(Boolean);
+  // 移除這次被刪掉的規格（曾被下單的因外鍵為 set null，不影響歷史訂單）
+  let removeQuery = supabase
+    .from("product_variants")
+    .delete()
+    .eq("product_id", data.id);
+  if (keepIds.length > 0) removeQuery = removeQuery.not("id", "in", `(${keepIds.join(",")})`);
+  const { error: removeError } = await removeQuery;
+  if (removeError) {
+    console.error(removeError);
+    throw new Error(`Variants could not be updated: ${removeError.message}`);
+  }
+
+  const variantRows = variants.map((v, index) => ({
+    ...(v.id ? { id: v.id } : {}),
+    product_id: data.id,
+    name: v.name?.trim() ? v.name.trim() : null,
+    price: Number(v.price) || 0,
+    discount: Number(v.discount) || 0,
+    stock: isBlank(v.stock) ? null : Number(v.stock),
+    weight_g: isBlank(v.weight_g) ? null : Number(v.weight_g),
+    sort_order: index,
+    is_active: v.is_active !== false,
+  }));
+
+  const { error: variantError } = await supabase
+    .from("product_variants")
+    .upsert(variantRows);
+
+  if (variantError) {
+    console.error(variantError);
+    throw new Error(`Variants could not be saved: ${variantError.message}`);
   }
 
   return data;

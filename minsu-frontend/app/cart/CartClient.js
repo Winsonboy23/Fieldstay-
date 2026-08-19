@@ -50,11 +50,21 @@ export default function CartClient({ products, settings }) {
     );
   }
 
-  // 以最新的商品資料重新核對購物車：找不到的代表已下架或刪除
-  const byId = new Map(products.map((p) => [Number(p.id), p]));
+  // 以最新的商品資料重新核對購物車（key 為規格）：找不到的代表已下架或刪除
+  const byVariantId = new Map();
+  products.forEach((product) => {
+    (product.variants || []).forEach((variant) => {
+      byVariantId.set(Number(variant.id), { product, variant });
+    });
+  });
   const lines = items.map((item) => {
-    const product = byId.get(item.id);
-    return { ...item, product, unavailable: !product };
+    const hit = byVariantId.get(item.variantId);
+    return {
+      ...item,
+      product: hit?.product,
+      variant: hit?.variant,
+      unavailable: !hit,
+    };
   });
 
   const unavailableLines = lines.filter((line) => line.unavailable);
@@ -65,7 +75,7 @@ export default function CartClient({ products, settings }) {
       (line) => line.product.temperature === value
     );
     const itemsTotal = groupLines.reduce(
-      (sum, line) => sum + unitPrice(line.product) * line.qty,
+      (sum, line) => sum + unitPrice(line.variant) * line.qty,
       0
     );
     return {
@@ -113,13 +123,13 @@ export default function CartClient({ products, settings }) {
             <ul className="mt-4 flex flex-col gap-2">
               {unavailableLines.map((line) => (
                 <li
-                  key={line.id}
+                  key={line.variantId}
                   className="flex items-center justify-between gap-4 text-sm text-primary-700"
                 >
-                  <span>商品編號 #{line.id}（已下架）× {line.qty}</span>
+                  <span>商品規格 #{line.variantId}（已下架）× {line.qty}</span>
                   <button
                     type="button"
-                    onClick={() => removeItem(line.id)}
+                    onClick={() => removeItem(line.variantId)}
                     className="text-xs font-medium text-clay-500 underline transition hover:text-clay-700"
                   >
                     移除
@@ -154,15 +164,15 @@ export default function CartClient({ products, settings }) {
 
             <ul className="divide-y divide-primary-200">
               {group.lines.map((line) => {
-                const soldOut = isSoldOut(line.product);
-                const price = unitPrice(line.product);
+                const soldOut = isSoldOut(line.variant);
+                const price = unitPrice(line.variant);
                 const overStock =
-                  line.product.stock !== null &&
-                  line.product.stock !== undefined &&
-                  line.qty > line.product.stock;
+                  line.variant.stock !== null &&
+                  line.variant.stock !== undefined &&
+                  line.qty > line.variant.stock;
 
                 return (
-                  <li key={line.id} className="flex gap-4 p-5">
+                  <li key={line.variantId} className="flex gap-4 p-5">
                     <Link
                       href={`/shop/${line.product.id}`}
                       className="h-20 w-20 flex-shrink-0 rounded-lg border border-primary-200 bg-primary-100 bg-cover bg-center"
@@ -179,6 +189,11 @@ export default function CartClient({ products, settings }) {
                           <Link href={`/shop/${line.product.id}`}>
                             <h3 className="text-sm font-semibold text-primary-900">
                               {line.product.name}
+                              {line.variant.name && (
+                                <span className="ml-1.5 font-normal text-primary-600">
+                                  {line.variant.name}
+                                </span>
+                              )}
                             </h3>
                           </Link>
                           <p className="mt-0.5 text-xs text-primary-500">
@@ -197,20 +212,20 @@ export default function CartClient({ products, settings }) {
                       )}
                       {!soldOut && overStock && (
                         <p className="text-xs font-medium text-clay-500">
-                          庫存僅剩 {line.product.stock} 件，請調整數量
+                          庫存僅剩 {line.variant.stock} 件，請調整數量
                         </p>
                       )}
 
                       <div className="flex items-center justify-between gap-3">
                         <QuantityStepper
                           value={line.qty}
-                          max={line.product.stock ?? null}
+                          max={line.variant.stock ?? null}
                           disabled={soldOut}
-                          onChange={(next) => setQty(line.id, next)}
+                          onChange={(next) => setQty(line.variantId, next)}
                         />
                         <button
                           type="button"
-                          onClick={() => removeItem(line.id)}
+                          onClick={() => removeItem(line.variantId)}
                           className="text-xs font-medium text-primary-500 underline transition hover:text-primary-900"
                         >
                           移除

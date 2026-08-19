@@ -176,19 +176,34 @@ const DeleteButton = styled(ActionButton)`
   }
 `;
 
-function stockLabel(stock) {
-  if (stock === null || stock === undefined) return "不限量";
-  if (stock <= 0) return "售完";
-  return `${stock} 件`;
+function stockLabel(variants) {
+  if (variants.some((v) => v.stock === null || v.stock === undefined))
+    return "不限量";
+  const total = variants.reduce((sum, v) => sum + Number(v.stock || 0), 0);
+  return total <= 0 ? "售完" : `${total} 件`;
+}
+
+function priceLabel(variants) {
+  const prices = variants.map((v) =>
+    Math.max(Number(v.price || 0) - Number(v.discount || 0), 0)
+  );
+  if (prices.length === 0) return formatCurrency(0);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max ? formatCurrency(min) : `${formatCurrency(min)} 起`;
 }
 
 function ProductCard({ product }) {
   const { isDeleting, deleteProduct } = useDeleteProduct();
   const { toggleActive, isToggling } = useToggleProductActive();
-  const price = product.price - (product.discount || 0);
+  const variants = Array.isArray(product.variants) ? product.variants : [];
   const isActive = product.is_active !== false;
   const temp = getTemperature(product.temperature);
-  const isSoldOut = product.stock !== null && product.stock <= 0;
+  const isSoldOut =
+    variants.length > 0 &&
+    variants.every(
+      (v) => v.stock !== null && v.stock !== undefined && v.stock <= 0
+    );
 
   return (
     <Modal>
@@ -209,12 +224,20 @@ function ProductCard({ product }) {
           <div>
             <StatRow>
               <span>售價</span>
-              <strong>{formatCurrency(price)}</strong>
+              <strong>{priceLabel(variants)}</strong>
+            </StatRow>
+            <StatRow>
+              <span>規格</span>
+              <strong>
+                {variants.length > 1
+                  ? `${variants.length} 種`
+                  : variants[0]?.name || "無區分"}
+              </strong>
             </StatRow>
             <StatRow>
               <span>庫存</span>
               <strong className={isSoldOut ? "sold-out" : ""}>
-                {stockLabel(product.stock)}
+                {stockLabel(variants)}
               </strong>
             </StatRow>
             <StatRow>

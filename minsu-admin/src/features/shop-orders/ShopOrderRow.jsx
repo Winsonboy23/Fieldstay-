@@ -117,7 +117,10 @@ function itemsSummary(order) {
     ? order.shop_order_items
     : [];
   if (items.length === 0) return "—";
-  const first = `${items[0].name} × ${items[0].quantity}`;
+  const label = items[0].variant_name
+    ? `${items[0].name} ${items[0].variant_name}`
+    : items[0].name;
+  const first = `${label} × ${items[0].quantity}`;
   return items.length === 1 ? first : `${first} 等 ${items.length} 項`;
 }
 

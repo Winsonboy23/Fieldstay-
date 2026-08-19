@@ -31,12 +31,44 @@ export function getTemperature(value) {
   return TEMPERATURES.find((t) => t.value === value) || TEMPERATURES[0];
 }
 
-export function unitPrice(product) {
-  return Math.max(Number(product.price || 0) - Number(product.discount || 0), 0);
+// 價格與庫存都在規格層；unitPrice / isSoldOut 皆以規格為對象
+export function unitPrice(variant) {
+  return Math.max(Number(variant?.price || 0) - Number(variant?.discount || 0), 0);
 }
 
-export function isSoldOut(product) {
-  return product.stock !== null && product.stock !== undefined && product.stock <= 0;
+export function isSoldOut(variant) {
+  return (
+    variant?.stock !== null && variant?.stock !== undefined && variant.stock <= 0
+  );
+}
+
+export function variantsOf(product) {
+  return Array.isArray(product?.variants) ? product.variants : [];
+}
+
+// 是否要顯示規格選擇器：只有一筆且沒有名稱時視為「無規格區分」
+export function hasVariantChoice(product) {
+  const variants = variantsOf(product);
+  return variants.length > 1 || (variants.length === 1 && !!variants[0].name);
+}
+
+export function firstAvailableVariant(product) {
+  const variants = variantsOf(product);
+  return variants.find((v) => !isSoldOut(v)) || variants[0] || null;
+}
+
+export function isProductSoldOut(product) {
+  const variants = variantsOf(product);
+  return variants.length > 0 && variants.every(isSoldOut);
+}
+
+// 商品卡的價格顯示：多規格時給區間
+export function priceRange(product) {
+  const prices = variantsOf(product).map(unitPrice);
+  if (prices.length === 0) return { min: 0, max: 0, isRange: false };
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return { min, max, isRange: min !== max };
 }
 
 // v1 冷凍僅開放全家取貨，所以冷凍固定用全家運費

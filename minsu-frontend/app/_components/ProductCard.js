@@ -2,19 +2,33 @@ import Link from "next/link";
 
 import AddToCartButton from "./AddToCartButton";
 import {
+  firstAvailableVariant,
   formatPrice,
   getTemperature,
-  isSoldOut,
+  hasVariantChoice,
+  isProductSoldOut,
+  priceRange,
   unitPrice,
+  variantsOf,
 } from "../_lib/product-utils";
 
 export default function ProductCard({ product }) {
   const temp = getTemperature(product.temperature);
-  const price = unitPrice(product);
-  const soldOut = isSoldOut(product);
-  const hasDiscount = Number(product.discount) > 0;
+  const variants = variantsOf(product);
+  const soldOut = isProductSoldOut(product);
+  const multi = hasVariantChoice(product);
+  const range = priceRange(product);
+
+  // 單一規格時才可以直接加入購物車
+  const single = multi ? null : variants[0];
+  const pick = firstAvailableVariant(product);
+  const hasDiscount = !multi && Number(single?.discount) > 0;
   const lowStock =
-    !soldOut && product.stock !== null && product.stock !== undefined && product.stock <= 5;
+    !soldOut &&
+    !multi &&
+    single?.stock !== null &&
+    single?.stock !== undefined &&
+    single.stock <= 5;
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-primary-200 bg-primary-50 transition hover:border-primary-300 hover:shadow-md">
@@ -52,31 +66,49 @@ export default function ProductCard({ product }) {
           <div>
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-semibold text-primary-900">
-                {formatPrice(price)}
+                {range.isRange
+                  ? `${formatPrice(range.min)} 起`
+                  : formatPrice(range.min)}
               </span>
               {hasDiscount && (
                 <span className="text-sm text-primary-400 line-through">
-                  {formatPrice(product.price)}
+                  {formatPrice(single.price)}
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-primary-500">{temp.delivery}</p>
+            <p className="mt-0.5 text-xs text-primary-500">
+              {multi ? `${variants.length} 種規格・${temp.delivery}` : temp.delivery}
+            </p>
           </div>
           {lowStock && (
             <span className="whitespace-nowrap text-xs font-medium text-clay-500">
-              僅剩 {product.stock} 件
+              僅剩 {single.stock} 件
             </span>
           )}
         </div>
 
-        <AddToCartButton
-          productId={product.id}
-          disabled={soldOut}
-          stock={product.stock}
-          className="w-full"
-        >
-          {soldOut ? "已售完" : "加入購物車"}
-        </AddToCartButton>
+        {multi ? (
+          // 有多種規格時無法直接加入購物車，導到商品頁選規格
+          <Link
+            href={`/shop/${product.id}`}
+            className={`inline-flex w-full items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition ${
+              soldOut
+                ? "cursor-not-allowed bg-primary-200 text-primary-500"
+                : "bg-accent-500 text-white hover:bg-accent-700"
+            }`}
+          >
+            {soldOut ? "已售完" : "選擇規格"}
+          </Link>
+        ) : (
+          <AddToCartButton
+            variantId={pick?.id}
+            disabled={soldOut}
+            stock={single?.stock}
+            className="w-full"
+          >
+            {soldOut ? "已售完" : "加入購物車"}
+          </AddToCartButton>
+        )}
       </div>
     </article>
   );

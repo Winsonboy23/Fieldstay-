@@ -497,7 +497,9 @@ const CVS_LABEL = { UNIMART: "7-ELEVEN", FAMI: "全家" };
 function shopItemsCard(order) {
   const items = Array.isArray(order?.shop_order_items) ? order.shop_order_items : [];
   const rows = items.map((item) => ({
-    label: escape(item.name),
+    label: escape(
+      item.variant_name ? `${item.name}（${item.variant_name}）` : item.name
+    ),
     value: `${formatPrice(item.unit_price)} × ${item.quantity} ＝ ${formatPrice(
       item.unit_price * item.quantity
     )}`,

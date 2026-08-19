@@ -91,7 +91,14 @@ export default function ShopOrderDetail({ order, settings, showBank = false }) {
           {items.map((item) => (
             <li key={item.id} className="flex justify-between gap-4 px-5 py-4">
               <div>
-                <p className="text-sm font-medium text-primary-900">{item.name}</p>
+                <p className="text-sm font-medium text-primary-900">
+                  {item.name}
+                  {item.variant_name && (
+                    <span className="ml-1.5 font-normal text-primary-600">
+                      {item.variant_name}
+                    </span>
+                  )}
+                </p>
                 <p className="mt-0.5 text-xs text-primary-500">
                   {formatPrice(item.unit_price)} × {item.quantity}
                 </p>

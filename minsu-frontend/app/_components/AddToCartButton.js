@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useCart } from "./CartContext";
 
 export default function AddToCartButton({
-  productId,
+  variantId,
   disabled = false,
   quantity = 1,
   stock = null,
@@ -14,7 +14,8 @@ export default function AddToCartButton({
   const { addItem, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
 
-  const inCart = items.find((item) => item.id === Number(productId))?.qty || 0;
+  const inCart =
+    items.find((item) => item.variantId === Number(variantId))?.qty || 0;
   // 有限庫存時，購物車內數量不可超過庫存（真正的把關在結帳的 RPC）
   // stock 為 0 屬於售完，由 disabled 處理，不算「達上限」
   const reachedStock =
@@ -22,8 +23,8 @@ export default function AddToCartButton({
   const isDisabled = disabled || reachedStock;
 
   function handleClick() {
-    if (isDisabled) return;
-    addItem(productId, quantity);
+    if (isDisabled || !variantId) return;
+    addItem(variantId, quantity);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1600);
   }

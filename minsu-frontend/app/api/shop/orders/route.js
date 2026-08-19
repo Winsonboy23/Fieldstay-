@@ -13,7 +13,7 @@ const ERROR_MESSAGES = {
   EMPTY_CART: "購物車是空的",
   DUPLICATE_ITEM: "購物車資料有誤，請重新整理後再試",
   QUANTITY_INVALID: "商品數量不正確",
-  PRODUCT_NOT_FOUND: "購物車中有商品已不存在，請重新整理後再試",
+  PRODUCT_NOT_FOUND: "購物車中有商品規格已不存在，請重新整理後再試",
   PRODUCT_INACTIVE: "購物車中有商品已下架，請移除後再結帳",
   TEMP_MISMATCH: "同一張訂單只能包含相同溫層的商品",
   TEMP_INVALID: "商品溫層資料有誤",
@@ -59,10 +59,10 @@ export async function POST(request) {
   const items = Array.isArray(payload.items)
     ? payload.items
         .map((item) => ({
-          product_id: Number(item.productId ?? item.product_id),
+          variant_id: Number(item.variantId ?? item.variant_id),
           quantity: Number(item.quantity),
         }))
-        .filter((item) => item.product_id > 0 && item.quantity > 0)
+        .filter((item) => item.variant_id > 0 && item.quantity > 0)
     : [];
 
   if (items.length === 0) {
