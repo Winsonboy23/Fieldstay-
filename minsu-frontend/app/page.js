@@ -1360,6 +1360,7 @@ export default async function Page() {
       <li><a href="#about">關於我們</a></li>
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
+      <li><a href="/shop">選物商店</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
 
@@ -1381,6 +1382,7 @@ export default async function Page() {
       <li><a href="#about">關於我們</a></li>
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
+      <li><a href="/shop">選物商店</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
     <div class="mobile-actions">

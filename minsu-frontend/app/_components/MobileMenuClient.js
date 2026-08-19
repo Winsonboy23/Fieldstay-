@@ -80,6 +80,14 @@ function LogoutIcon(props) {
   );
 }
 
+function ShopIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 8h16l-1 12H5L4 8z" />
+      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+    </svg>
+  );
+}
 function CartIcon(props) {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -95,6 +103,7 @@ const ITEMS = [
   { href: "/about", label: "關於我們", icon: BookIcon },
   { href: "/rooms", label: "房型選擇", icon: BedIcon },
   { href: "/activities", label: "田間體驗", icon: LeafIcon },
+  { href: "/shop", label: "選物商店", icon: ShopIcon },
   { href: "/cart", label: "購物車", icon: CartIcon },
   { href: "/#transport", label: "交通資訊", icon: PinIcon },
   { href: "/account", label: "會員中心", icon: UserIcon },
