@@ -21,7 +21,7 @@ function QuantityStepper({ value, max, onChange, disabled }) {
         onClick={() => onChange(value - 1)}
         disabled={disabled}
         aria-label="減少數量"
-        className="px-3 py-1.5 text-primary-700 transition hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
+        className="btn-press px-3 py-1.5 text-primary-700 hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
       >
         −
       </button>
@@ -33,7 +33,7 @@ function QuantityStepper({ value, max, onChange, disabled }) {
         onClick={() => onChange(value + 1)}
         disabled={disabled || (max !== null && value >= max)}
         aria-label="增加數量"
-        className="px-3 py-1.5 text-primary-700 transition hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
+        className="btn-press px-3 py-1.5 text-primary-700 hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
       >
         +
       </button>

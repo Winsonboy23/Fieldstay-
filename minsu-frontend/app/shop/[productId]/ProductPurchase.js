@@ -97,7 +97,7 @@ export default function ProductPurchase({ product }) {
             onClick={() => setQuantity((q) => Math.max(q - 1, 1))}
             disabled={soldOut || quantity <= 1}
             aria-label="減少數量"
-            className="px-4 py-2 text-lg text-primary-700 transition hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
+            className="btn-press px-4 py-2 text-lg text-primary-700 hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
           >
             −
           </button>
@@ -109,7 +109,7 @@ export default function ProductPurchase({ product }) {
             onClick={() => setQuantity((q) => Math.min(q + 1, max))}
             disabled={soldOut || quantity >= max}
             aria-label="增加數量"
-            className="px-4 py-2 text-lg text-primary-700 transition hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
+            className="btn-press px-4 py-2 text-lg text-primary-700 hover:text-primary-900 disabled:cursor-not-allowed disabled:text-primary-300"
           >
             +
           </button>

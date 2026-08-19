@@ -1,7 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "./CartContext";
+
+function CheckIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="cart-check"
+    >
+      <path d="M4 12l5 5L20 6" />
+    </svg>
+  );
+}
 
 export default function AddToCartButton({
   variantId,
@@ -13,6 +32,10 @@ export default function AddToCartButton({
 }) {
   const { addItem, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
+  const timerRef = useRef(null);
+
+  // 元件卸載時清掉計時器，避免對已卸載元件 setState
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const inCart =
     items.find((item) => item.variantId === Number(variantId))?.qty || 0;
@@ -26,7 +49,8 @@ export default function AddToCartButton({
     if (isDisabled || !variantId) return;
     addItem(variantId, quantity);
     setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1600);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setJustAdded(false), 1600);
   }
 
   return (
@@ -34,13 +58,25 @@ export default function AddToCartButton({
       type="button"
       onClick={handleClick}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition ${
+      aria-live="polite"
+      className={`btn-press inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold ${
         isDisabled
           ? "cursor-not-allowed bg-primary-200 text-primary-500"
+          : justAdded
+          ? "bg-accent-700 text-white"
           : "bg-accent-500 text-white hover:bg-accent-700"
       } ${className}`}
     >
-      {reachedStock ? "已達庫存上限" : justAdded ? "已加入購物車 ✓" : children}
+      {reachedStock ? (
+        "已達庫存上限"
+      ) : justAdded ? (
+        <span className="cart-added inline-flex items-center gap-2">
+          <CheckIcon />
+          已加入購物車
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 }

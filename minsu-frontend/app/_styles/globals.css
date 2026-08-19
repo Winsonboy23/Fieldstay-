@@ -147,6 +147,66 @@
   }
 }
 
+/* ── 加入購物車回饋動畫 ───────────────────────────── */
+
+/* 按下時的輕微內縮 */
+.btn-press {
+  transition: transform 0.12s ease, background-color 0.2s ease;
+}
+.btn-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* 成功狀態的文字與勾勾淡入 */
+@keyframes cart-added-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.cart-added {
+  animation: cart-added-in 0.25s ease-out both;
+}
+
+/* 勾勾由小放大，帶一點回彈 */
+@keyframes cart-check-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.cart-check {
+  animation: cart-check-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* 購物車圖示：數量增加時輕輕跳一下 */
+@keyframes cart-icon-bump {
+  0% { transform: none; }
+  35% { transform: translateY(-3px) scale(1.08); }
+  100% { transform: none; }
+}
+.cart-bump {
+  animation: cart-icon-bump 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 徽章數字更新時的彈入 */
+@keyframes cart-badge-pop {
+  0% { transform: scale(0.5); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.cart-badge-pop {
+  animation: cart-badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-press:active:not(:disabled),
+  .cart-added,
+  .cart-check,
+  .cart-bump,
+  .cart-badge-pop {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 /* Mobile menu Liquid Glass (matches /login .glass) */
 .menu-glass {
   background: radial-gradient(
