@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CartLink from "./CartLink";
 
 const BRAND_LOGO_URL =
   "https://wnvqbozqsdvaszfgumkg.supabase.co/storage/v1/object/public/site-images/1778689945313-0.1766648174384008-528684274_18019731992746464_3668865358020989427_n--1-.jpg";
@@ -18,7 +19,7 @@ function BrandMark() {
   );
 }
 
-export default function SiteHeader({ user = null, hideFaq = false }) {
+export default function SiteHeader({ user = null }) {
   const userName = user?.name || user?.email || "會員中心";
 
   return (
@@ -48,14 +49,7 @@ export default function SiteHeader({ user = null, hideFaq = false }) {
       </Link>
 
       <div className="flex items-center gap-3">
-        {!hideFaq && (
-          <Link
-            href="/faq"
-            className="hidden text-sm font-medium text-primary-700 transition hover:text-accent-700 md:inline-flex"
-          >
-            FAQ
-          </Link>
-        )}
+        <CartLink />
         {user ? (
           <>
             <Link

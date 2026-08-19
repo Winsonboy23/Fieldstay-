@@ -209,6 +209,105 @@ export async function getSettings() {
   return data;
 }
 
+// Products
+const PRODUCT_COLUMNS =
+  "id, name, subtitle, description, price, discount, temperature, stock, weight_g, image, gallery_images, sort_order, features, notes, spec_content, spec_origin, spec_ingredients, spec_shelf_life, spec_storage";
+
+export async function getProducts() {
+  const { data, error } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    throw new Error("Products could not be loaded");
+  }
+  return data;
+}
+
+export async function getProduct(id) {
+  const { data, error } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("id", id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Product could not be loaded");
+  }
+  return data;
+}
+
+// Shop orders
+export async function createShopOrder(payload) {
+  const { data, error } = await supabaseAdmin.rpc("create_shop_order", {
+    p_guest_id: payload.guestId ?? null,
+    p_contact_name: payload.contactName,
+    p_contact_email: payload.contactEmail,
+    p_contact_phone: payload.contactPhone,
+    p_temperature: payload.temperature,
+    p_delivery_type: payload.deliveryType,
+    p_items: payload.items,
+    p_cvs_brand: payload.cvsBrand ?? null,
+    p_cvs_store_id: payload.cvsStoreId ?? null,
+    p_cvs_store_name: payload.cvsStoreName ?? null,
+    p_cvs_store_address: payload.cvsStoreAddress ?? null,
+    p_receiver_address: payload.receiverAddress ?? null,
+    p_special_request: payload.specialRequest ?? null,
+  });
+
+  if (error) {
+    console.error(error);
+    throw new Error(error.message);
+  }
+  return data;
+}
+
+export async function cancelShopOrder(orderId) {
+  const { data, error } = await supabaseAdmin.rpc("cancel_shop_order", {
+    p_order_id: orderId,
+  });
+
+  if (error) {
+    console.error(error);
+    throw new Error(error.message);
+  }
+  return data;
+}
+
+export async function getShopOrdersByGuestId(guestId) {
+  const { data, error } = await supabaseAdmin
+    .from("shop_orders")
+    .select("*, shop_order_items(*)")
+    .eq("guest_id", guestId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    throw new Error("Shop orders could not be loaded");
+  }
+  return data;
+}
+
+export async function getShopOrderById(orderId) {
+  const { data, error } = await supabaseAdmin
+    .from("shop_orders")
+    .select("*, shop_order_items(*)")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    throw new Error("Shop order could not be loaded");
+  }
+  return data;
+}
+
 // Activities
 export async function getActivities() {
   const { data, error } = await supabase

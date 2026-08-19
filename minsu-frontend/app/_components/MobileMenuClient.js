@@ -70,15 +70,6 @@ function MenuIcon(props) {
     </svg>
   );
 }
-function FaqIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7" />
-      <circle cx="12" cy="17" r="0.6" fill="currentColor" />
-    </svg>
-  );
-}
 function LogoutIcon(props) {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -89,13 +80,23 @@ function LogoutIcon(props) {
   );
 }
 
+function CartIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9" cy="20" r="1.2" />
+      <circle cx="18" cy="20" r="1.2" />
+      <path d="M2 3h3l2.4 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 7H6" />
+    </svg>
+  );
+}
+
 const ITEMS = [
   { href: "/", label: "首頁", icon: HomeIcon },
   { href: "/about", label: "關於我們", icon: BookIcon },
   { href: "/rooms", label: "房型選擇", icon: BedIcon },
   { href: "/activities", label: "田間體驗", icon: LeafIcon },
+  { href: "/cart", label: "購物車", icon: CartIcon },
   { href: "/#transport", label: "交通資訊", icon: PinIcon },
-  { href: "/faq", label: "FAQ", icon: FaqIcon },
   { href: "/account", label: "會員中心", icon: UserIcon },
 ];
 

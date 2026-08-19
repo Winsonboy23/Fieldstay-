@@ -8,6 +8,7 @@ import GlobalStyles from "./styles/GlobalStyles";
 import Dashboard from "./pages/Dashboard";
 import Bookings from "./pages/Bookings";
 import Rooms from "./pages/Rooms";
+import Products from "./pages/Products";
 import Users from "./pages/Users";
 import Guests from "./pages/Guests";
 import Settings from "./pages/Settings";
@@ -50,6 +51,7 @@ function App() {
               <Route path="checkin/:bookingId" element={<Checkin />} />
 
               <Route path="rooms" element={<Rooms />} />
+              <Route path="products" element={<Products />} />
               <Route path="activities" element={<Activities />} />
               <Route path="guests" element={<Guests />} />
               <Route path="users" element={<Users />} />

@@ -1,5 +1,6 @@
 import "@/app/_styles/globals.css";
 import { ReservationProvider } from "./_components/ReservationContext";
+import { CartProvider } from "./_components/CartContext";
 import { getSettings } from "./_lib/data-service";
 import MobileMenu from "./_components/MobileMenu";
 
@@ -61,7 +62,9 @@ export default function RootLayout({ children }) {
       <meta name="referrer" content="origin-when-cross-origin" />
       <meta name="robots" content="index, follow" />
       <body className="antialiased bg-primary-50 text-primary-900 min-h-screen flex flex-col relative font-sans">
-        <ReservationProvider>{children}</ReservationProvider>
+        <CartProvider>
+          <ReservationProvider>{children}</ReservationProvider>
+        </CartProvider>
         <MobileMenu />
 
         <footer className="sr-only">

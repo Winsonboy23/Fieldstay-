@@ -5,6 +5,7 @@ import {
   HiOutlineCog6Tooth,
   HiOutlineHome,
   HiOutlineHomeModern,
+  HiOutlineShoppingBag,
   HiOutlineSparkles,
   HiOutlineUsers,
   HiOutlineArrowRightOnRectangle,
@@ -132,6 +133,12 @@ function MainNav() {
           <StyledLink to="/activities">
             <HiOutlineSparkles />
             <span>活動管理</span>
+          </StyledLink>
+        </li>
+        <li>
+          <StyledLink to="/products">
+            <HiOutlineShoppingBag />
+            <span>商品管理</span>
           </StyledLink>
         </li>
         <li>

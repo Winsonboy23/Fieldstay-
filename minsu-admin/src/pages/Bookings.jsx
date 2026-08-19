@@ -10,8 +10,10 @@ import {
 
 import BookingTable from "../features/bookings/BookingTable";
 import ActivitySignupTable from "../features/activities/ActivitySignupTable";
+import ShopOrderTable from "../features/shop-orders/ShopOrderTable";
 import { useBookingStats } from "../features/bookings/useBookingStats";
 import { useSignupStats } from "../features/activities/useSignupStats";
+import { useShopOrderStats } from "../features/shop-orders/useShopOrders";
 import { useOutsideClick } from "../hooks/useOutsideClick";
 import { formatCurrency } from "../utils/helpers";
 
@@ -228,6 +230,15 @@ const ACTIVITY_FILTERS = [
   { value: "cancelled", label: "已取消" },
 ];
 
+const SHOP_FILTERS = [
+  { value: "all", label: "全部狀態" },
+  { value: "pending", label: "待匯款" },
+  { value: "paid", label: "已收款" },
+  { value: "shipped", label: "已出貨" },
+  { value: "completed", label: "已完成" },
+  { value: "cancelled", label: "已取消" },
+];
+
 const TypeTabs = styled.div`
   display: inline-flex;
   height: 4rem;
@@ -261,15 +272,23 @@ function Bookings() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const ref = useOutsideClick(() => setOpen(false), false);
-  const type = searchParams.get("type") === "activity" ? "activity" : "room";
+  const rawType = searchParams.get("type");
+  const type =
+    rawType === "activity" ? "activity" : rawType === "shop" ? "shop" : "room";
   const tab = searchParams.get("tab") || "all";
   const search = searchParams.get("q") || "";
   const { stats: roomStats } = useBookingStats();
   const { stats: activityStats } = useSignupStats();
+  const { stats: shopStats } = useShopOrderStats();
   const isActivity = type === "activity";
-  const stats = isActivity ? activityStats : roomStats;
+  const isShop = type === "shop";
+  const stats = isShop ? shopStats : isActivity ? activityStats : roomStats;
 
-  const FILTERS = isActivity ? ACTIVITY_FILTERS : ROOM_FILTERS;
+  const FILTERS = isShop
+    ? SHOP_FILTERS
+    : isActivity
+    ? ACTIVITY_FILTERS
+    : ROOM_FILTERS;
   const current = FILTERS.find((f) => f.value === tab) || FILTERS[0];
 
   function handleType(value) {
@@ -311,14 +330,14 @@ function Bookings() {
             <StatValue>{stats.total}</StatValue>
           </StatRow>
           <StatRow>
-            <StatLabel>待確認</StatLabel>
+            <StatLabel>{isShop ? "待匯款" : "待確認"}</StatLabel>
             <StatValue>{stats.pending}</StatValue>
           </StatRow>
           <StatRow>
-            <StatLabel>已確認</StatLabel>
+            <StatLabel>{isShop ? "處理中" : "已確認"}</StatLabel>
             <StatValue>{stats.confirmed}</StatValue>
           </StatRow>
-          {!isActivity && (
+          {!isActivity && !isShop && (
             <StatRow>
               <StatLabel>進行中</StatLabel>
               <StatValue>{stats.inProgress}</StatValue>
@@ -349,6 +368,9 @@ function Bookings() {
           >
             活動
           </TypeTabButton>
+          <TypeTabButton $active={isShop} onClick={() => handleType("shop")}>
+            商品
+          </TypeTabButton>
         </TypeTabs>
 
         <ToolBar>
@@ -359,7 +381,9 @@ function Bookings() {
               value={search}
               onChange={handleSearch}
               placeholder={
-                isActivity
+                isShop
+                  ? "搜尋訂單編號、收件人或商品名稱…"
+                  : isActivity
                   ? "搜尋報名編號、報名人或活動名稱…"
                   : "搜尋訂單編號、住客姓名或房間…"
               }
@@ -387,7 +411,9 @@ function Bookings() {
         </ToolBar>
       </ControlsRow>
 
-      {isActivity ? (
+      {isShop ? (
+        <ShopOrderTable search={search} />
+      ) : isActivity ? (
         <ActivitySignupTable search={search} />
       ) : (
         <BookingTable search={search} />

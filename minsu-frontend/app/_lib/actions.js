@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { auth, signOut } from "./auth";
 import {
+  cancelShopOrder,
   createActivitySignup,
   createBooking,
   deleteBooking,
   getActivity,
   getBookings,
   getSettings,
+  getShopOrderById,
   registerGuest,
   requestPasswordReset,
   updateBooking,
@@ -19,6 +21,7 @@ import { sendMail } from "./mailer";
 import {
   activityCreatedEmail,
   bookingCancelledEmail,
+  shopOrderCancelledEmail,
 } from "./emailTemplates";
 import { redirect } from "next/navigation";
 
@@ -280,4 +283,53 @@ export async function forgotPasswordAction(formData) {
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/" });
+}
+
+export async function cancelShopOrderAction(orderId) {
+  const session = await auth();
+  if (!session?.user?.guestId) throw new Error("請先登入");
+
+  const order = await getShopOrderById(orderId);
+  if (!order) throw new Error("找不到此訂單");
+
+  // 只能取消自己的訂單
+  if (String(order.guest_id) !== String(session.user.guestId)) {
+    throw new Error("您沒有權限取消此訂單");
+  }
+
+  let cancelled;
+  try {
+    cancelled = await cancelShopOrder(orderId);
+  } catch (err) {
+    const msg = String(err?.message || "");
+    if (msg.includes("ALREADY_SHIPPED"))
+      throw new Error("訂單已出貨，無法自行取消，請與我們聯繫");
+    if (msg.includes("ORDER_NOT_FOUND")) throw new Error("找不到此訂單");
+    throw err;
+  }
+
+  // 寄取消通知信（失敗不擋取消）
+  if (cancelled && !order.cancelled_email_sent_at) {
+    try {
+      const [full, settings] = await Promise.all([
+        getShopOrderById(orderId),
+        getSettings().catch(() => ({})),
+      ]);
+      const { subject, html } = shopOrderCancelledEmail({
+        order: full || cancelled,
+        settings: settings || {},
+        siteUrl: process.env.NEXTAUTH_URL || "http://localhost:3000",
+      });
+      await sendMail({ to: order.contact_email, subject, html });
+      await supabaseAdmin
+        .from("shop_orders")
+        .update({ cancelled_email_sent_at: new Date().toISOString() })
+        .eq("id", orderId);
+    } catch (mailErr) {
+      console.error("shop order cancel mail failed", mailErr);
+    }
+  }
+
+  revalidatePath("/account/shop-orders");
+  revalidatePath(`/account/shop-orders/${orderId}`);
 }

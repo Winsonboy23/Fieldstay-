@@ -4,6 +4,7 @@ import {
   ClipboardDocumentListIcon,
   CalendarDaysIcon,
   HomeIcon,
+  ShoppingBagIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
@@ -19,6 +20,11 @@ const navLinks = [
     name: "體驗預約",
     href: "/account/experiences",
     icon: CalendarDaysIcon,
+  },
+  {
+    name: "商品訂單",
+    href: "/account/shop-orders",
+    icon: ShoppingBagIcon,
   },
   {
     name: "個人資料",

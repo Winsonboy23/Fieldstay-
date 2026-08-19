@@ -55,3 +55,19 @@ export function notifyBookingCancelled(bookingId) {
 export function notifyActivityCancelled(signupId) {
   return postNotify("/api/notify/activity-cancelled", { signupId });
 }
+
+export function notifyShopPaid(orderId) {
+  return postNotify("/api/notify/shop-paid", { orderId });
+}
+
+export function notifyShopShipped(orderId) {
+  return postNotify("/api/notify/shop-shipped", { orderId });
+}
+
+export function notifyShopCancelled(orderId) {
+  return postNotify("/api/notify/shop-cancelled", { orderId });
+}
+
+export function resendShopNotification(orderId) {
+  return postNotify("/api/notify/shop-resend", { orderId });
+}

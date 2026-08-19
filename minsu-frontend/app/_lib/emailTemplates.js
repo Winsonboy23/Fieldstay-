@@ -487,3 +487,188 @@ export function activityPaidEmail({
     }),
   };
 }
+
+// ============================================================
+// 商品訂單共用區塊
+// ============================================================
+const TEMP_LABEL = { normal: "常溫", chilled: "冷藏", frozen: "冷凍" };
+const CVS_LABEL = { UNIMART: "7-ELEVEN", FAMI: "全家" };
+
+function shopItemsCard(order) {
+  const items = Array.isArray(order?.shop_order_items) ? order.shop_order_items : [];
+  const rows = items.map((item) => ({
+    label: escape(item.name),
+    value: `${formatPrice(item.unit_price)} × ${item.quantity} ＝ ${formatPrice(
+      item.unit_price * item.quantity
+    )}`,
+  }));
+  return infoCard({
+    title: `訂購商品（${TEMP_LABEL[order.temperature] || ""}）`,
+    rows: [
+      ...rows,
+      { label: "商品小計", value: formatPrice(order.items_total) },
+      {
+        label: "運費",
+        value: order.shipping_fee === 0 ? "免運" : formatPrice(order.shipping_fee),
+      },
+      { label: "訂單總計", value: formatPrice(order.total_price) },
+    ],
+  });
+}
+
+function shopDeliveryCard(order) {
+  const rows =
+    order.delivery_type === "cvs"
+      ? [
+          { label: "取貨方式", value: `${CVS_LABEL[order.cvs_brand] || ""} 超商取貨` },
+          { label: "取貨門市", value: escape(order.cvs_store_name) },
+          { label: "門市店號", value: escape(order.cvs_store_id) },
+          { label: "門市地址", value: escape(order.cvs_store_address || "") },
+        ]
+      : [
+          { label: "配送方式", value: "低溫宅配" },
+          { label: "收件地址", value: escape(order.receiver_address) },
+        ];
+
+  return infoCard({
+    title: "配送資訊",
+    rows: [
+      ...rows,
+      { label: "收件人", value: escape(order.contact_name) },
+      { label: "聯絡電話", value: escape(order.contact_phone) },
+    ],
+  });
+}
+
+// ============================================================
+// 3A. 商品訂單成立 + 請完成匯款
+// ============================================================
+export function shopOrderCreatedEmail({ order, settings, siteUrl }) {
+  const link = `${siteUrl}/account/shop-orders/${order.id}`;
+  const deadline = settings?.payment_deadline_hours ?? 48;
+
+  const bankCard = infoCard({
+    title: "匯款資訊",
+    accent: true,
+    rows: [
+      {
+        label: "銀行",
+        value: `${escape(settings?.bank_name)} ${escape(settings?.bank_branch || "")}`,
+      },
+      { label: "戶名", value: escape(settings?.bank_account_name) },
+      { label: "帳號", value: escape(settings?.bank_account_number) },
+      { label: "金額", value: formatPrice(order.total_price) },
+      { label: "備註", value: `請填訂單編號 ${escape(order.order_no)}` },
+      { label: "期限", value: `請於 ${deadline} 小時內完成匯款` },
+    ],
+  });
+
+  return {
+    subject: `【山田寓所】訂單成立 ${order.order_no}，請完成匯款`,
+    html: shell({
+      title: "訂單成立，請完成匯款",
+      intro: `${escape(order.contact_name) || "貴賓"} 您好，您的商品訂單 ${escape(
+        order.order_no
+      )} 已成立，請於下方期限內完成匯款，我們收款後會盡快為您出貨。`,
+      body: shopItemsCard(order) + shopDeliveryCard(order) + bankCard,
+      ctaText: "查看訂單",
+      ctaLink: link,
+      footer: settings?.contact_phone
+        ? `如有任何問題，請聯絡 ${escape(settings.contact_phone)}`
+        : "如有任何問題，歡迎來信與我們聯繫。",
+    }),
+  };
+}
+
+// ============================================================
+// 3B. 商品訂單已收款
+// ============================================================
+export function shopOrderPaidEmail({ order, settings, siteUrl }) {
+  const link = `${siteUrl}/account/shop-orders/${order.id}`;
+
+  return {
+    subject: `【山田寓所】已收到款項 ${order.order_no}，備貨中`,
+    html: shell({
+      title: "已收到您的款項",
+      intro: `${escape(order.contact_name) || "貴賓"} 您好，我們已確認收到訂單 ${escape(
+        order.order_no
+      )} 的款項，正在為您備貨，出貨後會再以 Email 通知您。`,
+      body: shopItemsCard(order) + shopDeliveryCard(order),
+      ctaText: "查看訂單",
+      ctaLink: link,
+      footer: settings?.contact_phone
+        ? `如有任何問題，請聯絡 ${escape(settings.contact_phone)}`
+        : "如有任何問題，歡迎來信與我們聯繫。",
+    }),
+  };
+}
+
+// ============================================================
+// 3C. 商品訂單已出貨
+// ============================================================
+export function shopOrderShippedEmail({ order, settings, siteUrl }) {
+  const link = `${siteUrl}/account/shop-orders/${order.id}`;
+  const isCvs = order.delivery_type === "cvs";
+
+  const shipCard = infoCard({
+    title: "寄件資訊",
+    accent: true,
+    rows: [
+      { label: "寄件單號", value: escape(order.logistics_no || "—") },
+      ...(isCvs
+        ? [
+            {
+              label: "取貨門市",
+              value: `${CVS_LABEL[order.cvs_brand] || ""} ${escape(
+                order.cvs_store_name
+              )}`,
+            },
+            { label: "門市店號", value: escape(order.cvs_store_id) },
+          ]
+        : [{ label: "收件地址", value: escape(order.receiver_address) }]),
+    ],
+  });
+
+  const notice = isCvs
+    ? "包裹送達門市後，超商會以簡訊通知您取貨。請留意取件期限，逾期未取商品將退回。"
+    : "包裹已交由宅配寄出，請保持電話暢通以便配送人員聯繫。";
+
+  return {
+    subject: `【山田寓所】訂單 ${order.order_no} 已出貨`,
+    html: shell({
+      title: "您的商品已出貨",
+      intro: `${escape(order.contact_name) || "貴賓"} 您好，訂單 ${escape(
+        order.order_no
+      )} 已寄出。${notice}`,
+      body: shipCard + shopItemsCard(order),
+      ctaText: "查看訂單",
+      ctaLink: link,
+      footer: settings?.contact_phone
+        ? `如有任何問題，請聯絡 ${escape(settings.contact_phone)}`
+        : "如有任何問題，歡迎來信與我們聯繫。",
+    }),
+  };
+}
+
+// ============================================================
+// 3D. 商品訂單已取消
+// ============================================================
+export function shopOrderCancelledEmail({ order, settings, siteUrl }) {
+  const link = `${siteUrl}/shop`;
+
+  return {
+    subject: `【山田寓所】訂單 ${order.order_no} 已取消`,
+    html: shell({
+      title: "訂單已取消",
+      intro: `${escape(order.contact_name) || "貴賓"} 您好，您的訂單 ${escape(
+        order.order_no
+      )} 已取消。若您已完成匯款，我們會盡快與您聯繫辦理退款。`,
+      body: shopItemsCard(order),
+      ctaText: "回到選物商店",
+      ctaLink: link,
+      footer: settings?.contact_phone
+        ? `如有任何問題，請聯絡 ${escape(settings.contact_phone)}`
+        : "如有任何問題，歡迎來信與我們聯繫。",
+    }),
+  };
+}

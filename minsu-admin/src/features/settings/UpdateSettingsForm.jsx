@@ -186,6 +186,20 @@ function UpdateSettingsForm() {
     updateSetting({ [field]: value });
   }
 
+  function handleFeeBlur(e, field) {
+    const value = Number(e.target.value) || 0;
+    if (value === (settings[field] ?? 0)) return;
+    updateSetting({ [field]: value });
+  }
+
+  // 免運門檻留空 = 該溫層不提供免運
+  function handleThresholdBlur(e, field) {
+    const raw = e.target.value.trim();
+    const value = raw === "" ? null : Number(raw) || 0;
+    if (value === (settings[field] ?? null)) return;
+    updateSetting({ [field]: value });
+  }
+
   async function handleBannerPick(e) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -435,6 +449,98 @@ function UpdateSettingsForm() {
         </FieldGrid>
         <p className="hint" style={{ marginTop: "0.8rem" }}>
           客戶完成預約後，將在通知信中告知需於此時數內完成匯款。
+        </p>
+      </Section>
+
+      {/* 商城運費 */}
+      <Section>
+        <h3>商城運費</h3>
+        <p className="hint">
+          結帳時依商品溫層分別計算運費。金額請依門市櫃檯實際牌價自行調整；
+          修改後只影響新訂單，已成立的訂單維持當時計算的運費。
+        </p>
+        <FieldGrid cols="1fr 1fr">
+          <Field>
+            <span>常溫・超商取貨（元 / 件）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="66"
+              defaultValue={settings.ship_fee_normal ?? 66}
+              disabled={disabled}
+              onBlur={(e) => handleFeeBlur(e, "ship_fee_normal")}
+            />
+          </Field>
+          <Field>
+            <span>常溫・滿額免運（元，留空=不免運）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="例：1200"
+              defaultValue={settings.free_ship_threshold_normal ?? ""}
+              disabled={disabled}
+              onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_normal")}
+            />
+          </Field>
+          <Field>
+            <span>冷凍・全家取貨（元 / 件）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="190"
+              defaultValue={settings.ship_fee_frozen_fami ?? 190}
+              disabled={disabled}
+              onBlur={(e) => handleFeeBlur(e, "ship_fee_frozen_fami")}
+            />
+          </Field>
+          <Field>
+            <span>冷凍・滿額免運（元，留空=不免運）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="例：2000"
+              defaultValue={settings.free_ship_threshold_frozen ?? ""}
+              disabled={disabled}
+              onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_frozen")}
+            />
+          </Field>
+          <Field>
+            <span>冷藏・黑貓低溫宅配（元 / 件）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="180"
+              defaultValue={settings.ship_fee_chilled_home ?? 180}
+              disabled={disabled}
+              onBlur={(e) => handleFeeBlur(e, "ship_fee_chilled_home")}
+            />
+          </Field>
+          <Field>
+            <span>冷藏・滿額免運（元，留空=不免運）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="例：2000"
+              defaultValue={settings.free_ship_threshold_chilled ?? ""}
+              disabled={disabled}
+              onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_chilled")}
+            />
+          </Field>
+          <Field>
+            <span>冷凍・7-11 取貨（元 / 件）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="150"
+              defaultValue={settings.ship_fee_frozen_unimart ?? 150}
+              disabled={disabled}
+              onBlur={(e) => handleFeeBlur(e, "ship_fee_frozen_unimart")}
+            />
+          </Field>
+        </FieldGrid>
+        <p className="hint" style={{ marginTop: "0.8rem" }}>
+          冷藏商品無法超商取貨（超商只有常溫與冷凍溫層），一律走宅配。
+          冷凍目前僅開放全家取貨，7-11 冷凍運費欄位保留供日後開放使用。
         </p>
       </Section>
 
