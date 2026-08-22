@@ -173,7 +173,7 @@ export function bookingCreatedEmail({
       title: "訂房成功，請完成匯款",
       intro: `${escape(contactName) || "貴賓"} 您好，您的訂房已成立，請於下方期限內完成匯款，我們將盡快為您確認。`,
       body: orderCard + bankCard,
-      ctaText: "查看我的訂單",
+      ctaText: "查看住宿訂單",
       ctaLink: link,
       footer: settings?.contact_phone
         ? `如有任何問題，請聯絡 ${escape(settings.contact_phone)}`
@@ -542,11 +542,17 @@ function shopDeliveryCard(order) {
   });
 }
 
+// 商品訂單連結：會員導會員中心；訪客訂單（無 guest_id）用 access_token 連結
+function shopOrderLink(order, siteUrl) {
+  if (order.guest_id) return `${siteUrl}/account/shop-orders/${order.id}`;
+  return `${siteUrl}/shop/thankyou?orderId=${order.id}&token=${order.access_token || ""}`;
+}
+
 // ============================================================
 // 3A. 商品訂單成立 + 請完成匯款
 // ============================================================
 export function shopOrderCreatedEmail({ order, settings, siteUrl }) {
-  const link = `${siteUrl}/account/shop-orders/${order.id}`;
+  const link = shopOrderLink(order, siteUrl);
   const deadline = settings?.payment_deadline_hours ?? 48;
 
   const bankCard = infoCard({
@@ -586,7 +592,7 @@ export function shopOrderCreatedEmail({ order, settings, siteUrl }) {
 // 3B. 商品訂單已收款
 // ============================================================
 export function shopOrderPaidEmail({ order, settings, siteUrl }) {
-  const link = `${siteUrl}/account/shop-orders/${order.id}`;
+  const link = shopOrderLink(order, siteUrl);
 
   return {
     subject: `【山田寓所】已收到款項 ${order.order_no}，備貨中`,
@@ -609,7 +615,7 @@ export function shopOrderPaidEmail({ order, settings, siteUrl }) {
 // 3C. 商品訂單已出貨
 // ============================================================
 export function shopOrderShippedEmail({ order, settings, siteUrl }) {
-  const link = `${siteUrl}/account/shop-orders/${order.id}`;
+  const link = shopOrderLink(order, siteUrl);
   const isCvs = order.delivery_type === "cvs";
 
   const shipCard = infoCard({

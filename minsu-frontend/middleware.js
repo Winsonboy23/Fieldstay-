@@ -11,5 +11,6 @@ import { auth } from "@/app/_lib/auth";
 export const middleware = auth;
 
 export const config = {
-  matcher: ["/account/:path*", "/checkout"],
+  // /checkout 開放訪客結帳，不再強制登入
+  matcher: ["/account/:path*"],
 };

@@ -285,15 +285,19 @@ export async function signOutAction() {
   await signOut({ redirectTo: "/" });
 }
 
-export async function cancelShopOrderAction(orderId) {
+export async function cancelShopOrderAction(orderId, token = null) {
   const session = await auth();
-  if (!session?.user?.guestId) throw new Error("請先登入");
 
   const order = await getShopOrderById(orderId);
   if (!order) throw new Error("找不到此訂單");
 
-  // 只能取消自己的訂單
-  if (String(order.guest_id) !== String(session.user.guestId)) {
+  // 會員取消自己的訂單，或訪客憑 access_token 取消
+  const isOwner =
+    session?.user?.guestId &&
+    String(order.guest_id) === String(session.user.guestId);
+  const tokenOk =
+    token && order.access_token && String(token) === String(order.access_token);
+  if (!isOwner && !tokenOk) {
     throw new Error("您沒有權限取消此訂單");
   }
 
@@ -332,4 +336,5 @@ export async function cancelShopOrderAction(orderId) {
 
   revalidatePath("/account/shop-orders");
   revalidatePath(`/account/shop-orders/${orderId}`);
+  revalidatePath("/shop/thankyou");
 }

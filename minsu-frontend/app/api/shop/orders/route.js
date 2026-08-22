@@ -33,10 +33,8 @@ function messageFor(err) {
 
 export async function POST(request) {
   const session = await auth();
-
-  if (!session?.user?.guestId) {
-    return NextResponse.json({ error: "請先登入會員" }, { status: 401 });
-  }
+  // 允許訪客下單：沒登入時 guest_id 記 null，訂單靠 access_token 連結查詢
+  const guestId = session?.user?.guestId ?? null;
 
   const payload = await request.json().catch(() => null);
   if (!payload) {
@@ -72,7 +70,7 @@ export async function POST(request) {
   let order;
   try {
     order = await createShopOrder({
-      guestId: session.user.guestId,
+      guestId,
       contactName,
       contactEmail,
       contactPhone,
@@ -121,5 +119,7 @@ export async function POST(request) {
     ok: true,
     orderId: order.id,
     orderNo: order.order_no,
+    // 訪客訂單回傳 token，前端導向 thankyou 時帶上才看得到訂單
+    ...(guestId ? {} : { token: order.access_token }),
   });
 }

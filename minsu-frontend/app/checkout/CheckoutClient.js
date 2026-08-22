@@ -182,7 +182,11 @@ export default function CheckoutClient({ products, settings, guest }) {
 
       // 下單成功才把這組商品移出購物車
       active.lines.forEach((line) => removeItem(line.variant.id));
-      router.push(`/shop/thankyou?orderId=${data.orderId}`);
+      router.push(
+        `/shop/thankyou?orderId=${data.orderId}${
+          data.token ? `&token=${data.token}` : ""
+        }`
+      );
     } catch {
       setError("連線失敗，請稍後再試");
       setSubmitting(false);

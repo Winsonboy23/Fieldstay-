@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/app/_lib/auth";
 import { getSettings, getShopOrderById } from "@/app/_lib/data-service";
 import ShopOrderDetail, { StatusBadge } from "@/app/_components/ShopOrderDetail";
-import CancelShopOrderButton from "./CancelShopOrderButton";
+import CancelShopOrderButton from "@/app/_components/CancelShopOrderButton";
 
 export const revalidate = 0;
 

@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 
 import { cancelShopOrderAction } from "@/app/_lib/actions";
 
-export default function CancelShopOrderButton({ orderId }) {
+// token：訪客訂單用 access_token 授權取消（會員訂單不需要）
+export default function CancelShopOrderButton({ orderId, token = null }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -13,7 +14,7 @@ export default function CancelShopOrderButton({ orderId }) {
     setError("");
     startTransition(async () => {
       try {
-        await cancelShopOrderAction(orderId);
+        await cancelShopOrderAction(orderId, token);
         setConfirming(false);
       } catch (err) {
         setError(err?.message || "取消失敗，請稍後再試");
