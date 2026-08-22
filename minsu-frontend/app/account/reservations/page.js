@@ -5,7 +5,7 @@ import { format, isPast } from "date-fns";
 import Link from "next/link";
 
 export const metadata = {
-  title: "我的訂單",
+  title: "住宿訂單",
 };
 
 const statusStyles = {
@@ -33,7 +33,7 @@ export default async function Page() {
     <section>
       <div className="mb-8 flex items-center justify-between">
         <h2 className="font-serif text-2xl font-semibold text-primary-900">
-          我的訂單
+          住宿訂單
         </h2>
         <p className="text-sm text-primary-500">共 {bookings.length} 筆</p>
       </div>

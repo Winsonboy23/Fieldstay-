@@ -264,7 +264,7 @@ export default function BookingSuccessClient({ detail, settings = {}, user = nul
             href="/account/reservations"
             className="rounded-lg bg-accent-700 px-8 py-3 text-sm font-semibold text-white transition hover:bg-accent-800"
           >
-            查看我的訂單
+            查看住宿訂單
           </Link>
           {detail.isEditable ? (
             <button

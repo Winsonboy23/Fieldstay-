@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation";
 
 const navLinks = [
   {
-    name: "我的訂單",
+    name: "住宿訂單",
     href: "/account/reservations",
     icon: ClipboardDocumentListIcon,
   },

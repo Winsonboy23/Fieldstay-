@@ -91,7 +91,7 @@ export default async function Page({ params }) {
             className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-primary-500 transition hover:text-accent-700"
           >
             <ArrowLeftIcon className="h-4 w-4" />
-            返回我的訂單
+            返回住宿訂單
           </Link>
           <h2 className="font-serif text-2xl font-semibold text-primary-900">
             訂單明細
@@ -261,7 +261,7 @@ export default async function Page({ params }) {
           href="/account/reservations"
           className="rounded-lg bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800"
         >
-          返回我的訂單
+          返回住宿訂單
         </Link>
       </div>
     </section>
