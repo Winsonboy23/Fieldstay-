@@ -71,9 +71,6 @@ export default async function ShopPage() {
                 <h2 className="font-serif text-xl font-semibold text-primary-900">
                   {group.temp.label}商品
                 </h2>
-                <span className="text-xs text-primary-500">
-                  {group.temp.delivery}
-                </span>
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,8 +1,15 @@
 import fs from "fs";
 import path from "path";
-import { getRooms, getActivities, getSettings } from "./_lib/data-service";
+import {
+  getRooms,
+  getActivities,
+  getProducts,
+  getSettings,
+} from "./_lib/data-service";
 import { auth } from "./_lib/auth";
 import HomeInteractions from "./_components/HomeInteractions";
+import HomeCartBadge from "./_components/HomeCartBadge";
+import ProductCard from "./_components/ProductCard";
 import SiteFooter from "./_components/SiteFooter";
 
 export const metadata = { title: "山田寓所 FIELDSTAY — 田間民宿訂房" };
@@ -105,6 +112,7 @@ export default async function Page() {
       `;
     })
     .join("");
+  const featuredProducts = (await getProducts().catch(() => [])).slice(0, 3);
   const userName = session?.user?.name || session?.user?.email || "";
   const authActionHtml = session?.user
     ? `<a href="/account" class="btn btn-primary">${escapeHtml(userName)}</a>`
@@ -1360,11 +1368,18 @@ export default async function Page() {
       <li><a href="#about">關於我們</a></li>
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
-      <li><a href="/shop">選物商店</a></li>
+      <li><a href="#shop">選物商店</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
 
     <div class="nav-actions">
+      <a href="/cart" id="homeCartLink" class="user-icon" style="position:relative" aria-label="購物車">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.2"/>
+          <circle cx="18" cy="20" r="1.2"/>
+          <path d="M2 3h3l2.4 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/>
+        </svg>
+      </a>
       <a href="/account" class="user-icon" aria-label="會員中心">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -1382,10 +1397,11 @@ export default async function Page() {
       <li><a href="#about">關於我們</a></li>
       <li><a href="#rooms">房型選擇</a></li>
       <li><a href="#experience">田間體驗</a></li>
-      <li><a href="/shop">選物商店</a></li>
+      <li><a href="#shop">選物商店</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
     <div class="mobile-actions">
+      <a href="/cart" class="btn btn-ghost">購物車</a>
       <a href="/account" class="btn btn-ghost">會員中心</a>
       ${authActionHtml}
     </div>
@@ -1469,8 +1485,49 @@ export default async function Page() {
     </div>
   </section>
 
+` }} />
+
+      {/* ═══ SHOP ═══ 用真的 ProductCard（商品圖／價格／加入購物車），不是純 HTML 卡片 */}
+      <section className="section" id="shop">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">
+              <small>FIELDSTAY SELECT</small>
+              選物商店
+            </h2>
+            <a href="/shop" className="see-all">
+              查看全部商品 →
+            </a>
+          </div>
+
+          {featuredProducts.length === 0 ? (
+            <p style={{ color: "var(--muted)" }}>商品準備中，敬請期待。</p>
+          ) : (
+            <>
+              <div className="exp-grid" id="shopGrid" data-carousel>
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              <div className="carousel-dots" data-dots-for="shopGrid">
+                {featuredProducts.map((_, i) => (
+                  <button
+                    type="button"
+                    key={i}
+                    className={`carousel-dot${i === 0 ? " active" : ""}`}
+                    data-idx={i}
+                    aria-label={`第 ${i + 1} 張`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <div dangerouslySetInnerHTML={{ __html: `
   <!-- ═══ TRANSPORT ════════════════════════════════════ -->
-  <section class="section" id="transport">
+  <section class="section section-alt" id="transport">
     <div class="container">
       <div class="transport-header">
         <p class="transport-eyebrow">交通與聯絡 · VISIT US</p>
@@ -1530,6 +1587,7 @@ export default async function Page() {
 ` }} />
       <SiteFooter />
       <HomeInteractions />
+      <HomeCartBadge />
     </>
   );
 }
