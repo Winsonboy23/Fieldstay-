@@ -12,7 +12,7 @@ import HomeCartBadge from "./_components/HomeCartBadge";
 import ProductCard from "./_components/ProductCard";
 import SiteFooter from "./_components/SiteFooter";
 
-export const metadata = { title: "山田寓所 FIELDSTAY — 田間民宿訂房" };
+export const metadata = { title: "山田寓所 FIELDSTAY — 古宅民宿訂房" };
 
 const bannerExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
 
@@ -176,8 +176,9 @@ export default async function Page() {
       --accent-d: oklch(38% 0.13 183);
       --accent2:  oklch(40% 0.14 28);
       --brand-color: oklch(44% 0.13 183);
-      --font-serif: Georgia, serif;
-      --font-sans:  system-ui, sans-serif;
+      --font-serif: Georgia, "Songti TC", "Songti SC", "Noto Serif CJK TC", serif;
+      --font-sans:  system-ui, -apple-system, "PingFang TC", "PingFang SC",
+                    "Noto Sans CJK TC", sans-serif;
     }
 
     html { scroll-behavior: smooth; }
@@ -554,15 +555,18 @@ export default async function Page() {
     .section-alt { background: var(--surface); }
     .container { max-width: 1200px; margin: 0 auto; width: 100%; }
 
-    /* 房型選擇 / 田間體驗 色塊區分 */
+    /* 區段分隔色塊：深淺交錯，讓每一段看得出界線 */
     #rooms {
       background: oklch(94% 0.018 75);
     }
     #experience {
       background: var(--surface);
     }
-    #transport {
+    #shop {
       background: oklch(94% 0.018 75);
+    }
+    #transport {
+      background: var(--surface);
     }
 
     /* ── HAMBURGER ──────────────────────────────── */
@@ -656,14 +660,25 @@ export default async function Page() {
     }
 
     .see-all {
-      font-size: 13px;
-      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 9px 20px;
+      border: 1.5px solid var(--brand-color);
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--brand-color);
       text-decoration: none;
       letter-spacing: 0.02em;
-      transition: color 0.2s;
+      white-space: nowrap;
+      transition: background 0.2s, color 0.2s;
     }
 
-    .see-all:hover { color: var(--accent); }
+    .see-all:hover {
+      background: var(--brand-color);
+      color: white;
+    }
 
     /* ── FILTER TABS ─────────────────────────────── */
     .filter-tabs {
@@ -942,6 +957,11 @@ export default async function Page() {
       color: var(--muted);
       line-height: 1.7;
     }
+    .info-sub a {
+      color: var(--brand-color);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
 
     /* ── ABOUT BAND ──────────────────────────────── */
     .about-band {
@@ -1213,9 +1233,13 @@ export default async function Page() {
     @media (max-width: 1024px) {
       .exp-grid { grid-template-columns: repeat(2, 1fr); }
       .footer-grid { grid-template-columns: 1fr 1fr; }
+      /* 平板寬度選單要放得下六個項目 */
+      .nav { padding: 0 1.25rem; }
+      .nav-links { gap: 0; padding: 4px; margin-right: 0.5rem; }
+      .nav-links a { padding: 8px 10px; font-size: 13px; white-space: nowrap; }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .nav { padding: 0 1.25rem; }
       .nav-links { display: none; }
       .nav-actions .btn-ghost { display: none; }
@@ -1348,7 +1372,7 @@ export default async function Page() {
       }
     }
     /* 桌機隱藏 dots */
-    @media (min-width: 769px) {
+    @media (min-width: 768px) {
       .carousel-dots { display: none; }
     }
   ` }} />
@@ -1365,10 +1389,11 @@ export default async function Page() {
     </a>
 
     <ul class="nav-links">
-      <li><a href="#about">關於我們</a></li>
-      <li><a href="#rooms">房型選擇</a></li>
-      <li><a href="#experience">田間體驗</a></li>
-      <li><a href="#shop">選物商店</a></li>
+      <li><a href="/">首頁</a></li>
+      <li><a href="/about">關於我們</a></li>
+      <li><a href="/rooms">房型選擇</a></li>
+      <li><a href="/activities">田間體驗</a></li>
+      <li><a href="/shop">選物商店</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
 
@@ -1394,10 +1419,11 @@ export default async function Page() {
 
   <div class="mobile-menu" id="mobileMenu" role="menu" aria-label="行動版選單">
     <ul>
-      <li><a href="#about">關於我們</a></li>
-      <li><a href="#rooms">房型選擇</a></li>
-      <li><a href="#experience">田間體驗</a></li>
-      <li><a href="#shop">選物商店</a></li>
+      <li><a href="/">首頁</a></li>
+      <li><a href="/about">關於我們</a></li>
+      <li><a href="/rooms">房型選擇</a></li>
+      <li><a href="/activities">田間體驗</a></li>
+      <li><a href="/shop">選物商店</a></li>
       <li><a href="#transport">交通資訊</a></li>
     </ul>
     <div class="mobile-actions">
@@ -1418,13 +1444,13 @@ export default async function Page() {
           <circle cx="6" cy="6" r="5" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
           <circle cx="6" cy="6" r="1.5" fill="rgba(255,255,255,0.55)"/>
         </svg>
-        台中大甲 · 田間民宿 · 體驗農村生活
+        臺中大甲 · 古宅民宿 · 體驗農村生活
       </div>
 
-      <h1>山田之間<br>生活的起點</h1>
+      <h1>山與田之間<br>生活的起點</h1>
       <p class="hero-sub">
-        在傳統磚瓦老屋中，感受台灣土地的四季節奏<br>
-        與我們共度一段慢速的田間時光
+        在傳統磚瓦老屋中，感受臺灣土地的四季節奏<br>
+        與我們共度一段慢慢時光
       </p>
 
     </div>
@@ -1470,7 +1496,7 @@ export default async function Page() {
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">
-          <small>FIELD ACTIVITIES</small>
+          <small>FIELD EXPERIENCE</small>
           田間體驗
         </h2>
         <a href="/activities" class="see-all">查看所有活動 →</a>
@@ -1548,26 +1574,29 @@ export default async function Page() {
         <div class="transport-info">
           <div class="info-block">
             <p class="info-eyebrow">地址 · ADDRESS</p>
-            <p class="info-main">台南市後壁區後山里田心 23 號</p>
-            <p class="info-sub">抵達前 24 小時將以 LINE 提供詳細導引</p>
+            <p class="info-main">臺中市大甲區賢仁路 143 號</p>
           </div>
 
           <div class="info-block">
-            <p class="info-eyebrow">聯絡 · CONTACT</p>
-            <p class="info-main">LINE：@fieldstay　・　電話：06-XXX-XXXX</p>
-            <p class="info-sub">週一至週日 09:00–20:00（建議優先以 LINE 聯繫）</p>
+            <p class="info-eyebrow">對外開放營業時間 · OPEN HOURS</p>
+            <p class="info-main">週一 五 六 日 13:30–18:00</p>
           </div>
 
           <div class="info-block">
             <p class="info-eyebrow">大眾運輸 · BY TRANSIT</p>
-            <p class="info-main">新營高鐵站 → 計程車 18 分鐘</p>
-            <p class="info-sub">或搭 7211 公車於「土溝」站下車，步行 12 分鐘</p>
+            <p class="info-main">大甲火車站 → 計程車約 10–15 分鐘</p>
+            <p class="info-sub">或租借 u-bike（德元宮站還車）</p>
+            <p class="info-sub">公車（班次較少，請先查詢時刻表）</p>
+            <p class="info-sub">661（右環）德元宮站下車（<a href="https://citybus.taichung.gov.tw/ebus/route-map/661" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
+            <p class="info-sub">305 文武公園站下車 → 步行 13 分鐘（<a href="https://citybus.taichung.gov.tw/ebus/route-map/305" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
           </div>
 
           <div class="info-block">
             <p class="info-eyebrow">自駕 · BY CAR</p>
-            <p class="info-main">國道 1 號 → 新營交流道 → 172 縣道</p>
-            <p class="info-sub">提供 4 個免費停車位，包棟住客優先</p>
+            <p class="info-main">北上：國道 3 號 164-大甲出口</p>
+            <p class="info-sub">往大甲方向下匝道 → 沿甲后路直行 → 市道 132 線</p>
+            <p class="info-main" style="margin-top:10px">南下：國道 3 號 156-苑裡出口</p>
+            <p class="info-sub">往三義方向前進 → 140 縣道</p>
           </div>
         </div>
       </div>
