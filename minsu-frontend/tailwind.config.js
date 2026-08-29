@@ -43,8 +43,15 @@ module.exports = {
         },
       },
       fontFamily: {
-        serif: ["Georgia", "serif"],
-        sans: ["system-ui", "sans-serif"],
+        serif: ["Georgia", "Songti TC", "Songti SC", "Noto Serif CJK TC", "serif"],
+        sans: [
+          "system-ui",
+          "-apple-system",
+          "PingFang TC",
+          "PingFang SC",
+          "Noto Sans CJK TC",
+          "sans-serif",
+        ],
       },
     },
   },
