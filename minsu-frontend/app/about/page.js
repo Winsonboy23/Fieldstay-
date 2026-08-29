@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { auth } from "../_lib/auth";
 import AboutInteractions from "./AboutInteractions";
 import SiteFooter from "../_components/SiteFooter";
-import BrandMark from "../_components/BrandMark";
+import SiteHeader from "../_components/SiteHeader";
 
 export const metadata = {
   title: "關於我們",
@@ -24,18 +23,23 @@ const PILLARS = [
   {
     num: "03",
     zh: "社區串連",
-    en: "Community First",
+    en: "Community Ties",
     desc: "與柑仔店、地方小農、社區媽媽及鄰近酒廠互助共好，讓旅人的停留也能回到地方。",
   },
   {
     num: "04",
     zh: "永續營運",
-    en: "Sustainable Mix",
+    en: "Built to Last",
     desc: "住宿、咖啡、體驗多元共好，慢慢做、不擴張，讓這間老屋能長長久久存在下去。",
   },
 ];
 
 const TIMELINE = [
+  {
+    year: "— 地 · LAND —",
+    title: "道卡斯聚落 · 土地記憶",
+    desc: "在黃氏祖厝之前，這裡就有人生活。鐵砧山下一帶，平埔族道卡斯的文化，是這片土地最早的記憶。",
+  },
   {
     year: "— 源 · ORIGIN —",
     title: "江夏郡望 · 黃氏家聲",
@@ -54,11 +58,11 @@ const TIMELINE = [
 ];
 
 const PLACE_TILES = [
-  { src: "/about-assets/gallery-yard.png", label: "中庭草地 · 坐下來曬太陽", featured: true },
-  { src: "/about-assets/intro-yard.png", label: "老屋門廊 · 看光走動" },
+  { src: "/about-assets/gallery-yard.png", label: "中庭草地 · 微風吹拂", featured: true },
+  { src: "/about-assets/facade.jpg", label: "江夏家聲 · 家族記憶" },
   { src: "/about-assets/greens.png", label: "田間作物 · 土地導覽" },
   { src: "/about-assets/cafe.png", label: "咖啡餐桌 · 友善風味" },
-  { src: "/about-assets/door.png", label: "江夏門框 · 家族記憶" },
+  { src: "/about-assets/drying-yard.jpg", label: "稻埕空地 · 享受陽光" },
 ];
 
 const ROOMS_IMAGES = [
@@ -71,61 +75,30 @@ const ROOMS_IMAGES = [
 ];
 
 const STATS = [
-  { num: "2025", label: "Since" },
-  { num: "4", label: "核心實踐" },
+  { num: "2026", label: "Since" },
   { num: "1", label: "老屋再生" },
   { num: "∞", label: "慢生活想像" },
 ];
 
-export default async function AboutPage() {
-  const session = await auth();
-  const userName = session?.user?.name || session?.user?.email;
+// 聯合國永續發展目標，色碼為 UN 官方色
+const SDGS = [
+  { num: 8, color: "#A21942", zh: "合適的工作及經濟成長", en: "Decent Work and Economic Growth" },
+  { num: 11, color: "#FD9D24", zh: "永續城鄉", en: "Sustainable Cities and Communities" },
+  { num: 12, color: "#BF8B2E", zh: "責任消費及生產", en: "Responsible Consumption and Production" },
+  { num: 17, color: "#19486A", zh: "多元夥伴關係", en: "Partnerships for the Goals" },
+];
 
+export default async function AboutPage() {
   return (
     <>
       {/* Header — same as /rooms */}
-      <header className="sticky top-0 z-40 border-b border-primary-200 bg-primary-50">
-        <div className="mx-auto flex h-20 w-full items-center justify-between px-5 md:px-10">
-          <Link href="/" className="flex items-center gap-3">
-            <BrandMark />
-            <span className="flex flex-col leading-none">
-              <span className="font-serif text-[15px] font-semibold tracking-[0.08em] text-primary-900">
-                山田寓所
-              </span>
-              <span className="mt-1 text-[9px] tracking-[0.22em] text-primary-500">
-                FIELDSTAY
-              </span>
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/account"
-              className="hidden rounded-md border border-primary-200 bg-primary-50 px-5 py-3 text-sm font-semibold text-primary-900 transition hover:border-primary-400 md:inline-flex"
-            >
-              會員中心
-            </Link>
-            {session?.user ? (
-              <Link
-                href="/account"
-                className="hidden rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800 md:inline-flex"
-              >
-                {userName}
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800"
-              >
-                登入
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteHeader overlay />
 
       {/* Hero */}
-      <section className="relative overflow-hidden px-5 py-24 text-center text-white md:px-10 md:py-32">
+      <section
+        data-site-banner
+        className="relative overflow-hidden px-5 pb-24 pt-[184px] text-center text-white md:px-10 md:pb-32 md:pt-[228px]"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/about-assets/hero.png"
@@ -147,6 +120,7 @@ export default async function AboutPage() {
           </h1>
           <p className="mx-auto max-w-[600px] text-base font-light leading-[2] text-white/80">
             山田寓所是一座融合住宿、咖啡、藝術課程與土地導覽的生活實驗場。
+            <br />
             在鐵砧山下，種一片生活。
           </p>
         </div>
@@ -165,15 +139,13 @@ export default async function AboutPage() {
           </div>
           <h2 className="mb-8 font-serif text-2xl font-semibold leading-[1.6] tracking-wide md:text-3xl lg:text-[2.1rem]">
             山田寓所｜來自土地的溫柔邀請
-            <br />
-            在鐵砧山下，種一片生活
           </h2>
           <div className="mx-auto mb-8 h-px w-8 bg-accent-700/50" />
           <p className="mx-auto mb-4 max-w-[680px] text-[15px] leading-[1.95] text-primary-500">
-            這裡的故事，始於一座家族老宅的呼喚。都市裡尋找歸屬的倦怠靈魂，看見了土地的呼喚。我們相信，農村不該只是泛黃的記憶，更不該是繁華的邊陲。
+            這裡的故事，比家族老宅更早開始……鐵砧山下的這片土地，曾是平埔族道卡斯族的主要聚落所在——是這裡最早的生活記憶。
           </p>
           <p className="mx-auto max-w-[680px] text-[15px] leading-[1.95] text-primary-500">
-            「山田寓所」是我們對生活的重新想像，也是一場溫柔的再生實驗。我們想打造的，不只是一間民宿、一間咖啡館，或一個藝術空間；而是一個「農村 × 藝術 × 慢生活」的療癒場域。
+            後來，這裡的故事，始於一座家族老宅的呼喚。都市裡尋找歸屬的倦怠靈魂，看見了土地的呼喚。我們相信，農村不該只是泛黃的記憶，更不該是繁華的邊陲。
           </p>
         </div>
       </section>
@@ -186,9 +158,9 @@ export default async function AboutPage() {
               四個我們在乎的事 · OUR PRACTICE
             </p>
             <h2 className="font-serif text-2xl font-bold leading-tight tracking-wide md:text-3xl lg:text-[2.2rem]">
-              不為了好看，
+              不是為了好看，
               <br />
-              而是為了能繼續
+              是為了走得久一點
             </h2>
           </div>
 
@@ -248,7 +220,7 @@ export default async function AboutPage() {
               整修以「極簡干預」為原則：在確保結構安全下保留原輪廓與通風動線，以可呼吸的塗料與小尺度開窗引入自然光；必要部位加固梁架、修補屋瓦，讓歷史的溫度與當代的清新共存。
             </p>
             <p className="mb-4 text-[14.5px] leading-[1.95] text-primary-500">
-              我們將它改建為一座小型民宿與共享空間，開放廚房與中庭讓人們在料理與陽光中交流；以自然材質、循環家具與在地工藝延續土地的質感。
+              我們將它改建為一個複合式空間——民宿、共享空間、選物店與咖啡廳，在老屋的光影裡各自安放；也不定期舉辦食農教育、農村與道卡斯文化體驗，以及各種展覽，用自然材質與在地工藝，延續這片土地的質感。
             </p>
 
             <ul
@@ -286,7 +258,10 @@ export default async function AboutPage() {
               老屋、田野與日常風味
             </h2>
             <p className="mt-2 text-[14.5px] leading-relaxed text-primary-500">
-              這裡不是刻意打造的觀光景點，而是一處依舊呼吸著村落節奏的生活場景。
+              老屋不是觀光景點，而是還在呼吸的生活場景。
+            </p>
+            <p className="mt-3 text-[14.5px] leading-relaxed text-primary-500">
+              房子前的稻埕，以前是曬穀、乘涼、孩子追跑的地方。沒有車，只有陽光、風，和偶爾曬著的作物。我們想讓大家也體驗這樣的留白——在稻埕上，奔跑、曬曬太陽、發發呆。
             </p>
           </div>
 
@@ -327,7 +302,7 @@ export default async function AboutPage() {
               住宿空間 · STAY
             </p>
             <h2 className="font-serif text-2xl font-bold leading-tight tracking-wide md:text-3xl lg:text-[2.2rem]">
-              風格之外，我們也在乎友善
+              少一點裝飾，多一點能休息的空白
             </h2>
             <p className="mt-2 text-[14.5px] leading-relaxed text-primary-500">
               房間延續老屋材質與光線，留下紅磚、木構、窗景與安靜的空白，讓入住的人能真的休息。
@@ -373,7 +348,7 @@ export default async function AboutPage() {
               放進口中的，不只是咖啡與餐點。每一個選擇，都是對土地的溫柔回應：在地食材、季節風味、友善互動，以及剛剛好的生活節奏。
             </p>
 
-            <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 border-t border-white/20 pt-6">
+            <div className="mt-6 grid grid-cols-3 gap-x-4 border-t border-white/20 pt-6">
               {STATS.map((s) => (
                 <div key={s.label}>
                   <div className="mb-1 font-serif text-4xl font-bold leading-none tracking-wide">
@@ -385,13 +360,36 @@ export default async function AboutPage() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-8 border-t border-white/20 pt-6">
+              <div className="mb-3 text-[11px] uppercase tracking-[0.18em] text-white/60">
+                我們實踐的 SDGs
+              </div>
+              <ul className="flex list-none flex-wrap gap-2">
+                {SDGS.map((g) => (
+                  <li key={g.num}>
+                    <div
+                      title={`SDG ${g.num}｜${g.zh}`}
+                      className="flex h-[74px] w-[74px] flex-col justify-between rounded-md p-2 text-white"
+                      style={{ backgroundColor: g.color }}
+                    >
+                      <span className="font-sans text-lg font-bold leading-none">{g.num}</span>
+                      <span className="text-[8px] font-semibold uppercase leading-[1.15] tracking-tight">
+                        {g.en}
+                      </span>
+                    </div>
+                    <span className="sr-only">{g.zh}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div className="relative flex min-h-[340px] items-end overflow-hidden rounded-2xl border border-white/15 p-5 font-serif text-[13px] tracking-[0.16em] text-white/85 lg:min-h-[430px]">
+          <div className="relative flex aspect-[4/3] items-end overflow-hidden rounded-2xl border border-white/15 p-5 font-serif text-[13px] tracking-[0.16em] text-white/85 lg:aspect-auto lg:min-h-[430px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/about-assets/person.png"
               alt="田間採集 土地風味"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover object-[center_25%]"
             />
             <span
               aria-hidden="true"
