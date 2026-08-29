@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { auth } from "../../_lib/auth";
+import BackToListLink from "../../_components/BackToListLink";
+import RecentlyViewed from "../../_components/RecentlyViewed";
 import { getProduct, getSettings } from "../../_lib/data-service";
 import {
   formatPrice,
@@ -9,6 +11,7 @@ import {
   getShippingFee,
   getTemperature,
   isProductSoldOut,
+  priceRange,
   variantsOf,
 } from "../../_lib/product-utils";
 import SiteHeader from "../../_components/SiteHeader";
@@ -35,6 +38,7 @@ export default async function ProductPage({ params }) {
   const temp = getTemperature(product.temperature);
   const soldOut = isProductSoldOut(product);
   const variants = variantsOf(product);
+  const minPrice = priceRange(product).min;
   const shippingFee = getShippingFee(product.temperature, 0, settings);
   const freeGap = getFreeShippingGap(product.temperature, 0, settings);
   // 封面＋附圖組成圖庫，去除空值與重複
@@ -61,7 +65,9 @@ export default async function ProductPage({ params }) {
 
   return (
     <>
-      <SiteHeader user={session?.user} />
+      <SiteHeader />
+
+      <BackToListLink href="/shop" label="返回選物商店" maxWidth="72rem" />
 
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-6 py-5 text-xs text-primary-500 md:px-10">
         <Link href="/" className="transition hover:text-primary-900">
@@ -191,6 +197,18 @@ export default async function ProductPage({ params }) {
           </div>
         </div>
       </main>
+
+      <RecentlyViewed
+        type="product"
+        item={{
+          id: params.productId,
+          name: product.name,
+          image: galleryImages[0] || null,
+          price: minPrice ? formatPrice(minPrice) : "",
+          href: `/shop/${params.productId}`,
+        }}
+      />
+
 
       <SiteFooter />
     </>

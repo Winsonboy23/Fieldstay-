@@ -9,6 +9,8 @@ import { getActivity } from "@/app/_lib/data-service";
 import { auth } from "@/app/_lib/auth";
 import { normalizeActivity } from "../_activity-data";
 import SiteHeader from "@/app/_components/SiteHeader";
+import BackToListLink from "@/app/_components/BackToListLink";
+import RecentlyViewed from "@/app/_components/RecentlyViewed";
 import ActivitySidebar from "./ActivitySidebar";
 
 export async function generateMetadata({ params }) {
@@ -37,7 +39,9 @@ export default async function ActivityDetailPage({ params }) {
 
   return (
     <main className="min-h-screen bg-[#f5f3ef] text-[#111827]">
-      <SiteHeader user={session?.user || null} />
+      <SiteHeader />
+
+      <BackToListLink href="/activities" label="返回田間體驗" maxWidth="1280px" />
 
       <div className="mx-auto grid max-w-[1280px] gap-8 px-6 py-10 pb-28 lg:grid-cols-[1fr_390px] lg:pb-10">
         <section>
@@ -175,6 +179,18 @@ export default async function ActivityDetailPage({ params }) {
 
         <ActivitySidebar activity={activity} />
       </div>
+
+      <RecentlyViewed
+        type="activity"
+        item={{
+          id: params.activityId,
+          name: activity.title,
+          image: coverImage || null,
+          price: activity.price ? `NT$${Number(activity.price).toLocaleString("zh-TW")} / 人` : "",
+          href: `/activities/${params.activityId}`,
+        }}
+      />
+
     </main>
   );
 }

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { auth } from "@/app/_lib/auth";
 import { getRoom } from "@/app/_lib/data-service";
 import BookingSidebar from "./BookingSidebar";
-import BrandMark from "@/app/_components/BrandMark";
+import SiteHeader from "@/app/_components/SiteHeader";
+import BackToListLink from "@/app/_components/BackToListLink";
+import RecentlyViewed from "@/app/_components/RecentlyViewed";
 
 export async function generateMetadata({ params }) {
   try {
@@ -73,8 +74,6 @@ function iconForAmenity(label) {
 }
 
 export default async function Page({ params }) {
-  const session = await auth();
-  const userName = session?.user?.name || session?.user?.email || "";
   const roomId = Number(params.roomId);
 
   let room;
@@ -110,23 +109,9 @@ export default async function Page({ params }) {
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
 
-      <nav className="nav">
-        <Link href="/" className="nav-logo">
-          <BrandMark size={38} />
-          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-            <span className="logo-zh">山田寓所</span>
-            <span className="logo-en">FIELDSTAY</span>
-          </div>
-        </Link>
-        <div className="nav-actions">
-          <Link href="/account" className="btn btn-ghost">會員中心</Link>
-          {session?.user ? (
-            <Link href="/account" className="btn btn-primary">{userName}</Link>
-          ) : (
-            <Link href="/login" className="btn btn-primary">登入</Link>
-          )}
-        </div>
-      </nav>
+      <SiteHeader />
+
+      <BackToListLink href="/rooms" label="返回所有房型" />
 
       <div className="breadcrumb">
         <Link href="/">首頁</Link>
@@ -254,6 +239,18 @@ export default async function Page({ params }) {
           isActive={room.is_active !== false}
         />
       </div>
+
+      <RecentlyViewed
+        type="room"
+        item={{
+          id: roomId,
+          name: room.name,
+          image: coverImage || null,
+          price: pricePerNight ? `NT$${pricePerNight.toLocaleString("zh-TW")} / 夜` : "",
+          href: `/rooms/${roomId}`,
+        }}
+      />
+
     </>
   );
 }
@@ -271,8 +268,9 @@ const PAGE_CSS = `
       --accent-d: oklch(38% 0.13 183);
       --accent2:  oklch(40% 0.14 28);
       --success:  oklch(50% 0.14 148);
-      --font-serif: Georgia, serif;
-      --font-sans:  system-ui, sans-serif;
+      --font-serif: Georgia, "Songti TC", "Songti SC", "Noto Serif CJK TC", serif;
+      --font-sans:  system-ui, -apple-system, "PingFang TC", "PingFang SC",
+                    "Noto Sans CJK TC", sans-serif;
     }
 
     body {
@@ -311,6 +309,7 @@ const PAGE_CSS = `
 
     /* BREADCRUMB */
     .breadcrumb {
+      width: 100%;
       max-width: 1200px;
       margin: 0 auto;
       padding: 1.25rem 2.5rem;
@@ -321,6 +320,7 @@ const PAGE_CSS = `
       align-items: center;
     }
     .breadcrumb a { color: var(--muted); text-decoration: none; }
+
     .breadcrumb a:hover { color: var(--accent); }
     .breadcrumb span { opacity: 0.4; }
 
