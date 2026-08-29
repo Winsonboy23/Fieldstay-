@@ -17,7 +17,7 @@ const ITEMS = [
   },
   {
     q: "如何聯絡山田寓所？",
-    a: "可透過 Email：fieldstay00@gmail.com 聯絡。地址位於台中市大甲區鐵砧山旁。",
+    a: "可透過 Email：fieldstay00@gmail.com 聯絡。地址位於臺中市大甲區鐵砧山旁。",
   },
 ];
 

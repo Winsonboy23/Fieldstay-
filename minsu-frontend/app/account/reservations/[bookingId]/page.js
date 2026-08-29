@@ -131,7 +131,7 @@ export default async function Page({ params }) {
                     <p className="font-semibold">
                       {booking.rooms?.name || "已預訂房型"}
                     </p>
-                    <p className="text-sm text-primary-500">台中市</p>
+                    <p className="text-sm text-primary-500">臺中市</p>
                   </div>
                 </div>
                 <div className="flex gap-4">

@@ -114,8 +114,10 @@ export default async function SiteFooter() {
               ) : null}
             </span>
           </a>
-          <p className="mt-4 max-w-[260px] text-[13px] leading-[1.75] text-white">
-            台南農村民宿，提供田間體驗與住宿，感受節氣文化與土地連結。
+          <p className="mt-4 text-[13px] leading-[1.75] text-white">
+            位在大甲芋頭發源地及道卡斯文化發源地之一的民宿咖啡廳。
+            <br />
+            STOP AND SMELL THE EARTH.
           </p>
         </div>
 
