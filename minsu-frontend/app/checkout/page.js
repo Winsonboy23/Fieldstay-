@@ -25,7 +25,7 @@ export default async function CheckoutPage() {
 
   return (
     <>
-      <SiteHeader user={session?.user} />
+      <SiteHeader />
 
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-6 py-5 text-xs text-primary-500 md:px-10">
         <Link href="/shop" className="transition hover:text-primary-900">

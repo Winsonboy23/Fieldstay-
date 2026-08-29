@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "./CartContext";
+import { navIconClass } from "./NavIconButton";
 
-export default function CartLink() {
+export default function CartLink({ solid }) {
   const { totalCount, isLoaded } = useCart();
   const [bump, setBump] = useState(false);
   const prevCount = useRef(0);
@@ -27,9 +28,7 @@ export default function CartLink() {
     <Link
       href="/cart"
       aria-label={`購物車，${totalCount} 件商品`}
-      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-primary-200 text-primary-900 transition hover:border-primary-900 ${
-        bump ? "cart-bump" : ""
-      }`}
+      className={`${navIconClass(solid)} ${bump ? "cart-bump" : ""}`}
     >
       <svg
         width="20"

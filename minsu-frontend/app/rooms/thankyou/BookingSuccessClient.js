@@ -60,7 +60,7 @@ export default function BookingSuccessClient({ detail, settings = {}, user = nul
 
   return (
     <main className="min-h-screen bg-primary-100 text-primary-900">
-      <SiteHeader user={user} />
+      <SiteHeader />
 
       <div className="mx-auto max-w-[960px] px-4 py-6">
         {/* Hero */}

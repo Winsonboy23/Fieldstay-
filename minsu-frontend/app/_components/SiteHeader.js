@@ -1,86 +1,94 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import BrandMark from "./BrandMark";
 import CartLink from "./CartLink";
+import NavIconButton from "./NavIconButton";
+import SiteNavLinks from "./SiteNavLinks";
 
-const BRAND_LOGO_URL =
-  "https://wnvqbozqsdvaszfgumkg.supabase.co/storage/v1/object/public/site-images/1778689945313-0.1766648174384008-528684274_18019731992746464_3668865358020989427_n--1-.jpg";
-
-function BrandMark() {
+function UserIcon() {
   return (
-    <img
-      src={BRAND_LOGO_URL}
-      alt="山田寓所"
-      style={{
-        width: 38,
-        height: 38,
-        objectFit: "contain",
-        borderRadius: "50%",
-      }}
-    />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
   );
 }
 
-export default function SiteHeader({ user = null }) {
-  const userName = user?.name || user?.email || "會員中心";
+/**
+ * overlay：頁面最上方有深色 banner 時傳 true，導覽列會先浮在 banner 上（透明白字），
+ * 捲過 banner 之後才換成米白實心 —— 邏輯與配色比照首頁。
+ * banner 元素要加上 data-site-banner。
+ */
+export default function SiteHeader({ overlay = false }) {
+  const [solid, setSolid] = useState(!overlay);
+
+  useEffect(() => {
+    if (!overlay) return;
+    const banner = document.querySelector("[data-site-banner]");
+    if (!banner) {
+      setSolid(true);
+      return;
+    }
+    // 與首頁相同：banner 底邊捲到導覽列高度以內就換色
+    const onScroll = () => setSolid(banner.getBoundingClientRect().bottom <= 100);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [overlay]);
 
   return (
     <nav
-      className="sticky top-0 z-[200] flex h-16 items-center justify-between px-6 backdrop-blur-md md:px-10"
-      style={{
-        background: "rgba(253, 251, 249, 0.92)",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
-      }}
+      className={`z-[200] flex h-[100px] items-center gap-4 px-5 transition-colors md:px-10 ${
+        overlay ? "fixed inset-x-0 top-0" : "sticky top-0"
+      } ${solid ? "backdrop-blur-md" : ""}`}
+      style={
+        solid
+          ? {
+              background: "rgba(253, 251, 249, 0.92)",
+              borderBottom: "1px solid rgba(0,0,0,0.06)",
+            }
+          : { background: "transparent" }
+      }
     >
-      <Link href="/" className="flex items-center gap-3 no-underline">
+      <Link href="/" className="mr-auto flex shrink-0 items-center gap-[0.7rem] no-underline">
         <BrandMark />
         <div className="flex flex-col leading-none">
           <span
-            className="font-serif text-[15px] font-semibold text-primary-900"
-            style={{ letterSpacing: "0.08em" }}
+            className={`font-serif text-[15px] font-semibold tracking-[0.08em] ${
+              solid ? "text-primary-900" : "text-white"
+            }`}
           >
             山田寓所
           </span>
           <span
-            className="mt-[2px] text-[9px] uppercase text-primary-500"
-            style={{ letterSpacing: "0.22em" }}
+            className={`mt-[2px] text-[9px] uppercase tracking-[0.22em] ${
+              solid ? "text-primary-500" : "text-white/60"
+            }`}
           >
             FIELDSTAY
           </span>
         </div>
       </Link>
 
-      <div className="flex items-center gap-3">
-        <CartLink />
-        {user ? (
-          <>
-            <Link
-              href="/account"
-              className="inline-flex items-center rounded-lg border border-primary-200 px-[18px] py-2 text-sm font-medium text-primary-900 transition hover:border-primary-900 hover:bg-primary-900 hover:text-primary-50"
-            >
-              會員中心
-            </Link>
-            <Link
-              href="/account"
-              className="inline-flex items-center rounded-lg bg-accent-500 px-[18px] py-2 text-sm font-medium text-white transition hover:bg-accent-700"
-            >
-              {userName}
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link
-              href="/account"
-              className="inline-flex items-center rounded-lg border border-primary-200 px-[18px] py-2 text-sm font-medium text-primary-900 transition hover:border-primary-900 hover:bg-primary-900 hover:text-primary-50"
-            >
-              會員中心
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center rounded-lg bg-accent-500 px-[18px] py-2 text-sm font-medium text-white transition hover:bg-accent-700"
-            >
-              登入
-            </Link>
-          </>
-        )}
+      <SiteNavLinks solid={solid} />
+
+      <div className="hidden shrink-0 items-center gap-3 md:flex">
+        <CartLink solid={solid} />
+        <NavIconButton href="/account" label="會員中心" solid={solid}>
+          <UserIcon />
+        </NavIconButton>
       </div>
     </nav>
   );

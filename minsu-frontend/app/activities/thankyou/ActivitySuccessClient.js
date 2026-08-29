@@ -62,7 +62,7 @@ export default function ActivitySuccessClient({ detail, settings = {}, user = nu
 
   return (
     <main className="min-h-screen bg-primary-100 text-primary-900">
-      <SiteHeader user={user} />
+      <SiteHeader />
 
       <div className="mx-auto max-w-[960px] px-6 py-10">
         <section className="mb-10 text-center">

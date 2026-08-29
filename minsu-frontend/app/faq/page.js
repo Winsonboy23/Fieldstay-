@@ -1,58 +1,16 @@
 import Link from "next/link";
-import { auth } from "../_lib/auth";
 import FaqAccordion from "../about/FaqAccordion";
 import SiteFooter from "../_components/SiteFooter";
-import BrandMark from "../_components/BrandMark";
+import SiteHeader from "../_components/SiteHeader";
 
 export const metadata = {
   title: "常見問題",
 };
 
 export default async function FaqPage() {
-  const session = await auth();
-  const userName = session?.user?.name || session?.user?.email;
-
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-primary-200 bg-primary-50">
-        <div className="mx-auto flex h-20 w-full items-center justify-between px-5 md:px-10">
-          <Link href="/" className="flex items-center gap-3">
-            <BrandMark />
-            <span className="flex flex-col leading-none">
-              <span className="font-serif text-[15px] font-semibold tracking-[0.08em] text-primary-900">
-                山田寓所
-              </span>
-              <span className="mt-1 text-[9px] tracking-[0.22em] text-primary-500">
-                FIELDSTAY
-              </span>
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/account"
-              className="hidden rounded-md border border-primary-200 bg-primary-50 px-5 py-3 text-sm font-semibold text-primary-900 transition hover:border-primary-400 md:inline-flex"
-            >
-              會員中心
-            </Link>
-            {session?.user ? (
-              <Link
-                href="/account"
-                className="hidden rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800 md:inline-flex"
-              >
-                {userName}
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800"
-              >
-                登入
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <section className="bg-primary-100 px-5 py-16 text-center md:px-10 md:py-20">
         <div className="mx-auto max-w-[680px]">

@@ -43,7 +43,7 @@ export default async function ShopThankYouPage({ searchParams }) {
 
   return (
     <>
-      <SiteHeader user={session?.user} />
+      <SiteHeader />
 
       <main className="mx-auto w-full max-w-3xl px-6 py-12 md:px-10">
         <div className="mb-8 text-center">
