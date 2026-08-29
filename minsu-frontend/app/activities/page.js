@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { auth } from "../_lib/auth";
 import { getActivities } from "../_lib/data-service";
 import { pageStyle } from "./_styles";
 import ActivitiesGrid from "./ActivitiesGrid";
 import SiteFooter from "../_components/SiteFooter";
+import SiteHeader from "../_components/SiteHeader";
 
 export const metadata = {
   title: "田間體驗 | 山田寓所 FIELDSTAY",
@@ -14,6 +14,8 @@ function fmtPrice(p) {
 }
 
 const SOLAR_TERMS = [
+  { startMonth: 1, startDay: 5, zh: "小寒", en: "Xiǎohán" },
+  { startMonth: 1, startDay: 20, zh: "大寒", en: "Dàhán" },
   { startMonth: 2, startDay: 4, zh: "立春", en: "Lìchūn" },
   { startMonth: 2, startDay: 19, zh: "雨水", en: "Yǔshuǐ" },
   { startMonth: 3, startDay: 5, zh: "驚蟄", en: "Jīngzhé" },
@@ -36,8 +38,6 @@ const SOLAR_TERMS = [
   { startMonth: 11, startDay: 22, zh: "小雪", en: "Xiǎoxuě" },
   { startMonth: 12, startDay: 7, zh: "大雪", en: "Dàxuě" },
   { startMonth: 12, startDay: 22, zh: "冬至", en: "Dōngzhì" },
-  { startMonth: 1, startDay: 5, zh: "小寒", en: "Xiǎohán" },
-  { startMonth: 1, startDay: 20, zh: "大寒", en: "Dàhán" },
 ];
 
 function getCurrentSolarTerm(date = new Date()) {
@@ -51,30 +51,7 @@ function getCurrentSolarTerm(date = new Date()) {
   return current;
 }
 
-const BRAND_LOGO_URL =
-  "https://wnvqbozqsdvaszfgumkg.supabase.co/storage/v1/object/public/site-images/1778689945313-0.1766648174384008-528684274_18019731992746464_3668865358020989427_n--1-.jpg";
-
-function Logo({ small = false }) {
-  const size = small ? 36 : 38;
-  return (
-    <img
-      src={BRAND_LOGO_URL}
-      alt="山田寓所"
-      width={size}
-      height={size}
-      style={{
-        width: size,
-        height: size,
-        objectFit: "contain",
-        borderRadius: "50%",
-      }}
-    />
-  );
-}
-
 export default async function ActivitiesPage() {
-  const session = await auth();
-  const userName = session?.user?.name || session?.user?.email || "會員中心";
   const activities = await getActivities();
   const solarTerm = getCurrentSolarTerm();
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -89,33 +66,10 @@ export default async function ActivitiesPage() {
     <>
       <style dangerouslySetInnerHTML={{ __html: pageStyle }} />
 
-      {/* NAV */}
-      <nav className="nav">
-        <Link href="/" className="nav-logo">
-          <Logo />
-          <div className="logo-wordmark">
-            <span className="logo-zh">山田寓所</span>
-            <span className="logo-en">FIELDSTAY</span>
-          </div>
-        </Link>
-
-        <div className="nav-actions">
-          {session?.user ? (
-            <>
-              <Link href="/account" className="btn btn-ghost nav-desktop-only">會員中心</Link>
-              <Link href="/account" className="btn btn-primary nav-desktop-only">{userName}</Link>
-            </>
-          ) : (
-            <>
-              <Link href="/account" className="btn btn-ghost nav-desktop-only">會員中心</Link>
-              <Link href="/login" className="btn btn-primary">登入</Link>
-            </>
-          )}
-        </div>
-      </nav>
+      <SiteHeader overlay />
 
       {/* HERO */}
-      <section className="hero">
+      <section className="hero" data-site-banner>
         <div className="hero-inner">
           <div>
             <div className="hero-eyebrow">
@@ -123,16 +77,16 @@ export default async function ActivitiesPage() {
                 <circle cx="6" cy="6" r="5" stroke="rgba(255,255,255,0.6)" strokeWidth="1" />
                 <circle cx="6" cy="6" r="1.5" fill="rgba(255,255,255,0.6)" />
               </svg>
-              二十四節氣 · 田間活動行事曆
+              二十四節氣 · 山與田之間的活動行事曆
             </div>
             <h1>
               順著節氣
               <br />
-              過一段田裡的日子
+              過一段慢下來的日子
             </h1>
             <p className="hero-sub">
-              依照節氣與田裡的狀態，
-              不定期安排幾場手作課程、田間勞動與在地小旅行。
+              依照節氣與土地的狀態，不定期安排手作課程、田間勞動、
+              食農與米食體驗、藝術創作，以及道卡斯文化小旅行。
             </p>
           </div>
 

@@ -5,6 +5,7 @@ import { getProducts } from "../_lib/data-service";
 import { TEMPERATURE_ORDER, getTemperature } from "../_lib/product-utils";
 import ProductCard from "../_components/ProductCard";
 import SiteHeader from "../_components/SiteHeader";
+import PageHero from "../_components/PageHero";
 import SiteFooter from "../_components/SiteFooter";
 
 export const revalidate = 0;
@@ -24,24 +25,20 @@ export default async function ShopPage() {
 
   return (
     <>
-      <SiteHeader user={session?.user} />
+      <SiteHeader overlay />
 
-      <section className="border-b border-primary-200 bg-primary-100">
-        <div className="mx-auto w-full max-w-6xl px-6 py-14 md:px-10 md:py-20">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-primary-500">
-            Fieldstay Select · 選物商店
-          </p>
-          <h1 className="mt-3 font-serif text-3xl font-semibold leading-snug text-primary-900 md:text-4xl">
+      <PageHero
+        eyebrow="Fieldstay Select · 選物商店"
+        title={
+          <>
             把田裡的味道
             <br />
             帶回家
-          </h1>
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-primary-600">
-            在地小農契作與自家手作的食品雜貨。常溫與冷凍商品以超商取貨寄送，
-            冷藏商品走低溫宅配；不同溫層會分開計算運費與寄送。
-          </p>
-        </div>
-      </section>
+          </>
+        }
+        sub="在地小農契作與自家手作的食品雜貨。"
+        curveColor="#fdfbf8"
+      />
 
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-6 py-4 text-xs text-primary-500 md:px-10">
         <Link href="/" className="transition hover:text-primary-900">

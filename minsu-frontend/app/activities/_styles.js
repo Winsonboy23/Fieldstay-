@@ -14,8 +14,9 @@ export const pageStyle = `
       --warn:     oklch(56% 0.16 56);
       --success:  oklch(50% 0.14 148);
       --warm-block: #f5efe8;
-      --font-serif: Georgia, serif;
-      --font-sans:  system-ui, sans-serif;
+      --font-serif: Georgia, "Songti TC", "Songti SC", "Noto Serif CJK TC", serif;
+      --font-sans:  system-ui, -apple-system, "PingFang TC", "PingFang SC",
+                    "Noto Sans CJK TC", sans-serif;
     }
 
     body {
@@ -62,14 +63,19 @@ export const pageStyle = `
     /* ── HERO ────────────────────────────────────── */
     .hero {
       position: relative;
-      padding: 5rem 2.5rem 7rem;
+      padding: 180px 2.5rem 7rem;
       overflow: hidden;
-      background:
+      background-color: oklch(34% 0.10 145);
+      background-image:
         linear-gradient(180deg,
-          oklch(34% 0.10 145) 0%,
-          oklch(40% 0.11 130) 45%,
-          oklch(46% 0.10 110) 80%,
-          oklch(50% 0.09 100) 100%);
+          oklch(34% 0.10 145 / 0.86) 0%,
+          oklch(40% 0.11 130 / 0.84) 45%,
+          oklch(46% 0.10 110 / 0.82) 80%,
+          oklch(50% 0.09 100 / 0.86) 100%),
+        url('/about-assets/field-hero.png');
+      background-size: cover, cover;
+      background-position: center, center;
+      background-repeat: no-repeat, no-repeat;
       color: white;
     }
     .hero::before {

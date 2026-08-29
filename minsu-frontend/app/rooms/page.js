@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import RoomList from "../_components/RoomList";
 import Spinner from "../_components/Spinner";
 import Link from "next/link";
-import { auth } from "../_lib/auth";
 import SiteFooter from "../_components/SiteFooter";
-import BrandMark from "../_components/BrandMark";
+import SiteHeader from "../_components/SiteHeader";
+import PageHero from "../_components/PageHero";
 
 export const revalidate = 0;
 
@@ -13,71 +13,28 @@ export const metadata = {
 };
 
 export default async function Page({ searchParams }) {
-  const session = await auth();
-  const userName = session?.user?.name || session?.user?.email;
   const filter = searchParams?.capacity ?? "all";
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-primary-200 bg-primary-50">
-        <div className="mx-auto flex h-20 w-full items-center justify-between px-5 md:px-10">
-          <Link href="/" className="flex items-center gap-3">
-            <BrandMark />
-            <span className="flex flex-col leading-none">
-              <span className="font-serif text-[15px] font-semibold tracking-[0.08em] text-primary-900">
-                山田寓所
-              </span>
-              <span className="mt-1 text-[9px] tracking-[0.22em] text-primary-500">
-                FIELDSTAY
-              </span>
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/account"
-              className="hidden rounded-md border border-primary-200 bg-primary-50 px-5 py-3 text-sm font-semibold text-primary-900 transition hover:border-primary-400 md:inline-flex"
-            >
-              會員中心
-            </Link>
-            {session?.user ? (
-              <Link
-                href="/account"
-                className="hidden rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800 md:inline-flex"
-              >
-                {userName}
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="rounded-md bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800"
-              >
-                登入
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
-      <section className="border-b border-primary-200 bg-primary-50">
-        <div className="mx-auto w-full max-w-[1200px] px-5 py-10 md:px-10">
-          <div className="mb-6 text-xs text-primary-500">
-            <Link href="/" className="hover:text-accent-700">
+      <SiteHeader overlay />
+      <PageHero
+        eyebrow="Rooms & Stays · 房型選擇"
+        title="選擇您的住宿"
+        sub="每一間房都延續老屋的材質與光線，留下紅磚、木構與窗景，讓入住的人能真的休息。"
+        curveColor="#f3f1ee"
+        breadcrumb={
+          <>
+            <Link href="/" className="text-white/55 transition hover:text-white">
               首頁
             </Link>
-            <span className="mx-2">›</span>
-            <span>所有房型</span>
-          </div>
+            <span>›</span>
+            <span className="text-white/80">所有房型</span>
+          </>
+        }
+      />
 
-          <p className="mb-2 text-xs font-semibold tracking-[0.24em] text-accent-700">
-            ROOMS & STAYS
-          </p>
-          <h1 className="font-serif text-4xl font-semibold leading-tight text-primary-900">
-            選擇您的住宿
-          </h1>
-        </div>
-      </section>
-
-      <section className="min-h-[70vh] border-t border-primary-200 bg-[#f3f1ee]">
+      <section className="min-h-[70vh] bg-[#f3f1ee]">
         <div className="mx-auto w-full max-w-[1200px] px-4 py-12">
           <Suspense fallback={<Spinner />} key={filter}>
             <RoomList filter={filter} />
