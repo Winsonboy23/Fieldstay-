@@ -38,6 +38,9 @@ export default async function ShopPage() {
         }
         sub="在地小農契作與自家手作的食品雜貨。"
         curveColor="#fdfbf8"
+        image="/about-assets/shop-hero.jpg"
+        overlay={0.42}
+        tone="clay"
       />
 
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-6 py-4 text-xs text-primary-500 md:px-10">

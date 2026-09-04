@@ -20,9 +20,10 @@ export default async function Page({ searchParams }) {
       <SiteHeader overlay />
       <PageHero
         eyebrow="Rooms & Stays · 房型選擇"
-        title="選擇您的住宿"
+        title="在山田間，挑一處住所歇下"
         sub="每一間房都延續老屋的材質與光線，留下紅磚、木構與窗景，讓入住的人能真的休息。"
         curveColor="#f3f1ee"
+        image="/about-assets/rooms-hero.jpg"
         breadcrumb={
           <>
             <Link href="/" className="text-white/55 transition hover:text-white">

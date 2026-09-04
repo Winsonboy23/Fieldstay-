@@ -12,25 +12,44 @@ const PILLARS = [
     num: "01",
     zh: "空間再生",
     en: "Space Renewal",
+    img: "/about-assets/pillar-space.jpg",
     desc: "修舊如舊，為祖厝找到新生命。保留老屋輪廓與通風動線，讓歷史的溫度與當代生活共存。",
   },
   {
     num: "02",
     zh: "美感教育",
     en: "Everyday Aesthetics",
+    img: "/about-assets/pillar-aesthetics.jpg",
     desc: "藝術走進日常的每個細節，從空間、器物、課程到餐桌，讓美感自然發生在生活裡。",
   },
   {
     num: "03",
     zh: "社區串連",
     en: "Community Ties",
+    img: "/about-assets/pillar-community.jpg",
     desc: "與柑仔店、地方小農、社區媽媽及鄰近酒廠互助共好，讓旅人的停留也能回到地方。",
   },
   {
     num: "04",
     zh: "永續營運",
     en: "Built to Last",
+    img: "/about-assets/pillar-sustain.jpg",
     desc: "住宿、咖啡、體驗多元共好，慢慢做、不擴張，讓這間老屋能長長久久存在下去。",
+  },
+];
+
+const PRESS = [
+  {
+    outlet: "臺中市政府文化局",
+    date: "2026.01.22",
+    title: "百年土角厝重生 大甲歷史老屋「賢仁居」化身「山田寓所」正式啟用",
+    href: "https://www.taichung.gov.tw/8868/8872/9962/3196899",
+  },
+  {
+    outlet: "《漾臺中》月刊",
+    date: "p.53–54",
+    title: "臺中市政府線上電子書｜《漾臺中》月刊專題",
+    href: "https://www.news.taichung.gov.tw/14786/15050/15092/15095/1263057/3240829/",
   },
 ];
 
@@ -142,10 +161,14 @@ export default async function AboutPage() {
           </h2>
           <div className="mx-auto mb-8 h-px w-8 bg-accent-700/50" />
           <p className="mx-auto mb-4 max-w-[680px] text-[15px] leading-[1.95] text-primary-500">
-            這裡的故事，比家族老宅更早開始……鐵砧山下的這片土地，曾是平埔族道卡斯族的主要聚落所在——是這裡最早的生活記憶。
+            這裡的故事，比家族老宅更早開始……
+            <br />
+            鐵砧山下的這片土地，曾是平埔族道卡斯族的主要聚落所在——是這裡最早的生活記憶。
           </p>
           <p className="mx-auto max-w-[680px] text-[15px] leading-[1.95] text-primary-500">
-            後來，這裡的故事，始於一座家族老宅的呼喚。都市裡尋找歸屬的倦怠靈魂，看見了土地的呼喚。我們相信，農村不該只是泛黃的記憶，更不該是繁華的邊陲。
+            後來，這裡的故事，始於一座家族老宅的呼喚。
+            <br />
+            我們相信，農村不該只是泛黃的記憶，更不該是繁華的邊陲。
           </p>
         </div>
       </section>
@@ -170,15 +193,26 @@ export default async function AboutPage() {
                 key={p.num}
                 className="rounded-2xl border border-primary-200 bg-primary-50 p-7 transition hover:-translate-y-0.5 hover:border-accent-700 hover:shadow-lg"
               >
-                <p className="mb-5 font-serif text-[11px] tracking-[0.22em] text-accent-700">
-                  — {p.num} —
-                </p>
-                <h3 className="mb-2 font-serif text-xl font-bold tracking-wide text-primary-900">
-                  {p.zh}
-                  <span className="mt-1 block font-sans text-[10px] font-medium uppercase tracking-[0.22em] text-primary-500">
-                    {p.en}
-                  </span>
-                </h3>
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="mb-5 font-serif text-[11px] tracking-[0.22em] text-accent-700">
+                      — {p.num} —
+                    </p>
+                    <h3 className="font-serif text-xl font-bold tracking-wide text-primary-900">
+                      {p.zh}
+                      <span className="mt-1 block font-sans text-[10px] font-medium uppercase tracking-[0.22em] text-primary-500">
+                        {p.en}
+                      </span>
+                    </h3>
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.img}
+                    alt={p.zh}
+                    loading="lazy"
+                    className="h-28 w-28 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-primary-200"
+                  />
+                </div>
                 <p className="text-sm leading-[1.85] text-primary-500">{p.desc}</p>
               </div>
             ))}
@@ -328,6 +362,63 @@ export default async function AboutPage() {
             >
               房型介紹
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Press */}
+      <section data-reveal className="bg-primary-100 px-5 py-14 md:px-10 md:py-20">
+        <div className="mx-auto max-w-[1100px]">
+          <div className="mx-auto mb-10 max-w-[640px] text-center">
+            <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.22em] text-accent-700">
+              專訪與報導 · PRESS
+            </p>
+            <h2 className="font-serif text-2xl font-bold leading-tight tracking-wide md:text-3xl lg:text-[2.2rem]">
+              別人眼中的這間老屋
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_1fr] lg:gap-10">
+            <div>
+              <div className="overflow-hidden rounded-2xl border border-primary-200 bg-black">
+                <iframe
+                  className="block aspect-video w-full"
+                  src="https://www.youtube-nocookie.com/embed/ose6Kef4YfQ"
+                  title="臺灣家具品牌 有情門 專訪｜山田寓所"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+              <p className="mt-3 text-[13px] leading-relaxed text-primary-500">
+                影音專訪｜臺灣家具品牌 有情門
+              </p>
+            </div>
+
+            <ul className="flex list-none flex-col gap-3">
+              {PRESS.map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-full flex-col rounded-2xl border border-primary-200 bg-primary-50 p-6 transition hover:-translate-y-0.5 hover:border-accent-700 hover:shadow-lg"
+                  >
+                    <span className="mb-2 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-accent-700">
+                      {item.outlet}
+                      <span className="text-primary-400">{item.date}</span>
+                    </span>
+                    <span className="font-serif text-[15px] font-semibold leading-[1.75] text-primary-900">
+                      {item.title}
+                    </span>
+                    <span className="mt-3 text-[12px] tracking-[0.08em] text-primary-500">
+                      閱讀報導 →
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>

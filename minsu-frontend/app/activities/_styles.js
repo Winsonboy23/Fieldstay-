@@ -65,14 +65,14 @@ export const pageStyle = `
       position: relative;
       padding: 180px 2.5rem 7rem;
       overflow: hidden;
-      background-color: oklch(34% 0.10 145);
+      background-color: oklch(44% 0.09 150);
       background-image:
         linear-gradient(180deg,
-          oklch(34% 0.10 145 / 0.86) 0%,
-          oklch(40% 0.11 130 / 0.84) 45%,
-          oklch(46% 0.10 110 / 0.82) 80%,
-          oklch(50% 0.09 100 / 0.86) 100%),
-        url('/about-assets/field-hero.png');
+          oklch(44% 0.09 150 / 0.82) 0%,
+          oklch(50% 0.10 138 / 0.80) 45%,
+          oklch(56% 0.10 118 / 0.78) 80%,
+          oklch(61% 0.09 104 / 0.82) 100%),
+        url('/about-assets/field-walk.jpg');
       background-size: cover, cover;
       background-position: center, center;
       background-repeat: no-repeat, no-repeat;
@@ -143,6 +143,11 @@ export const pageStyle = `
       line-height: 1.9; color: rgba(255,255,255,0.78);
       border-top: 1px solid rgba(255,255,255,0.12);
       padding-top: 1rem;
+    }
+    .solar-card-note {
+      display: block; margin-top: 0.5rem;
+      font-family: var(--font-sans, inherit); font-size: 11px;
+      line-height: 1.8; color: rgba(255,255,255,0.55);
     }
 
     /* ── BREADCRUMB ───────────────────────────────── */

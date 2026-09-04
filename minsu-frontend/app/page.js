@@ -568,6 +568,10 @@ export default async function Page() {
     #transport {
       background: var(--surface);
     }
+    /* 固定 nav 高 100px，錨點捲動時預留，避免標題被蓋住 */
+    #about, #rooms, #experience, #shop, #transport {
+      scroll-margin-top: 100px;
+    }
 
     /* ── HAMBURGER ──────────────────────────────── */
     .nav-toggle {
@@ -1449,7 +1453,7 @@ export default async function Page() {
 
       <h1>山與田之間<br>生活的起點</h1>
       <p class="hero-sub">
-        在傳統磚瓦老屋中，感受臺灣土地的四季節奏<br>
+        在百年傳統閩式土角紅磚厝中，感受臺灣土地的四季節奏<br>
         與我們共度一段慢慢時光
       </p>
 
@@ -1586,7 +1590,7 @@ export default async function Page() {
             <p class="info-eyebrow">大眾運輸 · BY TRANSIT</p>
             <p class="info-main">大甲火車站 → 計程車約 10–15 分鐘</p>
             <p class="info-sub">或租借 u-bike（德元宮站還車）</p>
-            <p class="info-sub">公車（班次較少，請先查詢時刻表）</p>
+            <p class="info-main" style="margin-top:10px">公車（班次較少，請先查詢時刻表）</p>
             <p class="info-sub">661（右環）德元宮站下車（<a href="https://citybus.taichung.gov.tw/ebus/route-map/661" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
             <p class="info-sub">305 文武公園站下車 → 步行 13 分鐘（<a href="https://citybus.taichung.gov.tw/ebus/route-map/305" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
           </div>

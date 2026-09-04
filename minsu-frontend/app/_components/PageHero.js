@@ -1,14 +1,58 @@
-const GRADIENT =
-  "linear-gradient(180deg, oklch(34% 0.10 145) 0%, oklch(40% 0.11 130) 45%, oklch(46% 0.10 110) 80%, oklch(50% 0.09 100) 100%)";
+// 每個色調 4 個停點：[明度%, 彩度, 色相]
+const TONES = {
+  green: [
+    [52, 0.075, 168],
+    [58, 0.075, 152],
+    [64, 0.07, 132],
+    [69, 0.065, 116],
+  ],
+  // 商店走暖陶土色，跟房型的綠色分開
+  clay: [
+    [60, 0.065, 52],
+    [67, 0.058, 66],
+    [73, 0.048, 78],
+    [78, 0.038, 88],
+  ],
+};
+
+function gradient(tone, alpha) {
+  const a = alpha == null ? "" : ` / ${alpha}`;
+  const stops = [0, 45, 80, 100];
+  const parts = TONES[tone].map(
+    ([l, c, h], i) => `oklch(${l}% ${c} ${h}${a}) ${stops[i]}%`
+  );
+  return `linear-gradient(180deg, ${parts.join(", ")})`;
+}
 
 // 比照 /activities 的 header：綠色漸層 + 底部弧線
-export default function PageHero({ eyebrow, title, sub, breadcrumb, curveColor = "#f5efe8" }) {
+export default function PageHero({
+  eyebrow,
+  title,
+  sub,
+  breadcrumb,
+  curveColor = "#f5efe8",
+  image,
+  imagePosition = "center",
+  overlay = 0.78,
+  tone = "green",
+}) {
+  // 有照片時左側加一層薄暗幕，讓白字在淺漸層上仍讀得清楚
+  const scrim =
+    "linear-gradient(100deg, rgba(14,22,16,0.50) 0%, rgba(14,22,16,0.22) 48%, rgba(14,22,16,0) 78%)";
+  const background = image
+    ? `${scrim}, ${gradient(tone, overlay)}, url('${image}')`
+    : gradient(tone);
+
   return (
     <section
       data-site-banner
       className="relative overflow-hidden px-5 pb-28 pt-[140px] text-white md:px-10 md:pt-[172px]"
     >
-      <span aria-hidden="true" className="absolute inset-0" style={{ background: GRADIENT }} />
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 bg-cover bg-no-repeat"
+        style={{ background, backgroundSize: "cover", backgroundPosition: imagePosition }}
+      />
       <span
         aria-hidden="true"
         className="absolute -bottom-px left-0 right-0 h-20"
@@ -24,7 +68,7 @@ export default function PageHero({ eyebrow, title, sub, breadcrumb, curveColor =
           {title}
         </h1>
         {sub ? (
-          <p className="max-w-[480px] text-[15px] font-light leading-[1.9] text-white/70">{sub}</p>
+          <p className="max-w-[480px] text-[15px] font-light leading-[1.9] text-white/80">{sub}</p>
         ) : null}
       </div>
     </section>

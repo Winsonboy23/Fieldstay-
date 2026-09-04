@@ -23,6 +23,56 @@ export default function HomeInteractions() {
 
     const cleanups = [];
 
+    // 從別的分頁點「交通資訊」(/#transport) 進來時，Next 不會自動捲到錨點。
+    // html 有 scroll-behavior: smooth，剛進頁面要用 instant，
+    // 否則動畫會被後續的重試打斷、停在半路。
+    const scrollToHash = (behavior) => {
+      const raw = window.location.hash.slice(1);
+      if (!raw) return;
+      let id = raw;
+      try {
+        id = decodeURIComponent(raw);
+      } catch {}
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ block: "start", behavior });
+    };
+    if (window.location.hash) {
+      // 首頁圖片陸續載入會把版面往下推，所以在高度變動時重新校正，
+      // 最多 5 秒；使用者一動就停手，不跟他搶捲軸。
+      let stopped = false;
+      let ro = null;
+      let endTimer = null;
+      const userEvents = ["wheel", "touchstart", "keydown", "pointerdown"];
+
+      const snap = () => {
+        if (!stopped) scrollToHash("instant");
+      };
+      const teardown = () => {
+        stopped = true;
+        if (ro) ro.disconnect();
+        clearTimeout(endTimer);
+        userEvents.forEach((e) => window.removeEventListener(e, teardown));
+        window.removeEventListener("load", snap);
+      };
+
+      userEvents.forEach((e) =>
+        window.addEventListener(e, teardown, { once: true, passive: true })
+      );
+      window.addEventListener("load", snap);
+
+      snap();
+      if (typeof ResizeObserver !== "undefined") {
+        ro = new ResizeObserver(snap);
+        ro.observe(document.documentElement);
+      }
+      endTimer = setTimeout(teardown, 5000);
+
+      cleanups.push(teardown);
+    }
+    const onHashChange = () => scrollToHash("smooth");
+    window.addEventListener("hashchange", onHashChange);
+    cleanups.push(() => window.removeEventListener("hashchange", onHashChange));
+
     if (nav && hero) {
       const onScroll = () => {
         const bottom = hero.getBoundingClientRect().bottom;
