@@ -1487,7 +1487,7 @@ export default async function Page() {
       </div>
 
       <div class="room-grid" id="roomGrid" data-carousel>
-        ${roomCardsHtml}
+        ${roomCardsHtml || '<p style="color:var(--muted);">目前沒有可預訂的房型。</p>'}
       </div>
       <div class="carousel-dots" data-dots-for="roomGrid">
         ${featuredRooms.map((_, i) => `<button type="button" class="carousel-dot${i === 0 ? " active" : ""}" data-idx="${i}" aria-label="第 ${i + 1} 張"></button>`).join("")}

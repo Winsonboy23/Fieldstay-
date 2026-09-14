@@ -1,6 +1,8 @@
+import { notFound } from "next/navigation";
 import SubmitButton from "@/app/_components/SubmitButton";
+import { auth } from "@/app/_lib/auth";
 import { updateReservation } from "@/app/_lib/actions";
-import { getBooking, getRoom } from "@/app/_lib/data-service";
+import { getBookings, getRoom } from "@/app/_lib/data-service";
 
 export const metadata = {
   title: "Edit Reservation",
@@ -8,8 +10,18 @@ export const metadata = {
 
 export default async function Page({ params }) {
   const bookingId = params.bookingId;
-  const { numGuests, observations, roomId } = await getBooking(bookingId);
-  const { maxCapacity } = await getRoom(roomId);
+  // 只能看、改自己的訂單
+  const session = await auth();
+  if (!session?.user?.guestId) notFound();
+  const bookings = await getBookings(session.user.guestId);
+  const booking = bookings.find(
+    (item) => String(item.id) === String(bookingId)
+  );
+  if (!booking) notFound();
+
+  const { numGuests, observations, roomId } = booking;
+  const room = roomId ? await getRoom(roomId) : null;
+  const maxCapacity = room?.maxCapacity || numGuests || 1;
 
   return (
     <div>

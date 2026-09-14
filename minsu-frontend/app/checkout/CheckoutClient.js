@@ -106,14 +106,23 @@ export default function CheckoutClient({ products, settings, guest }) {
   }).filter((group) => group.lines.length > 0);
 
   if (groups.length === 0) {
+    // 購物車有東西但都已失效（商品被刪或下架）
+    const hasUnavailable = items.length > 0;
     return (
       <div className="rounded-xl border border-dashed border-primary-300 px-6 py-20 text-center">
-        <p className="font-serif text-lg text-primary-700">購物車是空的</p>
+        <p className="font-serif text-lg text-primary-700">
+          {hasUnavailable ? "購物車內沒有可結帳的商品" : "購物車是空的"}
+        </p>
+        {hasUnavailable && (
+          <p className="mt-2 text-sm text-primary-500">
+            請先回購物車移除已失效的商品。
+          </p>
+        )}
         <Link
-          href="/shop"
+          href={hasUnavailable ? "/cart" : "/shop"}
           className="mt-6 inline-flex rounded-lg bg-accent-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-700"
         >
-          前往選物商店
+          {hasUnavailable ? "回到購物車" : "前往選物商店"}
         </Link>
       </div>
     );

@@ -192,6 +192,12 @@ export default function ConfirmReservationClient({ room, user, booking }) {
 
       const result = await res.json().catch(() => ({}));
 
+      if ((res.status === 403 || res.status === 409) && result.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!res.ok) {
         throw new Error(result.error || "booking_failed");
       }

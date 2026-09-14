@@ -10,7 +10,17 @@ async function RoomList({ filter }) {
 
   if (!rooms) return null;
 
-  let displayedRooms;
+  if (rooms.length === 0)
+    return (
+      <div className="rounded-xl border border-dashed border-primary-300 px-6 py-20 text-center">
+        <p className="font-serif text-lg text-primary-700">房型準備中</p>
+        <p className="mt-2 text-sm text-primary-500">
+          目前沒有開放預訂的房型，請稍後再回來看看。
+        </p>
+      </div>
+    );
+
+  let displayedRooms = rooms;
 
   if (filter === "all") displayedRooms = rooms;
   if (filter === "small")

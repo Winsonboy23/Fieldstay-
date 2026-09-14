@@ -251,12 +251,14 @@ export default async function Page({ params }) {
       </article>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link
-          href={`/rooms/${booking.roomId}`}
-          className="rounded-lg border border-primary-200 bg-primary-50 px-6 py-3 text-sm font-semibold transition hover:bg-primary-100"
-        >
-          查看房型
-        </Link>
+        {booking.roomId ? (
+          <Link
+            href={`/rooms/${booking.roomId}`}
+            className="rounded-lg border border-primary-200 bg-primary-50 px-6 py-3 text-sm font-semibold transition hover:bg-primary-100"
+          >
+            查看房型
+          </Link>
+        ) : null}
         <Link
           href="/account/reservations"
           className="rounded-lg bg-accent-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-800"

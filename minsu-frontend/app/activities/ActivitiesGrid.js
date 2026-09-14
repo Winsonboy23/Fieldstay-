@@ -97,6 +97,9 @@ export default function ActivitiesGrid({ activities }) {
     return list;
   }, [activities, sortKey]);
 
+  if (sorted.length === 0)
+    return <p style={{ color: "var(--muted)" }}>目前沒有即將舉辦的活動。</p>;
+
   return (
     <>
       <div className="filter-row" style={{ justifyContent: "flex-end" }}>

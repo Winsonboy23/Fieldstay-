@@ -67,9 +67,13 @@ export default function BookingSuccessClient({ detail, settings = {}, user = nul
         <section className="mb-4 text-center">
           <CheckCircleIcon className="mx-auto mb-5 h-20 w-20 text-emerald-500" />
           <h1 className="mb-2 font-serif text-2xl font-semibold tracking-wide">
-            預訂成功
+            {detail.status === "cancelled" ? "訂單已取消" : "預訂成功"}
           </h1>
-          <p className="text-sm text-primary-500">感謝您的預訂，訂單已確認</p>
+          <p className="text-sm text-primary-500">
+            {detail.status === "cancelled"
+              ? "這筆訂單已經取消"
+              : "感謝您的預訂，訂單已確認"}
+          </p>
         </section>
 
         {/* Order detail card */}

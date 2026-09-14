@@ -12,12 +12,14 @@ const statusStyles = {
   unconfirmed: "bg-amber-100 text-amber-800",
   "checked-in": "bg-emerald-100 text-emerald-800",
   "checked-out": "bg-primary-200 text-primary-600",
+  cancelled: "bg-primary-100 text-primary-500",
 };
 
 const statusLabels = {
   unconfirmed: "待確認",
   "checked-in": "已確認",
   "checked-out": "已完成",
+  cancelled: "已取消",
 };
 
 const paymentStyles = {
@@ -51,9 +53,12 @@ export default async function Page() {
       ) : (
         <div className="space-y-6">
           {bookings.map((booking) => {
-            const status = isPast(new Date(booking.startDate))
-              ? "checked-out"
-              : booking.status;
+            const status =
+              booking.status === "cancelled"
+                ? "cancelled"
+                : isPast(new Date(booking.startDate))
+                  ? "checked-out"
+                  : booking.status;
             const statusClass =
               statusStyles[status] || "bg-primary-200 text-primary-600";
             const statusLabel = statusLabels[status] || "已確認";
@@ -83,7 +88,7 @@ export default async function Page() {
                       訂單 #FS-{String(booking.id).padStart(4, "0")}
                     </p>
                     <p className="mb-2 font-serif text-xl font-semibold text-primary-900">
-                      {booking.rooms?.name}
+                      {booking.rooms?.name || "已預訂房型"}
                     </p>
                     <p className="flex flex-wrap items-center gap-2 text-sm text-primary-500">
                       <CalendarDaysIcon className="h-4 w-4" />

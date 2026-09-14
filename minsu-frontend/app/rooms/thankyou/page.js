@@ -63,7 +63,11 @@ export default async function Page({ searchParams }) {
     contactName: observationValue(booking.observations, "訂房聯絡人"),
     contactEmail: observationValue(booking.observations, "聯絡 Email"),
     contactPhone: observationValue(booking.observations, "聯絡電話"),
-    isEditable: !isAdmin && !isPast(new Date(booking.startDate)),
+    status: booking.status,
+    isEditable:
+      !isAdmin &&
+      booking.status !== "cancelled" &&
+      !isPast(new Date(booking.startDate)),
   };
 
   const settings = await getSettings();

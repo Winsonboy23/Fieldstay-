@@ -252,7 +252,10 @@ export async function getProduct(id) {
     console.error(error);
     throw new Error("Product could not be loaded");
   }
-  return data ? normalizeProduct(data) : null;
+  if (!data) return null;
+  const product = normalizeProduct(data);
+  // 與 getProducts 一致：沒有可販售規格的商品視同下架
+  return product.variants.length > 0 ? product : null;
 }
 
 // Shop orders
