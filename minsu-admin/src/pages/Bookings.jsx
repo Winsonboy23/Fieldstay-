@@ -280,6 +280,11 @@ const TypeTabButton = styled.button`
     background: ${(p) =>
       p.$active ? "transparent" : "var(--color-grey-100)"};
   }
+
+  /* 滑鼠點擊不出現外框；鍵盤 Tab 時照常顯示 */
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
 `;
 
 const fadeIn = keyframes`

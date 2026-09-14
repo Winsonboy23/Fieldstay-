@@ -34,9 +34,14 @@ const OrderCode = styled.button`
   background: none;
   border: none;
   padding: 0;
+  text-align: left;
 
   &:hover {
     text-decoration: underline;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
   }
 `;
 
