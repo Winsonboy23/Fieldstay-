@@ -155,9 +155,11 @@ function BookingRow({ booking }) {
     isPaid,
     payment_method: paymentMethod,
     observations,
-    guests: { fullName: guestName } = {},
-    rooms: { name: roomName } = {},
+    guests,
+    rooms,
   } = booking;
+  const guestName = guests?.fullName || "-";
+  const roomName = rooms?.name || "-";
 
   const { updateBooking, isUpdating } = useUpdateBooking();
   const { checkout, isCheckingOut } = useCheckout();
