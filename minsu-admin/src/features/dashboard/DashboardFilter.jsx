@@ -1,7 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 import styled, { css } from "styled-components";
+import { useSlidingPill } from "../../hooks/useSlidingPill";
 
 const StyledFilter = styled.div`
+  position: relative;
   display: inline-flex;
   background: var(--color-grey-0);
   border: 1px solid var(--color-grey-100);
@@ -11,7 +13,19 @@ const StyledFilter = styled.div`
   box-shadow: var(--shadow-sm);
 `;
 
+const Pill = styled.span`
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  left: 0;
+  border-radius: 999px;
+  background: var(--color-grey-900);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+`;
+
 const FilterButton = styled.button`
+  position: relative;
   background: transparent;
   border: none;
   padding: 0.7rem 1.6rem;
@@ -19,7 +33,7 @@ const FilterButton = styled.button`
   font-weight: 500;
   font-size: 1.4rem;
   color: var(--color-grey-600);
-  transition: color 0.2s, background-color 0.2s;
+  transition: color 0.35s;
 
   &:hover:not(:disabled) {
     color: var(--color-grey-900);
@@ -28,7 +42,6 @@ const FilterButton = styled.button`
   ${(props) =>
     props.$active === "true" &&
     css`
-      background: var(--color-grey-900);
       color: var(--color-grey-0);
 
       &:hover:not(:disabled) {
@@ -47,6 +60,7 @@ const options = [
 function DashboardFilter() {
   const [searchParams, setSearchParams] = useSearchParams();
   const current = searchParams.get("last") || "7";
+  const [ref, pill] = useSlidingPill(current);
 
   function handleClick(value) {
     searchParams.set("last", value);
@@ -54,12 +68,21 @@ function DashboardFilter() {
   }
 
   return (
-    <StyledFilter>
+    <StyledFilter ref={ref}>
+      {pill && (
+        <Pill
+          style={{
+            width: pill.width,
+            transform: `translateX(${pill.left}px)`,
+          }}
+        />
+      )}
       {options.map((option) => (
         <FilterButton
           key={option.value}
           onClick={() => handleClick(option.value)}
           $active={String(option.value === current)}
+          data-active={option.value === current}
           disabled={option.value === current}
         >
           {option.label}

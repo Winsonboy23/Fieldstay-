@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useSearchParams } from "react-router-dom";
 import {
   HiOutlineCheck,
@@ -15,6 +15,7 @@ import { useBookingStats } from "../features/bookings/useBookingStats";
 import { useSignupStats } from "../features/activities/useSignupStats";
 import { useShopOrderStats } from "../features/shop-orders/useShopOrders";
 import { useOutsideClick } from "../hooks/useOutsideClick";
+import { useSlidingPill } from "../hooks/useSlidingPill";
 import { formatCurrency } from "../utils/helpers";
 
 const Page = styled.div`
@@ -240,6 +241,7 @@ const SHOP_FILTERS = [
 ];
 
 const TypeTabs = styled.div`
+  position: relative;
   display: inline-flex;
   height: 4rem;
   background-color: var(--color-grey-50);
@@ -250,22 +252,47 @@ const TypeTabs = styled.div`
   flex-shrink: 0;
 `;
 
+const TypePill = styled.span`
+  position: absolute;
+  top: 0.3rem;
+  bottom: 0.3rem;
+  left: 0;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-brand-600);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+`;
+
 const TypeTabButton = styled.button`
+  position: relative;
   padding: 0 1.4rem;
   border: none;
   border-radius: var(--border-radius-sm);
-  background: ${(p) =>
-    p.$active ? "var(--color-brand-600)" : "transparent"};
+  background: transparent;
   color: ${(p) =>
     p.$active ? "white" : "var(--color-grey-600)"};
   font-size: 1.4rem;
   font-weight: 500;
   cursor: pointer;
+  transition: color 0.35s, background-color 0.2s;
 
   &:hover {
     background: ${(p) =>
-      p.$active ? "var(--color-brand-600)" : "var(--color-grey-100)"};
+      p.$active ? "transparent" : "var(--color-grey-100)"};
   }
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const TableFade = styled.div`
+  animation: ${fadeIn} 0.3s ease-out;
 `;
 
 function Bookings() {
@@ -282,6 +309,7 @@ function Bookings() {
   const { stats: shopStats } = useShopOrderStats();
   const isActivity = type === "activity";
   const isShop = type === "shop";
+  const [tabsRef, pill] = useSlidingPill(type);
   const stats = isShop ? shopStats : isActivity ? activityStats : roomStats;
 
   const FILTERS = isShop
@@ -355,20 +383,34 @@ function Bookings() {
       </TopRow>
 
       <ControlsRow>
-        <TypeTabs>
+        <TypeTabs ref={tabsRef}>
+          {pill && (
+            <TypePill
+              style={{
+                width: pill.width,
+                transform: `translateX(${pill.left}px)`,
+              }}
+            />
+          )}
           <TypeTabButton
+            data-active={type === "room"}
             $active={type === "room"}
             onClick={() => handleType("room")}
           >
             住宿
           </TypeTabButton>
           <TypeTabButton
+            data-active={isActivity}
             $active={isActivity}
             onClick={() => handleType("activity")}
           >
             活動
           </TypeTabButton>
-          <TypeTabButton $active={isShop} onClick={() => handleType("shop")}>
+          <TypeTabButton
+            data-active={isShop}
+            $active={isShop}
+            onClick={() => handleType("shop")}
+          >
             商品
           </TypeTabButton>
         </TypeTabs>
@@ -411,13 +453,15 @@ function Bookings() {
         </ToolBar>
       </ControlsRow>
 
-      {isShop ? (
-        <ShopOrderTable search={search} />
-      ) : isActivity ? (
-        <ActivitySignupTable search={search} />
-      ) : (
-        <BookingTable search={search} />
-      )}
+      <TableFade key={type}>
+        {isShop ? (
+          <ShopOrderTable search={search} />
+        ) : isActivity ? (
+          <ActivitySignupTable search={search} />
+        ) : (
+          <BookingTable search={search} />
+        )}
+      </TableFade>
     </Page>
   );
 }
