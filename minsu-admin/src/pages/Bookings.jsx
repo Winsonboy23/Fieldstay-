@@ -357,7 +357,7 @@ function Bookings() {
       <ControlsRow>
         <TypeTabs>
           <TypeTabButton
-            $active={!isActivity}
+            $active={type === "room"}
             onClick={() => handleType("room")}
           >
             住宿

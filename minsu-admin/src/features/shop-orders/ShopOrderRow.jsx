@@ -43,7 +43,7 @@ const Stacked = styled.div`
   gap: 0.2rem;
   min-width: 0;
 
-  & span:first-child {
+  & > span:first-child {
     font-weight: 500;
     color: var(--color-grey-700);
     white-space: nowrap;
@@ -51,7 +51,7 @@ const Stacked = styled.div`
     text-overflow: ellipsis;
   }
 
-  & span:last-child {
+  & > span:last-child {
     color: var(--color-grey-500);
     font-size: 1.2rem;
     white-space: nowrap;
