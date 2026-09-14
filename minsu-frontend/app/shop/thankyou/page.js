@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/app/_lib/auth";
 import { getSettings, getShopOrderById } from "@/app/_lib/data-service";
+import { verifyViewPass } from "@/app/_lib/viewPass";
 import SiteHeader from "@/app/_components/SiteHeader";
 import SiteFooter from "@/app/_components/SiteFooter";
 import ShopOrderDetail from "@/app/_components/ShopOrderDetail";
@@ -15,12 +16,13 @@ export const metadata = { title: "訂單成立" };
 export default async function ShopThankYouPage({ searchParams }) {
   const orderId = searchParams?.orderId || "";
   const token = searchParams?.token || "";
-  const isAdminView = searchParams?.admin === "1";
+  // 後台員工證（10 分鐘、限定這筆訂單）才算管理者檢視；&admin=1 已不再有效
+  const isAdminView = verifyViewPass(searchParams?.pass, "shop", orderId);
   if (!orderId) notFound();
 
   const session = await auth();
-  // 沒帶 token 又沒登入 → 維持原本導登入的行為
-  if (!token && !session?.user?.guestId) {
+  // 沒帶 token、沒登入、也不是管理者檢視 → 維持原本導登入的行為
+  if (!isAdminView && !token && !session?.user?.guestId) {
     redirect(
       `/login?next=%2Fshop%2Fthankyou%3ForderId%3D${encodeURIComponent(orderId)}`
     );

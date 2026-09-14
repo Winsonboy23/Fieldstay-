@@ -13,7 +13,6 @@ import Table from "../../ui/Table";
 import Menus from "../../ui/Menus";
 import Modal from "../../ui/Modal";
 import { formatCurrency } from "../../utils/helpers";
-import { getFrontendUrl } from "../../utils/frontendUrl";
 
 import EditBookingForm from "./EditBookingForm";
 import CheckinConfirm from "../check-in-out/CheckinConfirm";
@@ -23,14 +22,18 @@ import {
   notifyBookingCancelled,
   resendBookingNotification,
 } from "../../services/apiNotify";
+import { openAdminOrderView } from "../../services/apiAdminView";
 
-const OrderCode = styled.a`
+const OrderCode = styled.button`
   font-family: "Noto Sans TC", sans-serif;
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--color-brand-700);
   text-decoration: none;
   cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
 
   &:hover {
     text-decoration: underline;
@@ -213,15 +216,17 @@ function BookingRow({ booking }) {
     else toast.error("重寄失敗，請查看 console");
   }
 
+  async function handleOpenView() {
+    try {
+      await openAdminOrderView("booking", bookingId);
+    } catch (err) {
+      toast.error(err.message || "無法開啟訂單頁");
+    }
+  }
+
   return (
     <Table.Row>
-      <OrderCode
-        href={getFrontendUrl(
-          `/rooms/thankyou?bookingId=${bookingId}&admin=1`
-        )}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <OrderCode type="button" onClick={handleOpenView} title="檢視訂單詳情">
         {orderCode(bookingId)}
       </OrderCode>
 

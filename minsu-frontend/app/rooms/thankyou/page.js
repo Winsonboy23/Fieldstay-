@@ -3,6 +3,7 @@ import { isPast } from "date-fns";
 import { auth } from "@/app/_lib/auth";
 import { getBookings, getSettings } from "@/app/_lib/data-service";
 import { supabaseAdmin } from "@/app/_lib/supabase-admin";
+import { verifyViewPass } from "@/app/_lib/viewPass";
 import BookingSuccessClient from "./BookingSuccessClient";
 
 function observationValue(observations, label) {
@@ -22,7 +23,8 @@ export default async function Page({ searchParams }) {
   const bookingId = searchParams?.bookingId || "";
   if (!bookingId) notFound();
 
-  const isAdmin = searchParams?.admin === "1";
+  // 後台員工證（10 分鐘、限定這筆訂單）才算管理者檢視；&admin=1 已不再有效
+  const isAdmin = verifyViewPass(searchParams?.pass, "booking", bookingId);
   const headerSession = await auth();
 
   let booking;
