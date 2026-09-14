@@ -23,7 +23,7 @@ function Stats({ bookings, confirmedStays, numDays, roomCount }) {
   );
   const checkins = confirmedStays.length;
   const occupation =
-    totalNights / Math.max(numDays * roomCount, 1);
+    roomCount > 0 ? totalNights / (numDays * roomCount) : 0;
 
   return (
     <>

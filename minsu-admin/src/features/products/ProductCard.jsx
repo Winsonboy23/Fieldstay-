@@ -187,7 +187,7 @@ function priceLabel(variants) {
   const prices = variants.map((v) =>
     Math.max(Number(v.price || 0) - Number(v.discount || 0), 0)
   );
-  if (prices.length === 0) return formatCurrency(0);
+  if (prices.length === 0) return "-";
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   return min === max ? formatCurrency(min) : `${formatCurrency(min)} 起`;

@@ -115,9 +115,15 @@ function BookingDataBox({ booking }) {
     hasBreakfast,
     observations,
     isPaid,
-    guests: { fullName: guestName, email, country, countryFlag, nationalID },
-    rooms: { name: roomName },
+    guests,
+    rooms,
   } = booking;
+  const guestName = guests?.fullName || "-";
+  const email = guests?.email || "-";
+  const country = guests?.country;
+  const countryFlag = guests?.countryFlag;
+  const nationalID = guests?.nationalID || "-";
+  const roomName = rooms?.name || "-";
 
   return (
     <StyledBookingDataBox>

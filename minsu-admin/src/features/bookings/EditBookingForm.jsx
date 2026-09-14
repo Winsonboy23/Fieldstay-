@@ -94,9 +94,9 @@ function EditBookingForm({ bookingToEdit, onCloseModal }) {
 
   const { register, handleSubmit, formState } = useForm({
     defaultValues: {
-      fullName: guests.fullName || "",
+      fullName: guests?.fullName || "",
       phone,
-      email: guests.email || "",
+      email: guests?.email || "",
       startDate,
       endDate,
       numGuests,

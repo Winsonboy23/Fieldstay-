@@ -11,6 +11,7 @@ import ButtonText from "../../ui/ButtonText";
 import { useMoveBack } from "../../hooks/useMoveBack";
 import { useBooking } from "../bookings/useBooking";
 import Spinner from "../../ui/Spinner";
+import Empty from "../../ui/Empty";
 import { useEffect, useState } from "react";
 import { formatCurrency } from "../../utils/helpers";
 import { useCheckin } from "./useCheckin";
@@ -36,6 +37,7 @@ function CheckinBooking() {
   const { checkin, isCheckingIn } = useCheckin();
 
   if (isLoading || isLoadingSettings) return <Spinner />;
+  if (!booking) return <Empty resourceName="booking" />;
 
   const {
     id: bookingId,
@@ -100,7 +102,7 @@ function CheckinBooking() {
           id="confirm"
           disabled={confirmPaid || isCheckingIn}
         >
-          我確認 {guests.fullName} 已完成轉帳付款，總金額為{" "}
+          我確認 {guests?.fullName || "-"} 已完成轉帳付款，總金額為{" "}
           {!addBreakfast
             ? formatCurrency(totalPrice)
             : `${formatCurrency(
