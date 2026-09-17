@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useCart } from "../_components/CartContext";
 import {
@@ -25,6 +25,9 @@ const CVS_OPTIONS = {
     { value: "FAMI", label: "全家", url: "https://www.family.com.tw/Marketing/inquiry/inquiry_store.aspx" },
   ],
 };
+
+// 去綠界地圖選店前把表單暫存起來，回來時再還原
+const DRAFT_KEY = "fieldstay-checkout-draft";
 
 const inputClass =
   "w-full rounded-lg border border-primary-200 bg-primary-50 px-4 py-2.5 text-sm text-primary-900 outline-none transition focus:border-accent-500";
@@ -64,6 +67,36 @@ export default function CheckoutClient({ products, settings, guest }) {
   function update(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  // 從綠界地圖選店回來：還原暫存表單，填入門市，清掉網址上的參數
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("cvsMap");
+    if (!result) return;
+
+    let draft = null;
+    try {
+      draft = JSON.parse(window.sessionStorage.getItem(DRAFT_KEY) || "null");
+      window.sessionStorage.removeItem(DRAFT_KEY);
+    } catch {
+      draft = null;
+    }
+    if (draft?.temperature) setTemperature(draft.temperature);
+    setForm((prev) => ({
+      ...prev,
+      ...(draft?.form || {}),
+      ...(result === "ok"
+        ? {
+            cvsBrand: params.get("cvsBrand") || "",
+            cvsStoreId: params.get("cvsStoreId") || "",
+            cvsStoreName: params.get("cvsStoreName") || "",
+            cvsStoreAddress: params.get("cvsStoreAddress") || "",
+          }
+        : {}),
+    }));
+    if (result !== "ok") setError("地圖選店失敗，請再試一次或自行填寫門市");
+    window.history.replaceState(null, "", "/checkout");
+  }, []);
 
   if (!isLoaded) {
     return <p className="py-20 text-center text-sm text-primary-500">載入中…</p>;
@@ -133,6 +166,19 @@ export default function CheckoutClient({ products, settings, guest }) {
   const isCvs = active.temp.value !== "chilled";
   const cvsOptions = CVS_OPTIONS[active.temp.value] || [];
   const selectedCvs = cvsOptions.find((o) => o.value === form.cvsBrand);
+
+  // 綠界電子地圖要在同一個分頁開（iOS 不能開新視窗），所以先暫存表單再整頁跳轉
+  function openCvsMap() {
+    try {
+      window.sessionStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ temperature: active.temp.value, form })
+      );
+    } catch {
+      // 暫存失敗就只帶門市回來，其他欄位請顧客再填
+    }
+    window.location.assign(`/api/logistics/cvs-map?brand=${form.cvsBrand}`);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -286,7 +332,7 @@ export default function CheckoutClient({ products, settings, guest }) {
           {isCvs ? (
             <>
               <p className="mt-1 text-xs text-primary-500">
-                {active.temp.label}商品以超商取貨寄送。請先查詢您要取貨的門市，再填入門市名稱與店號。
+                {active.temp.label}商品以超商取貨寄送。可直接在地圖上選門市，或自行查詢後填入門市名稱與店號。
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
@@ -317,15 +363,24 @@ export default function CheckoutClient({ products, settings, guest }) {
 
               {selectedCvs && (
                 <div className="mt-4 flex flex-col gap-4">
-                  <a
-                    href={selectedCvs.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-accent-500 px-4 py-2 text-sm font-medium text-accent-700 transition hover:bg-accent-50"
-                  >
-                    查詢 {selectedCvs.label} 門市
-                    <span aria-hidden="true">↗</span>
-                  </a>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={openCvsMap}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-700"
+                    >
+                      在地圖上選 {selectedCvs.label} 門市
+                    </button>
+                    <a
+                      href={selectedCvs.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-accent-500 px-4 py-2 text-sm font-medium text-accent-700 transition hover:bg-accent-50"
+                    >
+                      自行查詢 {selectedCvs.label} 門市
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field label="門市名稱" required hint="例如：後壁店">
