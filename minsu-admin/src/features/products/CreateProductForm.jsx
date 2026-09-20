@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import {
+  HiOutlineArrowDown,
+  HiOutlineArrowUp,
   HiOutlineArrowUpTray,
   HiOutlinePhoto,
   HiOutlinePlus,
@@ -231,6 +233,64 @@ const HelpText = styled.p`
   margin: 1rem 0 0;
 `;
 
+const DetailList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const DetailRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.8rem;
+  border: 1px solid var(--color-grey-100);
+  border-radius: var(--border-radius-md);
+  background: var(--color-grey-50);
+
+  img {
+    width: 18rem;
+    height: 7rem;
+    object-fit: cover;
+    border-radius: var(--border-radius-sm);
+    background: var(--color-grey-100);
+    flex-shrink: 0;
+  }
+
+  span {
+    flex: 1;
+    font-size: 1.3rem;
+    color: var(--color-grey-500);
+  }
+`;
+
+const IconBtn = styled.button`
+  width: 3.2rem;
+  height: 3.2rem;
+  flex-shrink: 0;
+  border: 1px solid var(--color-grey-200);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-grey-0);
+  color: var(--color-grey-600);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  svg {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-grey-100);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+`;
+
 const InlineAdder = styled.div`
   margin-top: 1.4rem;
   display: flex;
@@ -384,6 +444,14 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
   );
   const galleryInputRef = useRef(null);
 
+  // 商品描述圖：已排序的清單，file 為 null 代表是既有的圖
+  const [detailItems, setDetailItems] = useState(() =>
+    (Array.isArray(editValues.detail_images) ? editValues.detail_images : [])
+      .filter(Boolean)
+      .map((url) => ({ key: url, url, file: null }))
+  );
+  const detailInputRef = useRef(null);
+
   const { register, handleSubmit, watch, formState } = useForm({
     defaultValues: isEditSession
       ? editValues
@@ -459,6 +527,35 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
     setNewGalleryFiles((prev) => prev.filter((f) => f !== file));
   }
 
+  function handleDetailPick(e) {
+    const files = Array.from(e.target.files || []);
+    if (files.length) {
+      setDetailItems((prev) => [
+        ...prev,
+        ...files.map((file) => ({
+          key: `${Date.now()}-${Math.random()}-${file.name}`,
+          url: URL.createObjectURL(file),
+          file,
+        })),
+      ]);
+    }
+    if (detailInputRef.current) detailInputRef.current.value = "";
+  }
+
+  function removeDetailAt(index) {
+    setDetailItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function moveDetail(index, step) {
+    setDetailItems((prev) => {
+      const target = index + step;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
   function onSubmit(data) {
     const coverImage = coverFile || coverUrl || editValues.image;
     if (!coverImage) {
@@ -495,6 +592,7 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       image: coverImage,
       gallery_images: existingGalleryUrls,
       gallery_files: newGalleryFiles,
+      detail_items: detailItems.map((item) => item.file || item.url),
       features,
       notes,
       variants: cleanVariants,
@@ -505,6 +603,7 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       setCoverUrl("");
       setExistingGalleryUrls([]);
       setNewGalleryFiles([]);
+      setDetailItems([]);
       setFeatures([]);
       setNotes([]);
       setVariants([toFormVariant(null, 0)]);
@@ -933,6 +1032,66 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
 
             <HelpText>
               第一張為封面，會顯示在商品列表。支援 JPG、PNG 格式，單張不超過 5MB
+            </HelpText>
+          </Section>
+
+          {/* 商品描述圖 */}
+          <Section>
+            <h3>商品描述圖</h3>
+
+            {detailItems.length > 0 && (
+              <DetailList>
+                {detailItems.map((item, idx) => (
+                  <DetailRow key={item.key}>
+                    <img src={item.url} alt="" />
+                    <span>第 {idx + 1} 張</span>
+                    <IconBtn
+                      type="button"
+                      onClick={() => moveDetail(idx, -1)}
+                      disabled={idx === 0}
+                      aria-label="上移"
+                    >
+                      <HiOutlineArrowUp />
+                    </IconBtn>
+                    <IconBtn
+                      type="button"
+                      onClick={() => moveDetail(idx, 1)}
+                      disabled={idx === detailItems.length - 1}
+                      aria-label="下移"
+                    >
+                      <HiOutlineArrowDown />
+                    </IconBtn>
+                    <IconBtn
+                      type="button"
+                      onClick={() => removeDetailAt(idx)}
+                      aria-label="移除"
+                    >
+                      <HiOutlineXMark />
+                    </IconBtn>
+                  </DetailRow>
+                ))}
+              </DetailList>
+            )}
+
+            <HiddenFileInput
+              ref={detailInputRef}
+              accept="image/*"
+              multiple
+              onChange={handleDetailPick}
+            />
+
+            <Button
+              type="button"
+              variation="secondary"
+              onClick={() => detailInputRef.current?.click()}
+              style={{ marginTop: detailItems.length > 0 ? "1.2rem" : 0 }}
+            >
+              <HiOutlinePlus /> 上傳描述圖
+            </Button>
+
+            <HelpText>
+              會依上面的順序，滿版顯示在商品頁最下方，適合放品牌形象或成分說明長圖。
+              圖片建議寬度 1920px 以上，不上傳就不顯示這一區。
             </HelpText>
           </Section>
         </ScrollBody>

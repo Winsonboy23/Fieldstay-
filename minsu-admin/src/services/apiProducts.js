@@ -66,11 +66,28 @@ export async function createEditProduct(newProduct, id) {
     : [];
   const uploadedGallery = [];
   const uploadedNames = [];
+
+  // --- 商品描述圖 ---
+  // 後台傳來的是已排好序的陣列，字串＝既有網址、File＝這次新上傳，就地上傳以保留順序
+  const detailItems = Array.isArray(newProduct.detail_items)
+    ? newProduct.detail_items
+    : [];
+  const detailImages = [];
+
   try {
     for (const file of galleryFiles) {
       const { name, url } = await uploadOne(file);
       uploadedNames.push(name);
       uploadedGallery.push(url);
+    }
+    for (const item of detailItems) {
+      if (item instanceof File) {
+        const { name, url } = await uploadOne(item);
+        uploadedNames.push(name);
+        detailImages.push(url);
+      } else if (typeof item === "string" && item) {
+        detailImages.push(item);
+      }
     }
   } catch (err) {
     // Rollback any successful uploads from this call
@@ -94,6 +111,7 @@ export async function createEditProduct(newProduct, id) {
     sort_order: Number(newProduct.sort_order) || 0,
     image: imagePath,
     gallery_images: [...existingGalleryUrls, ...uploadedGallery],
+    detail_images: detailImages,
     features: Array.isArray(newProduct.features) ? newProduct.features : [],
     notes: Array.isArray(newProduct.notes) ? newProduct.notes : [],
     spec_content: newProduct.spec_content || null,

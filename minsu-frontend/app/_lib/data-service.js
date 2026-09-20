@@ -212,7 +212,7 @@ export async function getSettings() {
 // Products
 // 價格／庫存／重量在 product_variants，商品層只留共用資訊
 const PRODUCT_COLUMNS =
-  "id, name, subtitle, description, temperature, image, gallery_images, sort_order, features, notes, spec_content, spec_origin, spec_ingredients, spec_shelf_life, spec_storage, product_variants(id, name, price, discount, stock, weight_g, sort_order, is_active)";
+  "id, name, subtitle, description, temperature, image, gallery_images, detail_images, sort_order, features, notes, spec_content, spec_origin, spec_ingredients, spec_shelf_life, spec_storage, product_variants(id, name, price, discount, stock, weight_g, sort_order, is_active)";
 
 // 只留上架中的規格，並依 sort_order 排序
 function normalizeProduct(product) {

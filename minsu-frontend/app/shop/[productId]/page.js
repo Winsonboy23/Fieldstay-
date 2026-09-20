@@ -47,6 +47,10 @@ export default async function ProductPage({ params }) {
       [product.image, ...(Array.isArray(product.gallery_images) ? product.gallery_images : [])].filter(Boolean)
     ),
   ];
+  // 商品頁最下方的滿版描述圖，依後台排好的順序顯示
+  const detailImages = Array.isArray(product.detail_images)
+    ? product.detail_images.filter(Boolean)
+    : [];
   const features = Array.isArray(product.features) ? product.features.filter(Boolean) : [];
   const notes = Array.isArray(product.notes) ? product.notes.filter(Boolean) : [];
   const deliveryNote =
@@ -197,6 +201,20 @@ export default async function ProductPage({ params }) {
           </div>
         </div>
       </main>
+
+      {detailImages.length > 0 && (
+        <section className="w-full">
+          {detailImages.map((src, idx) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={src}
+              src={src}
+              alt={`${product.name} 商品說明 ${idx + 1}`}
+              className="block w-full"
+            />
+          ))}
+        </section>
+      )}
 
       <RecentlyViewed
         type="product"
