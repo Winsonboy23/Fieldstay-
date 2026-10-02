@@ -173,7 +173,8 @@ export async function createEditProduct(newProduct, id) {
 
   const { error: variantError } = await supabase
     .from("product_variants")
-    .upsert(variantRows);
+    // 新舊規格混在同一批時，新列沒有 id；不加這個會被補成 null 而違反 not-null
+    .upsert(variantRows, { defaultToNull: false });
 
   if (variantError) {
     console.error(variantError);
