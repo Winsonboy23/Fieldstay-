@@ -4,6 +4,7 @@ import {
   ClockIcon,
   MapPinIcon,
   UserGroupIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 import { getActivity } from "@/app/_lib/data-service";
 import { auth } from "@/app/_lib/auth";
@@ -12,6 +13,7 @@ import SiteHeader from "@/app/_components/SiteHeader";
 import BackToListLink from "@/app/_components/BackToListLink";
 import RecentlyViewed from "@/app/_components/RecentlyViewed";
 import ActivitySidebar from "./ActivitySidebar";
+import ActivityGallery from "./ActivityGallery";
 
 export async function generateMetadata({ params }) {
   const raw = await getActivity(params.activityId);
@@ -33,9 +35,9 @@ export default async function ActivityDetailPage({ params }) {
     ? activity.gallery_images
     : [];
   const coverImage = activity.image || galleryImages[0];
-  const subImages = galleryImages
-    .filter((url) => url && url !== coverImage)
-    .slice(0, 2);
+  const allImages = [coverImage, ...galleryImages].filter(
+    (url, idx, arr) => url && arr.indexOf(url) === idx
+  );
 
   return (
     <main className="min-h-screen bg-[#f5f3ef] text-[#111827]">
@@ -45,49 +47,11 @@ export default async function ActivityDetailPage({ params }) {
 
       <div className="mx-auto grid max-w-[1280px] gap-8 px-6 py-10 pb-28 lg:grid-cols-[1fr_390px] lg:pb-10">
         <section>
-          <div
-            className={`mb-7 grid h-[390px] grid-cols-1 gap-2 ${
-              subImages.length > 0 ? "md:grid-cols-[2fr_1fr]" : ""
-            }`}
-          >
-            <div
-              className="relative overflow-hidden rounded-2xl bg-[#0f4d3f]"
-              style={
-                coverImage
-                  ? {
-                      backgroundImage: `url(${coverImage})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }
-                  : undefined
-              }
-            >
-              {activity.category && (
-                <span className="absolute left-5 top-5 rounded-md bg-white px-3 py-1 text-xs font-bold text-[#007d6f]">
-                  {activity.category}
-                </span>
-              )}
-            </div>
-            {subImages.length > 0 && (
-              <div className="hidden flex-col gap-2 md:flex">
-                {[0, 1].map((idx) => (
-                  <div
-                    key={idx}
-                    className="relative flex-1 overflow-hidden rounded-2xl bg-[#0f4d3f]"
-                    style={
-                      subImages[idx]
-                        ? {
-                            backgroundImage: `url(${subImages[idx]})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                          }
-                        : undefined
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <ActivityGallery
+            images={allImages}
+            name={activity.title}
+            category={activity.category}
+          />
 
           <div className="mb-7 flex gap-4">
             <div className="w-16 shrink-0 text-center">
@@ -102,7 +66,7 @@ export default async function ActivityDetailPage({ params }) {
               <h1 className="mb-2 font-serif text-3xl font-black tracking-wide md:text-4xl">
                 {activity.title}
               </h1>
-              <p className="max-w-3xl text-lg leading-8 text-slate-600">
+              <p className="max-w-3xl whitespace-pre-line text-lg leading-8 text-slate-600">
                 {activity.summary}
               </p>
             </div>
@@ -157,13 +121,15 @@ export default async function ActivityDetailPage({ params }) {
                   <p className="text-sm text-slate-500">{activity.address}</p>
                 </div>
               </div>
-              <div className="flex gap-4">
-                <span className="mt-1 text-slate-500">♨</span>
-                <div>
-                  <p className="font-bold text-slate-900">活動講師</p>
-                  <p>{activity.instructor}</p>
+              {activity.instructor && (
+                <div className="flex gap-4">
+                  <UserIcon className="mt-1 h-5 w-5 text-slate-500" />
+                  <div>
+                    <p className="font-bold text-slate-900">活動講師</p>
+                    <p>{activity.instructor}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
 
