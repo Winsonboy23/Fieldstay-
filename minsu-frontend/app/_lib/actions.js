@@ -18,6 +18,7 @@ import {
 } from "./data-service";
 import { supabaseAdmin } from "./supabase-admin";
 import { sendMail } from "./mailer";
+import { suggestEmailFix } from "./emailTypos";
 import {
   activityCreatedEmail,
   bookingCancelledEmail,
@@ -239,6 +240,10 @@ export async function registerAction(formData) {
 
   if (!fullName || !email || !password) {
     redirect("/register?error=missing_fields");
+  }
+
+  if (suggestEmailFix(email)) {
+    redirect("/register?error=email_typo");
   }
 
   if (password.length < 8) {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { registerAction } from "@/app/_lib/actions";
+import EmailField from "./EmailField";
 
 export const metadata = { title: "註冊 | 山田寓所 FIELDSTAY" };
 
@@ -8,6 +9,7 @@ const errorMessages = {
   password_too_short: "密碼至少需要 8 碼。",
   password_mismatch: "兩次輸入的密碼不一致。",
   email_exists: "這個 Email 已經註冊過，請直接登入。",
+  email_typo: "Email 的網域看起來打錯了（例如 gmal.com），請再確認一次。",
   rate_limit: "已達 email 發送上限，請等一小時後再試。",
   register_failed: "註冊失敗，請稍後再試或聯絡管理員。",
 };
@@ -54,7 +56,7 @@ export default function Page({ searchParams }) {
       font-weight: 700;
     }
 
-    .register-card p {
+    .register-card > p {
       margin-bottom: 28px;
       color: oklch(50% 0.010 80);
       line-height: 1.7;
@@ -93,6 +95,24 @@ export default function Page({ searchParams }) {
     .register-field input:focus {
       border-color: oklch(44% 0.13 183);
       background: white;
+    }
+
+    .register-email-hint {
+      margin: 8px 0 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: oklch(45% 0.14 60);
+    }
+
+    .register-email-hint button {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: oklch(44% 0.13 183);
+      font: inherit;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
     }
 
     .register-submit {
@@ -137,10 +157,7 @@ export default function Page({ searchParams }) {
               <input id="fullName" name="fullName" type="text" required />
             </div>
 
-            <div className="register-field">
-              <label htmlFor="email">電子郵件</label>
-              <input id="email" name="email" type="email" required />
-            </div>
+            <EmailField />
 
             <div className="register-field">
               <label htmlFor="password">密碼</label>
