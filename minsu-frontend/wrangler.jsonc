@@ -17,6 +17,9 @@
     "AUTH_TRUST_HOST": "true",
     "NEXTAUTH_URL": "https://fieldstay-web.yongguang-web.workers.dev",
     "ADMIN_ORIGIN": "https://fieldstay-admin.yongguang-web.workers.dev",
-    "EMAIL_FROM": "FIELDSTAY <noreply@field-stay.com>"
+    "EMAIL_FROM": "FIELDSTAY 山田寓所 <noreply@field-stay.com>",
+    "SUPABASE_URL": "https://wnvqbozqsdvaszfgumkg.supabase.co",
+    "ECPAY_LOGISTICS_MAP_URL": "https://logistics.ecpay.com.tw/Express/map",
+    "ECPAY_LOGISTICS_MERCHANT_ID": "3514790"
   }
 }

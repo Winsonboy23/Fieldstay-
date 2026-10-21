@@ -3,7 +3,7 @@
 // 供應者依序挑第一個能用的：
 //   1. Cloudflare Email Service：部署在 Cloudflare Workers 時，wrangler.jsonc 的 `send_email` binding（EMAIL）。
 //      不需要 API key；寄件網域（field-stay.com）要先在儀表板 Email Service → Email Sending 完成驗證。
-//   2. Zeabur Email API：有 ZEABUR_EMAIL_API_KEY 時當備援（舊方案）。
+//   2. Zeabur Email API：沒有 binding、或 Cloudflare 寄送失敗時，有 ZEABUR_EMAIL_API_KEY 就改走 Zeabur（舊方案）。
 //   3. 都沒有：只印 log，不寄信（本機開發用）。
 //
 // sendMail 永遠不丟例外，失敗一律回 { ok: false, error }，不影響訂房／報名流程。
@@ -78,12 +78,18 @@ export async function sendMail({ to, subject, html, text }) {
 
   try {
     if (binding) {
-      // Email Service 一次一位收件人
-      let last = { ok: true, provider: "cloudflare" };
-      for (const rcpt of recipients) {
-        last = await sendViaCloudflare(binding, { ...message, to: rcpt });
+      try {
+        // Email Service 一次一位收件人
+        let last = { ok: true, provider: "cloudflare" };
+        for (const rcpt of recipients) {
+          last = await sendViaCloudflare(binding, { ...message, to: rcpt });
+        }
+        return last;
+      } catch (err) {
+        // 寄件網域尚未驗證（E_SENDER_NOT_VERIFIED）等情況：有 Zeabur key 就退回 Zeabur，否則往外丟
+        console.error("[mailer] cloudflare send error", err?.code || "", err?.message || err);
+        if (!zeaburKey) throw err;
       }
-      return last;
     }
     if (zeaburKey) {
       return await sendViaZeabur(zeaburKey, message);
