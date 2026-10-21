@@ -9,6 +9,9 @@
     "binding": "ASSETS"
   },
   "observability": { "enabled": true },
+  // Cloudflare Email Service 寄信 binding（app/_lib/mailer.js 用 getCloudflareContext().env.EMAIL）。
+  // 寄件網域 field-stay.com 需在儀表板 Email Service → Email Sending 完成驗證；寄給任意收件人需 Workers Paid。
+  "send_email": [{ "name": "EMAIL" }],
   // 非機密的設定放這裡；機密（Supabase key、NEXTAUTH_SECRET、NOTIFY_SECRET 等）用 `wrangler secret put`。
   "vars": {
     "AUTH_TRUST_HOST": "true",

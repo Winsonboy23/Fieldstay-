@@ -1,6 +1,7 @@
 import { Webhook } from "standardwebhooks";
+import { sendMail } from "@/app/_lib/mailer";
 
-// Supabase Send Email Hook → 由我們呼叫 Zeabur Email 寄出驗證信
+// Supabase Send Email Hook → 由我們透過 mailer（Cloudflare Email Service，備援 Zeabur）寄出驗證信
 // 設定方式：Supabase Dashboard → Authentication → Hooks → Send Email Hook
 //   URL: https://<your-domain>/api/auth/email-hook
 //   Secret: 啟用後 Supabase 會給你，貼進 SUPABASE_EMAIL_HOOK_SECRET
@@ -8,13 +9,11 @@ import { Webhook } from "standardwebhooks";
 export const dynamic = "force-dynamic";
 
 const HOOK_SECRET = process.env.SUPABASE_EMAIL_HOOK_SECRET;
-const ZEABUR_API_KEY = process.env.ZEABUR_EMAIL_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || "FIELDSTAY <noreply@field-stay.com>";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 
 export async function POST(req) {
-  if (!HOOK_SECRET || !ZEABUR_API_KEY) {
-    console.error("[email-hook] missing env: SUPABASE_EMAIL_HOOK_SECRET or ZEABUR_EMAIL_API_KEY");
+  if (!HOOK_SECRET) {
+    console.error("[email-hook] missing env: SUPABASE_EMAIL_HOOK_SECRET");
     return new Response(JSON.stringify({ error: "server_misconfigured" }), { status: 500 });
   }
 
@@ -45,24 +44,9 @@ export async function POST(req) {
     link: verifyUrl,
   });
 
-  const res = await fetch("https://api.zeabur.com/api/v1/zsend/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${ZEABUR_API_KEY}`,
-    },
-    body: JSON.stringify({
-      from: EMAIL_FROM,
-      to: [user.email],
-      subject,
-      html,
-      text,
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    console.error("[email-hook] Zeabur send failed", res.status, body);
+  const result = await sendMail({ to: user.email, subject, html, text });
+  if (!result.ok) {
+    console.error("[email-hook] send failed", result);
     return new Response(JSON.stringify({ error: "send_failed" }), { status: 500 });
   }
 
