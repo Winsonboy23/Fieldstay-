@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // 部署在 Cloudflare Workers，沒有 sharp 可做圖片最佳化，直接輸出原圖網址
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -31,3 +33,7 @@ const nextConfig = {
 };
 
 export default nextConfig;
+
+// 本機 next dev 時讓 getCloudflareContext() 可用（部署後由 OpenNext 提供）
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();

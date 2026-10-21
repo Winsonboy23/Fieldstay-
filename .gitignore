@@ -37,3 +37,10 @@ minsu-admin/supabase/.temp/
 
 # broken next caches
 minsu-frontend/.next.broken-*/
+
+# cloudflare
+.open-next/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example

@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fieldstay-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  // 非機密的設定放這裡；機密（Supabase key、NEXTAUTH_SECRET、NOTIFY_SECRET 等）用 `wrangler secret put`。
+  "vars": {
+    "AUTH_TRUST_HOST": "true",
+    "NEXTAUTH_URL": "https://fieldstay-web.yongguang-web.workers.dev",
+    "ADMIN_ORIGIN": "https://fieldstay-admin.yongguang-web.workers.dev",
+    "EMAIL_FROM": "FIELDSTAY <noreply@field-stay.com>"
+  }
+}
