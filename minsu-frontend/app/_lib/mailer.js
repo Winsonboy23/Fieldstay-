@@ -41,6 +41,7 @@ async function sendViaCloudflare(binding, { to, subject, html, text }) {
     text,
     html,
   });
+  console.info("[mailer] sent via cloudflare", { to, subject, messageId: result?.messageId });
   return { ok: true, provider: "cloudflare", messageId: result?.messageId };
 }
 
@@ -58,6 +59,7 @@ async function sendViaZeabur(apiKey, { to, subject, html, text }) {
     console.error("[mailer] zeabur send failed", res.status, body);
     return { ok: false, provider: "zeabur", error: "send_failed", status: res.status };
   }
+  console.info("[mailer] sent via zeabur", { to, subject });
   return { ok: true, provider: "zeabur" };
 }
 
