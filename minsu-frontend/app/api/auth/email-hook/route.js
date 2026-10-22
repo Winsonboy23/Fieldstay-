@@ -1,7 +1,7 @@
 import { Webhook } from "standardwebhooks";
 import { sendMail } from "@/app/_lib/mailer";
 
-// Supabase Send Email Hook → 由我們透過 mailer（Cloudflare Email Service，備援 Zeabur）寄出驗證信
+// Supabase Send Email Hook → 由我們透過 mailer（Cloudflare Email Service）寄出驗證信
 // 設定方式：Supabase Dashboard → Authentication → Hooks → Send Email Hook
 //   URL: https://<your-domain>/api/auth/email-hook
 //   Secret: 啟用後 Supabase 會給你，貼進 SUPABASE_EMAIL_HOOK_SECRET
