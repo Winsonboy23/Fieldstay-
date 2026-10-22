@@ -9,13 +9,20 @@
     "binding": "ASSETS"
   },
   "observability": { "enabled": true },
+  // 正式網域之外保留 workers.dev 網址（備援與測試用）
+  "workers_dev": true,
+  // 正式網域（field-stay.com 的 DNS 在同一個 Cloudflare 帳號，custom_domain 會自動建立 DNS 與憑證）
+  "routes": [
+    { "pattern": "field-stay.com", "custom_domain": true },
+    { "pattern": "www.field-stay.com", "custom_domain": true }
+  ],
   // Cloudflare Email Service 寄信 binding（app/_lib/mailer.js 用 getCloudflareContext().env.EMAIL）。
   // 寄件網域 field-stay.com 需在儀表板 Email Service → Email Sending 完成驗證；寄給任意收件人需 Workers Paid。
   "send_email": [{ "name": "EMAIL" }],
   // 非機密的設定放這裡；機密（Supabase key、NEXTAUTH_SECRET、NOTIFY_SECRET 等）用 `wrangler secret put`。
   "vars": {
     "AUTH_TRUST_HOST": "true",
-    "NEXTAUTH_URL": "https://fieldstay-web.yongguang-web.workers.dev",
+    "NEXTAUTH_URL": "https://field-stay.com",
     "ADMIN_ORIGIN": "https://fieldstay-admin.yongguang-web.workers.dev",
     "EMAIL_FROM": "FIELDSTAY 山田寓所 <noreply@field-stay.com>",
     "SUPABASE_URL": "https://wnvqbozqsdvaszfgumkg.supabase.co",
