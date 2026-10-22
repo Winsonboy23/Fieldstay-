@@ -24,6 +24,8 @@
     "AUTH_TRUST_HOST": "true",
     "NEXTAUTH_URL": "https://field-stay.com",
     "ADMIN_ORIGIN": "https://fieldstay-admin.yongguang-web.workers.dev",
+    // 店家通知信（新訂房／新報名／新訂單）收件信箱，逗號分隔多個
+    "NOTIFY_EMAIL": "fieldstay00@gmail.com",
     "EMAIL_FROM": "FIELDSTAY 山田寓所 <noreply@field-stay.com>",
     "SUPABASE_URL": "https://wnvqbozqsdvaszfgumkg.supabase.co",
     "ECPAY_LOGISTICS_MAP_URL": "https://logistics.ecpay.com.tw/Express/map",

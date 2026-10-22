@@ -6,7 +6,66 @@ import {
   getSettings,
 } from "@/app/_lib/data-service";
 import { sendMail } from "@/app/_lib/mailer";
-import { shopOrderCreatedEmail } from "@/app/_lib/emailTemplates";
+import {
+  formatPrice,
+  shopOrderCreatedEmail,
+} from "@/app/_lib/emailTemplates";
+import { notifyOwner } from "@/app/_lib/ownerNotify";
+
+const TEMP_LABEL = { normal: "常溫", chilled: "冷藏", frozen: "冷凍" };
+const CVS_LABEL = { UNIMART: "7-ELEVEN", FAMI: "全家" };
+
+// 店家通知信的摘要列
+function ownerShopRows(o) {
+  const items = Array.isArray(o.shop_order_items) ? o.shop_order_items : [];
+  const itemLines = items.map((item) => {
+    const name = item.variant_name
+      ? `${item.name}（${item.variant_name}）`
+      : item.name;
+    return `${name} × ${item.quantity}　${formatPrice(
+      Number(item.unit_price || 0) * Number(item.quantity || 0)
+    )}`;
+  });
+  const isCvs = o.delivery_type === "cvs";
+  return [
+    { label: "訂單編號", value: o.order_no },
+    { label: "聯絡人", value: o.contact_name },
+    { label: "聯絡 Email", value: o.contact_email },
+    { label: "電話", value: o.contact_phone },
+    { label: "品項", value: itemLines.join("\n") },
+    { label: "商品小計", value: o.items_total != null ? formatPrice(o.items_total) : "" },
+    {
+      label: "運費",
+      value:
+        o.shipping_fee == null
+          ? ""
+          : Number(o.shipping_fee) === 0
+          ? "免運"
+          : formatPrice(o.shipping_fee),
+    },
+    { label: "總金額", value: formatPrice(o.total_price) },
+    { label: "溫層", value: TEMP_LABEL[o.temperature] || "" },
+    ...(isCvs
+      ? [
+          {
+            label: "取貨方式",
+            value: `${CVS_LABEL[o.cvs_brand] || ""} 超商取貨`.trim(),
+          },
+          {
+            label: "取貨門市",
+            value: [o.cvs_store_name, o.cvs_store_id ? `（店號 ${o.cvs_store_id}）` : ""]
+              .filter(Boolean)
+              .join(""),
+          },
+          { label: "門市地址", value: o.cvs_store_address },
+        ]
+      : [
+          { label: "配送方式", value: "低溫宅配" },
+          { label: "收件地址", value: o.receiver_address },
+        ]),
+    { label: "備註", value: o.special_request },
+  ];
+}
 
 // RPC 丟出的錯誤碼 → 顧客看得懂的中文
 const ERROR_MESSAGES = {
@@ -99,12 +158,13 @@ export async function POST(request) {
     return NextResponse.json({ error: "訂單建立失敗，請稍後再試" }, { status: 500 });
   }
 
+  const [full, settings] = await Promise.all([
+    getShopOrderById(order.id).catch(() => null),
+    getSettings().catch(() => ({})),
+  ]);
+
   // 寄出「訂單成立，請完成匯款」通知信（失敗不擋訂單）
   try {
-    const [full, settings] = await Promise.all([
-      getShopOrderById(order.id),
-      getSettings().catch(() => ({})),
-    ]);
     const { subject, html } = shopOrderCreatedEmail({
       order: full || order,
       settings: settings || {},
@@ -113,6 +173,27 @@ export async function POST(request) {
     await sendMail({ to: contactEmail, subject, html });
   } catch (mailErr) {
     console.error("shop order confirmation mail failed", mailErr);
+  }
+
+  // 店家通知信（與客人信各自獨立，失敗不擋訂單）
+  try {
+    const o = full || order || {};
+    await notifyOwner({
+      kind: "shop",
+      title: `${o.contact_name || contactName} ${o.order_no || ""} ${formatPrice(
+        o.total_price
+      )}`.replace(/\s+/g, " "),
+      summaryRows: ownerShopRows({
+        contact_name: contactName,
+        contact_email: contactEmail,
+        contact_phone: contactPhone,
+        ...o,
+      }),
+      adminPath: `/bookings?type=shop&q=${encodeURIComponent(o.order_no || "")}`,
+      settings: settings || {},
+    });
+  } catch (notifyErr) {
+    console.error("shop order owner notify failed", notifyErr);
   }
 
   return NextResponse.json({

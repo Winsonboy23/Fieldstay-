@@ -3,12 +3,12 @@
 
 const BRAND_BLUE = "#3a7ea1";
 
-function formatPrice(n) {
+export function formatPrice(n) {
   const num = Number(n || 0);
   return `NT$ ${num.toLocaleString("zh-TW")}`;
 }
 
-function formatDate(d) {
+export function formatDate(d) {
   if (!d) return "";
   const date = new Date(d);
   if (Number.isNaN(date.getTime())) return String(d);
@@ -18,7 +18,25 @@ function formatDate(d) {
   return `${y}-${m}-${day}`;
 }
 
-function shell({ title, intro, body, ctaText, ctaLink, footer }) {
+// 主旨用的短日期：11/05
+export function formatShortDate(d) {
+  if (!d) return "";
+  const date = new Date(d);
+  if (Number.isNaN(date.getTime())) return String(d);
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${m}/${day}`;
+}
+
+function shell({
+  title,
+  intro,
+  body,
+  ctaText,
+  ctaLink,
+  footer,
+  eyebrow = "FIELDSTAY MEMBER",
+}) {
   return `<!DOCTYPE html>
 <html lang="zh-Hant">
   <body style="margin:0;padding:0;background:#f5f1ea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#231f1a;">
@@ -27,7 +45,7 @@ function shell({ title, intro, body, ctaText, ctaLink, footer }) {
         <td align="center">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fffdf9;border:1px solid #e5dccd;border-radius:18px;padding:40px;">
             <tr>
-              <td style="font-size:12px;letter-spacing:0.22em;color:${BRAND_BLUE};font-weight:700;padding-bottom:10px;">FIELDSTAY MEMBER</td>
+              <td style="font-size:12px;letter-spacing:0.22em;color:${BRAND_BLUE};font-weight:700;padding-bottom:10px;">${eyebrow}</td>
             </tr>
             <tr>
               <td style="font-family:Georgia,serif;font-size:26px;font-weight:700;padding:8px 0 16px;">${title}</td>
@@ -679,4 +697,83 @@ export function shopOrderCancelledEmail({ order, settings, siteUrl }) {
         : "如有任何問題，歡迎來信與我們聯繫。",
     }),
   };
+}
+
+// ============================================================
+// 4. 店家通知信（新訂房 / 新報名 / 新訂單）— 寄給 NOTIFY_EMAIL
+// ============================================================
+const OWNER_KIND = {
+  booking: {
+    tag: "新訂房",
+    heading: "收到一筆新訂房",
+    cardTitle: "訂房摘要",
+    note: "客人已收到訂房確認信與匯款資訊，目前等待客人匯款；收到款項後請到後台確認訂單。",
+  },
+  activity: {
+    tag: "新報名",
+    heading: "收到一筆活動報名",
+    cardTitle: "報名摘要",
+    note: "客人已收到報名確認信與匯款資訊，目前等待客人匯款；收到款項後請到後台確認報名。",
+  },
+  shop: {
+    tag: "新訂單",
+    heading: "收到一筆商店訂單",
+    cardTitle: "訂單摘要",
+    note: "客人已收到訂單確認信與匯款資訊，目前等待客人匯款；收到款項後請到後台確認並安排出貨。",
+  },
+};
+
+// summaryRows: [{ label, value }]，value 為純文字（會自動跳脫，換行轉 <br>）；空值列自動略過
+export function ownerNoticeEmail({
+  kind,
+  title,
+  summaryRows = [],
+  note,
+  adminUrl,
+  settings,
+}) {
+  const meta = OWNER_KIND[kind] || OWNER_KIND.booking;
+  const rows = (Array.isArray(summaryRows) ? summaryRows : []).filter(
+    (r) => r && r.value !== "" && r.value != null
+  );
+  const deadline = settings?.payment_deadline_hours;
+  const statusNote =
+    note ||
+    (deadline
+      ? `${meta.note}（匯款期限為成立後 ${deadline} 小時內）`
+      : meta.note);
+  const subject = `【山田寓所｜${meta.tag}】${title || ""}`.trim();
+
+  const card = infoCard({
+    title: meta.cardTitle,
+    rows: rows.map((r) => ({
+      label: escape(r.label),
+      value: escape(r.value).replace(/\n/g, "<br>"),
+    })),
+  });
+
+  const html = shell({
+    eyebrow: "FIELDSTAY 店家通知",
+    title: meta.heading,
+    intro: `<strong style="color:#231f1a;">${escape(title || "")}</strong>`,
+    body: card,
+    ctaText: adminUrl ? "到後台查看" : "",
+    ctaLink: adminUrl || "",
+    footer: `${escape(statusNote)}<br>此信由系統自動寄給店家，請勿直接回覆；如需聯絡客人，請使用上方的 Email 或電話。`,
+  });
+
+  const text = [
+    `【${meta.tag}】${title || ""}`,
+    "",
+    ...rows.map((r) => `${r.label}：${String(r.value)}`),
+    "",
+    adminUrl ? `到後台查看：${adminUrl}` : "",
+    statusNote,
+    "",
+    "— 山田寓所 FIELDSTAY",
+  ]
+    .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
+    .join("\n");
+
+  return { subject, html, text };
 }

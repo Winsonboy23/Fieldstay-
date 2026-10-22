@@ -22,8 +22,12 @@ import { suggestEmailFix } from "./emailTypos";
 import {
   activityCreatedEmail,
   bookingCancelledEmail,
+  formatDate,
+  formatPrice,
+  formatShortDate,
   shopOrderCancelledEmail,
 } from "./emailTemplates";
+import { notifyOwner } from "./ownerNotify";
 import { redirect } from "next/navigation";
 
 export async function UpdateGuest(formData) {
@@ -198,13 +202,16 @@ export async function createActivitySignupAction(activityId, formData) {
     throw err;
   }
 
+  const [activity, settings] = signup?.id
+    ? await Promise.all([
+        getActivity(activityId).catch(() => null),
+        getSettings().catch(() => ({})),
+      ])
+    : [null, {}];
+
   // 寄出「報名成功，請完成匯款」通知信（失敗不擋報名）
   if (signup?.id && contactEmail) {
     try {
-      const [activity, settings] = await Promise.all([
-        getActivity(activityId).catch(() => null),
-        getSettings().catch(() => ({})),
-      ]);
       const siteUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
       const { subject, html } = activityCreatedEmail({
         signup: {
@@ -220,6 +227,61 @@ export async function createActivitySignupAction(activityId, formData) {
       await sendMail({ to: contactEmail, subject, html });
     } catch (mailErr) {
       console.error("activity signup mail failed", mailErr);
+    }
+  }
+
+  // 店家通知信（與客人信各自獨立，失敗不擋報名）
+  if (signup?.id) {
+    try {
+      const qty = Math.max(1, quantity);
+      const price = Number(activity?.price || 0);
+      // 自訂欄位：依活動定義的順序逐項列；沒有定義時列出所有答案
+      const defs = Array.isArray(activity?.custom_fields)
+        ? activity.custom_fields
+        : [];
+      const customRows = defs.length
+        ? defs.map((f) => ({
+            label: f.label,
+            value: customFieldAnswers?.[f.label] || "—",
+          }))
+        : Object.entries(customFieldAnswers || {}).map(([label, value]) => ({
+            label,
+            value: String(value ?? ""),
+          }));
+      const time =
+        activity?.start_time && activity?.end_time
+          ? `${activity.start_time} – ${activity.end_time}`
+          : activity?.start_time || "";
+      // 與後台報名列表的編號格式一致（ActivitySignupTable 的 signupCode）
+      const signupCode = `AC${String(signup.id).replace(/\D/g, "").padStart(12, "0")}`;
+      await notifyOwner({
+        kind: "activity",
+        title: [
+          contactName,
+          activity?.title ? `「${activity.title}」` : "",
+          formatShortDate(activity?.activity_date),
+          `${qty}位`,
+        ]
+          .filter(Boolean)
+          .join(" "),
+        summaryRows: [
+          { label: "報名編號", value: `#${signup.id}（${signupCode}）` },
+          { label: "聯絡人", value: contactName },
+          { label: "聯絡 Email", value: contactEmail },
+          { label: "電話", value: contactPhone },
+          { label: "活動", value: activity?.title },
+          { label: "日期", value: formatDate(activity?.activity_date) },
+          { label: "時間", value: time },
+          { label: "人數", value: `${qty} 位` },
+          ...customRows,
+          { label: "金額", value: price > 0 ? formatPrice(price * qty) : "" },
+          { label: "備註", value: specialRequest },
+        ],
+        adminPath: `/bookings?type=activity&q=${signupCode}`,
+        settings: settings || {},
+      });
+    } catch (notifyErr) {
+      console.error("activity owner notify failed", notifyErr);
     }
   }
 

@@ -6,7 +6,13 @@ import {
   getSettings,
 } from "@/app/_lib/data-service";
 import { sendMail } from "@/app/_lib/mailer";
-import { bookingCreatedEmail } from "@/app/_lib/emailTemplates";
+import {
+  bookingCreatedEmail,
+  formatDate,
+  formatPrice,
+  formatShortDate,
+} from "@/app/_lib/emailTemplates";
+import { notifyOwner } from "@/app/_lib/ownerNotify";
 
 const CLEANING_FEE = 500;
 const SERVICE_RATE = 0.05;
@@ -83,10 +89,13 @@ export async function POST(request) {
       status: "unconfirmed",
     });
 
+    const settings = booking?.id
+      ? (await getSettings().catch(() => ({}))) || {}
+      : {};
+
     // 寄出「訂房成功，請完成匯款」通知信（失敗不擋訂單）
     if (booking?.id && contactEmail) {
       try {
-        const settings = await getSettings().catch(() => ({}));
         const siteUrl =
           process.env.NEXTAUTH_URL || "http://localhost:3000";
         const { subject, html } = bookingCreatedEmail({
@@ -100,12 +109,41 @@ export async function POST(request) {
           },
           room: targetRoom,
           contactName,
-          settings: settings || {},
+          settings,
           siteUrl,
         });
         await sendMail({ to: contactEmail, subject, html });
       } catch (mailErr) {
         console.error("booking confirmation mail failed", mailErr);
+      }
+    }
+
+    // 店家通知信（與客人信各自獨立，失敗不擋訂單）
+    if (booking?.id) {
+      try {
+        await notifyOwner({
+          kind: "booking",
+          title: `${contactName} ${formatShortDate(
+            payload.startDate
+          )}–${formatShortDate(payload.endDate)} ${numGuests}位`,
+          summaryRows: [
+            { label: "訂單編號", value: `#${booking.id}` },
+            { label: "聯絡人", value: contactName },
+            { label: "聯絡 Email", value: contactEmail },
+            { label: "電話", value: contactPhone },
+            { label: "房型", value: targetRoom?.name },
+            { label: "入住", value: formatDate(payload.startDate) },
+            { label: "退房", value: formatDate(payload.endDate) },
+            { label: "晚數", value: `${numNights} 晚` },
+            { label: "人數", value: `${numGuests} 位` },
+            { label: "總金額", value: formatPrice(totalPrice) },
+            { label: "備註", value: specialRequest },
+          ],
+          adminPath: `/bookings/${booking.id}`,
+          settings,
+        });
+      } catch (notifyErr) {
+        console.error("booking owner notify failed", notifyErr);
       }
     }
 
