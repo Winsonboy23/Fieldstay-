@@ -96,6 +96,7 @@ const Field = styled.label`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0; /* 讓 grid 欄位可以縮到比輸入框預設寬度更窄，避免整排溢出 */
   font-size: 1.3rem;
   color: var(--color-grey-700);
 
@@ -106,6 +107,9 @@ const Field = styled.label`
 `;
 
 const inputStyle = `
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 0.9rem 1.2rem;
   border: 1px solid var(--color-grey-200);
   border-radius: var(--border-radius-sm);
@@ -365,6 +369,15 @@ const VariantGrid = styled.div`
   grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr;
   gap: 0.8rem;
   min-width: 0;
+
+  /* 視窗較窄時改成兩排：規格名稱獨佔一排，其餘四欄一排 */
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(4, 1fr);
+
+    & > :first-child {
+      grid-column: 1 / -1;
+    }
+  }
 `;
 
 const RemoveVariantBtn = styled.button`
