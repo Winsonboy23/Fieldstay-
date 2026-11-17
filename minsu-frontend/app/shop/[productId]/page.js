@@ -7,8 +7,8 @@ import RecentlyViewed from "../../_components/RecentlyViewed";
 import { getProduct, getSettings } from "../../_lib/data-service";
 import {
   formatPrice,
-  getFreeShippingGap,
-  getShippingFee,
+  boxWeightG,
+  formatWeight,
   getTemperature,
   isProductSoldOut,
   priceRange,
@@ -39,8 +39,18 @@ export default async function ProductPage({ params }) {
   const soldOut = isProductSoldOut(product);
   const variants = variantsOf(product);
   const minPrice = priceRange(product).min;
-  const shippingFee = getShippingFee(product.temperature, 0, settings);
-  const freeGap = getFreeShippingGap(product.temperature, 0, settings);
+  // 運費說明：低溫只有宅配；常溫（含兩種都可以）可超商取貨或宅配
+  const isCold = temp.value === "cold";
+  const shipThreshold = Number(
+    isCold
+      ? settings?.free_ship_threshold_chilled
+      : settings?.free_ship_threshold_normal
+  );
+  const shippingText = isCold
+    ? `低溫宅配每箱 ${formatPrice(settings?.ship_fee_chilled_home)}`
+    : `超商取貨 ${formatPrice(settings?.ship_fee_normal)}／宅配每箱 ${formatPrice(
+        settings?.ship_fee_normal_home
+      )}`;
   // 封面＋附圖組成圖庫，去除空值與重複
   const galleryImages = [
     ...new Set(
@@ -53,12 +63,14 @@ export default async function ProductPage({ params }) {
     : [];
   const features = Array.isArray(product.features) ? product.features.filter(Boolean) : [];
   const notes = Array.isArray(product.notes) ? product.notes.filter(Boolean) : [];
-  const deliveryNote =
-    product.temperature === "chilled"
-      ? "冷藏商品以黑貓低溫宅配寄送，結帳時請填寫收件地址。"
-      : product.temperature === "frozen"
-      ? "冷凍商品以超商冷凍店到店寄送，結帳時請指定取貨門市。"
-      : "常溫商品以超商取貨寄送，結帳時可指定 7-11 或全家門市。";
+  const deliveryNote = isCold
+    ? "低溫商品以黑貓低溫宅配寄送，結帳時請填寫收件地址。"
+    : temp.value === "flex"
+    ? "此商品可常溫或低溫寄送，結帳時可自行選擇；常溫可選超商取貨或宅配。"
+    : "常溫商品可選超商取貨或宅配；總重超過超商限重時只能宅配。";
+  const boxNote = `宅配依總重分箱計費，每箱上限 ${formatWeight(
+    boxWeightG(settings)
+  )}。購物車內只要有需低溫配送的商品，整筆訂單會合併以低溫宅配寄出。`;
   const specRows = [
     ["內容量", product.spec_content],
     ["產地", product.spec_origin],
@@ -161,13 +173,13 @@ export default async function ProductPage({ params }) {
                 <dt className="text-primary-500">配送方式</dt>
                 <dd className="font-medium text-primary-900">{temp.delivery}</dd>
               </div>
-              <div className="flex justify-between py-3">
-                <dt className="text-primary-500">運費</dt>
-                <dd className="font-medium text-primary-900">
-                  {formatPrice(shippingFee)}
-                  {freeGap !== null && (
+              <div className="flex justify-between gap-6 py-3">
+                <dt className="flex-shrink-0 text-primary-500">運費</dt>
+                <dd className="text-right font-medium text-primary-900">
+                  {shippingText}
+                  {shipThreshold > 0 && (
                     <span className="ml-2 text-xs font-normal text-accent-600">
-                      滿 {formatPrice(freeGap)} 免運
+                      每滿 {formatPrice(shipThreshold)} 免一箱運費
                     </span>
                   )}
                 </dd>
@@ -185,7 +197,7 @@ export default async function ProductPage({ params }) {
             <div className="mt-6 rounded-lg bg-primary-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-primary-900">購買須知</h2>
               <ul className="mt-2 flex flex-col gap-1.5">
-                {[...notes, deliveryNote, "不同溫層的商品會分開成立訂單、分別計算運費。"].map(
+                {[...notes, deliveryNote, boxNote].map(
                   (note) => (
                     <li
                       key={note}

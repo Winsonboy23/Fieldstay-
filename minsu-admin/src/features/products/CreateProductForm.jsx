@@ -13,7 +13,11 @@ import {
 import Button from "../../ui/Button";
 import { useCreateProduct } from "./useCreateProduct";
 import { useEditProduct } from "./useEditProduct";
-import { TEMPERATURES, getTemperature } from "../../utils/productTemperature";
+import {
+  TEMPERATURES,
+  getTemperature,
+  normalizeProductTemp,
+} from "../../utils/productTemperature";
 
 const Wrapper = styled.div`
   width: min(820px, 92vw);
@@ -466,8 +470,9 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
   const detailInputRef = useRef(null);
 
   const { register, handleSubmit, watch, formState } = useForm({
+    // 舊商品的溫層可能還是 chilled / frozen，帶進表單時轉成現行的值
     defaultValues: isEditSession
-      ? editValues
+      ? { ...editValues, temperature: normalizeProductTemp(editValues.temperature) }
       : { temperature: "normal", discount: 0, sort_order: 0 },
   });
 
@@ -588,6 +593,11 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       alert("每組規格都要填售價（需大於 0）");
       return;
     }
+    // 運費依總重分箱計算，沒填重量會少算運費
+    if (cleanVariants.some((v) => !(Number(v.weight_g) > 0))) {
+      alert("每組規格都要填重量（克，需大於 0），運費會依重量計算");
+      return;
+    }
     if (cleanVariants.length > 1) {
       const names = cleanVariants.map((v) => v.name.trim());
       if (names.some((n) => !n)) {
@@ -701,20 +711,22 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
               <StyledSelect disabled={isWorking} {...register("temperature")}>
                 {TEMPERATURES.map((t) => (
                   <option key={t.value} value={t.value}>
-                    {t.label}
+                    {t.optionLabel}
                   </option>
                 ))}
               </StyledSelect>
             </Field>
 
             <DeliveryHint $color={selectedTemp.color}>
-              {selectedTemp.label}商品的配送方式為
+              此商品的配送方式為
               <strong>「{selectedTemp.delivery}」</strong>。
-              {selectedTemp.value === "chilled" &&
-                "超商沒有冷藏取貨服務，冷藏商品只能宅配。"}
-              {selectedTemp.value === "frozen" &&
-                "7-11 冷凍交貨便無法在門市自行寄件，因此冷凍商品僅開放全家取貨。"}
-              結帳時系統會依溫層分開計算運費，不同溫層無法合併成一張訂單。
+              {selectedTemp.value === "cold" &&
+                "只要購物車裡有這類商品，整筆訂單都會以低溫宅配寄出。"}
+              {selectedTemp.value === "flex" &&
+                "顧客結帳時可以自己選常溫或低溫；和必須低溫的商品一起買時會跟著走低溫。"}
+              {selectedTemp.value === "normal" &&
+                "和必須低溫的商品一起買時，會跟著整筆訂單以低溫宅配寄出。"}
+              所有商品合併成一張訂單，宅配運費依總重分箱計算。
             </DeliveryHint>
           </Section>
 
@@ -906,9 +918,9 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
                     />
                   </Field>
                   <Field>
-                    <span>重量 (克)</span>
+                    <span className="req">重量 (克)</span>
                     <NumberInput
-                      placeholder="選填"
+                      placeholder="必填"
                       value={variant.weight_g}
                       disabled={isWorking}
                       onChange={(e) => updateVariant(index, "weight_g", e.target.value)}
@@ -941,7 +953,7 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
             <HelpText>
               庫存留空代表不限量；設為 0 則該規格前台顯示「售完」。
               整個商品下架請用商品卡片上的開關。
-              重量用於超商包裹限制提醒（常溫 5kg、冷凍 10kg）。
+              重量請填含包裝的出貨重量，系統會用它判斷能不能超商取貨，並計算宅配要分幾箱。
             </HelpText>
           </Section>
 

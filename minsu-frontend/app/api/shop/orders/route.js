@@ -12,7 +12,7 @@ import {
 } from "@/app/_lib/emailTemplates";
 import { notifyOwner } from "@/app/_lib/ownerNotify";
 
-const TEMP_LABEL = { normal: "常溫", chilled: "冷藏", frozen: "冷凍" };
+const TEMP_LABEL = { normal: "常溫", cold: "低溫", chilled: "冷藏", frozen: "冷凍" };
 const CVS_LABEL = { UNIMART: "7-ELEVEN", FAMI: "全家" };
 
 // 店家通知信的摘要列
@@ -60,9 +60,19 @@ function ownerShopRows(o) {
           { label: "門市地址", value: o.cvs_store_address },
         ]
       : [
-          { label: "配送方式", value: "低溫宅配" },
+          {
+            label: "配送方式",
+            value: o.temperature && o.temperature !== "normal" ? "低溫宅配" : "宅配",
+          },
           { label: "收件地址", value: o.receiver_address },
         ]),
+    {
+      label: "總重／箱數",
+      value:
+        o.box_count != null
+          ? `${Number((Number(o.total_weight_g || 0) / 1000).toFixed(2))} kg／${o.box_count} 箱`
+          : "",
+    },
     { label: "備註", value: o.special_request },
   ];
 }
@@ -74,13 +84,13 @@ const ERROR_MESSAGES = {
   QUANTITY_INVALID: "商品數量不正確",
   PRODUCT_NOT_FOUND: "購物車中有商品規格已不存在，請重新整理後再試",
   PRODUCT_INACTIVE: "購物車中有商品已下架，請移除後再結帳",
-  TEMP_MISMATCH: "同一張訂單只能包含相同溫層的商品",
-  TEMP_INVALID: "商品溫層資料有誤",
   OUT_OF_STOCK: "商品庫存不足，請調整數量後再試",
-  DELIVERY_MISMATCH: "此溫層不支援所選的配送方式",
+  DELIVERY_INVALID: "請選擇配送方式",
+  COLD_REQUIRES_HOME: "購物車內有需低溫配送的商品，這筆訂單只能低溫宅配",
+  COLD_NOT_AVAILABLE: "購物車內的商品無法以低溫配送，請改選其他配送方式",
+  CVS_OVERWEIGHT: "總重已超過所選超商的取貨上限，請改選其他超商或宅配",
   CVS_BRAND_INVALID: "請選擇取貨超商",
   CVS_STORE_REQUIRED: "請填寫取貨門市名稱與店號",
-  FROZEN_CVS_UNSUPPORTED: "冷凍商品目前僅開放全家取貨",
   ADDRESS_REQUIRED: "請填寫收件地址",
 };
 
@@ -103,8 +113,7 @@ export async function POST(request) {
   const contactName = String(payload.contactName || "").trim();
   const contactEmail = String(payload.contactEmail || "").trim();
   const contactPhone = String(payload.contactPhone || "").trim();
-  const temperature = String(payload.temperature || "").trim();
-  const deliveryType = temperature === "chilled" ? "home" : "cvs";
+  const deliveryType = payload.deliveryType === "cvs" ? "cvs" : "home";
 
   if (!contactName || !contactEmail || !contactPhone) {
     return NextResponse.json(
@@ -133,8 +142,8 @@ export async function POST(request) {
       contactName,
       contactEmail,
       contactPhone,
-      temperature,
       deliveryType,
+      preferCold: payload.preferCold === true,
       items,
       cvsBrand: payload.cvsBrand ? String(payload.cvsBrand).trim() : null,
       cvsStoreId: payload.cvsStoreId ? String(payload.cvsStoreId).trim() : null,

@@ -167,6 +167,11 @@ const LogoPreview = styled.div`
   }
 `;
 
+function gramsToKg(grams, fallbackKg) {
+  const g = Number(grams);
+  return g > 0 ? Number((g / 1000).toFixed(2)) : fallbackKg;
+}
+
 function UpdateSettingsForm() {
   const { isLoading, settings = {} } = useSettings();
   const { isUpdating, updateSetting } = useUpdateSetting();
@@ -191,6 +196,15 @@ function UpdateSettingsForm() {
     const value = Number(e.target.value) || 0;
     if (value === (settings[field] ?? 0)) return;
     updateSetting({ [field]: value });
+  }
+
+  // 重量設定：畫面用公斤，資料庫存公克；填 0 或空白就退回預設值
+  function handleKgBlur(e, field, fallbackKg) {
+    const kg = Number(e.target.value);
+    const grams = Math.round((kg > 0 ? kg : fallbackKg) * 1000);
+    if (!(kg > 0)) e.target.value = fallbackKg;
+    if (grams === (settings[field] ?? fallbackKg * 1000)) return;
+    updateSetting({ [field]: grams });
   }
 
   // 免運門檻留空 = 該溫層不提供免運
@@ -471,12 +485,14 @@ function UpdateSettingsForm() {
       <Section>
         <h3>商城運費</h3>
         <p className="hint">
-          結帳時依商品溫層分別計算運費。金額請依門市櫃檯實際牌價自行調整；
-          修改後只影響新訂單，已成立的訂單維持當時計算的運費。
+          所有商品合併成一張訂單。購物車只要有一件必須低溫的商品，整筆就走低溫宅配。
+          宅配依總重分箱：箱數 = 總重 ÷ 每箱重量上限（無條件進位），每滿一次免運門檻就免一箱運費。
+          例：每箱 20 公斤、門檻 2000 元時，22 公斤買 2000 元收 1 箱運費，買 4000 元全免。
+          修改後只影響新訂單。
         </p>
         <FieldGrid cols="1fr 1fr">
           <Field>
-            <span>常溫・超商取貨（元 / 件）</span>
+            <span>常溫・超商取貨運費（元 / 件）</span>
             <TextInput
               type="number"
               min="0"
@@ -487,40 +503,30 @@ function UpdateSettingsForm() {
             />
           </Field>
           <Field>
-            <span>常溫・滿額免運（元，留空=不免運）</span>
+            <span>常溫・宅配運費（元 / 箱）</span>
             <TextInput
               type="number"
               min="0"
-              placeholder="例：1200"
+              placeholder="150"
+              defaultValue={settings.ship_fee_normal_home ?? 150}
+              disabled={disabled}
+              onBlur={(e) => handleFeeBlur(e, "ship_fee_normal_home")}
+            />
+          </Field>
+          <Field>
+            <span>常溫・免運門檻（元，留空=不免運）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="例：2000"
               defaultValue={settings.free_ship_threshold_normal ?? ""}
               disabled={disabled}
               onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_normal")}
             />
           </Field>
+          <span />
           <Field>
-            <span>冷凍・全家取貨（元 / 件）</span>
-            <TextInput
-              type="number"
-              min="0"
-              placeholder="190"
-              defaultValue={settings.ship_fee_frozen_fami ?? 190}
-              disabled={disabled}
-              onBlur={(e) => handleFeeBlur(e, "ship_fee_frozen_fami")}
-            />
-          </Field>
-          <Field>
-            <span>冷凍・滿額免運（元，留空=不免運）</span>
-            <TextInput
-              type="number"
-              min="0"
-              placeholder="例：2000"
-              defaultValue={settings.free_ship_threshold_frozen ?? ""}
-              disabled={disabled}
-              onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_frozen")}
-            />
-          </Field>
-          <Field>
-            <span>冷藏・黑貓低溫宅配（元 / 件）</span>
+            <span>低溫・黑貓宅配運費（元 / 箱）</span>
             <TextInput
               type="number"
               min="0"
@@ -531,7 +537,7 @@ function UpdateSettingsForm() {
             />
           </Field>
           <Field>
-            <span>冷藏・滿額免運（元，留空=不免運）</span>
+            <span>低溫・免運門檻（元，留空=不免運）</span>
             <TextInput
               type="number"
               min="0"
@@ -541,22 +547,49 @@ function UpdateSettingsForm() {
               onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_chilled")}
             />
           </Field>
+        </FieldGrid>
+
+        <p className="hint" style={{ marginTop: "2rem" }}>
+          重量限制（公斤）。超商限重請依門市實際規定填寫；超過限重的訂單，結帳時就不能選那家超商。
+        </p>
+        <FieldGrid cols="1fr 1fr 1fr">
           <Field>
-            <span>冷凍・7-11 取貨（元 / 件）</span>
+            <span>宅配每箱重量上限</span>
             <TextInput
               type="number"
-              min="0"
-              placeholder="150"
-              defaultValue={settings.ship_fee_frozen_unimart ?? 150}
+              min="1"
+              step="0.1"
+              placeholder="20"
+              defaultValue={gramsToKg(settings.ship_box_weight_g, 20)}
               disabled={disabled}
-              onBlur={(e) => handleFeeBlur(e, "ship_fee_frozen_unimart")}
+              onBlur={(e) => handleKgBlur(e, "ship_box_weight_g", 20)}
+            />
+          </Field>
+          <Field>
+            <span>7-ELEVEN 取貨限重</span>
+            <TextInput
+              type="number"
+              min="1"
+              step="0.1"
+              placeholder="10"
+              defaultValue={gramsToKg(settings.cvs_weight_limit_unimart_g, 10)}
+              disabled={disabled}
+              onBlur={(e) => handleKgBlur(e, "cvs_weight_limit_unimart_g", 10)}
+            />
+          </Field>
+          <Field>
+            <span>全家取貨限重</span>
+            <TextInput
+              type="number"
+              min="1"
+              step="0.1"
+              placeholder="5"
+              defaultValue={gramsToKg(settings.cvs_weight_limit_fami_g, 5)}
+              disabled={disabled}
+              onBlur={(e) => handleKgBlur(e, "cvs_weight_limit_fami_g", 5)}
             />
           </Field>
         </FieldGrid>
-        <p className="hint" style={{ marginTop: "0.8rem" }}>
-          冷藏商品無法超商取貨（超商只有常溫與冷凍溫層），一律走宅配。
-          冷凍目前僅開放全家取貨，7-11 冷凍運費欄位保留供日後開放使用。
-        </p>
       </Section>
 
       {/* 入住通用資訊 */}

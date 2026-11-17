@@ -285,13 +285,14 @@ export async function getProduct(id) {
 
 // Shop orders
 export async function createShopOrder(payload) {
-  const { data, error } = await supabaseAdmin.rpc("create_shop_order", {
+  // 溫層由 RPC 依購物車內容判定；preferCold 是顧客自選低溫（購物車需有可低溫的商品）
+  const { data, error } = await supabaseAdmin.rpc("create_shop_order_v2", {
     p_guest_id: payload.guestId ?? null,
     p_contact_name: payload.contactName,
     p_contact_email: payload.contactEmail,
     p_contact_phone: payload.contactPhone,
-    p_temperature: payload.temperature,
     p_delivery_type: payload.deliveryType,
+    p_prefer_cold: payload.preferCold === true,
     p_items: payload.items,
     p_cvs_brand: payload.cvsBrand ?? null,
     p_cvs_store_id: payload.cvsStoreId ?? null,

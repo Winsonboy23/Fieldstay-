@@ -244,6 +244,12 @@ function ProductCard({ product }) {
               <span>配送方式</span>
               <strong>{temp.delivery}</strong>
             </StatRow>
+            {variants.some((v) => !(Number(v.weight_g) > 0)) && (
+              <StatRow>
+                <span>重量</span>
+                <strong className="sold-out">未填，運費會少算</strong>
+              </StatRow>
+            )}
           </div>
 
           <StatusRow>

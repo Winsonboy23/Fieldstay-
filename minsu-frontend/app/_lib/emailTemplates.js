@@ -509,8 +509,13 @@ export function activityPaidEmail({
 // ============================================================
 // 商品訂單共用區塊
 // ============================================================
-const TEMP_LABEL = { normal: "常溫", chilled: "冷藏", frozen: "冷凍" };
+// cold 是現行的低溫；chilled / frozen 是改版前的舊訂單
+const TEMP_LABEL = { normal: "常溫", cold: "低溫", chilled: "冷藏", frozen: "冷凍" };
 const CVS_LABEL = { UNIMART: "7-ELEVEN", FAMI: "全家" };
+
+function homeDeliveryLabel(order) {
+  return order?.temperature && order.temperature !== "normal" ? "低溫宅配" : "宅配";
+}
 
 function shopItemsCard(order) {
   const items = Array.isArray(order?.shop_order_items) ? order.shop_order_items : [];
@@ -546,7 +551,10 @@ function shopDeliveryCard(order) {
           { label: "門市地址", value: escape(order.cvs_store_address || "") },
         ]
       : [
-          { label: "配送方式", value: "低溫宅配" },
+          { label: "配送方式", value: homeDeliveryLabel(order) },
+          ...(Number(order.box_count) > 1
+            ? [{ label: "包裹箱數", value: `${order.box_count} 箱` }]
+            : []),
           { label: "收件地址", value: escape(order.receiver_address) },
         ];
 

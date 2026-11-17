@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/app/_lib/auth";
 import { getShopOrdersByGuestId } from "@/app/_lib/data-service";
 import { StatusBadge } from "@/app/_components/ShopOrderDetail";
-import { formatPrice, getTemperature } from "@/app/_lib/product-utils";
+import { formatPrice, getOrderTemperature } from "@/app/_lib/product-utils";
 
 export const revalidate = 0;
 
@@ -42,7 +42,7 @@ export default async function ShopOrdersPage() {
       ) : (
         <ul className="flex flex-col gap-4">
           {orders.map((order) => {
-            const temp = getTemperature(order.temperature);
+            const temp = getOrderTemperature(order.temperature);
             const items = Array.isArray(order.shop_order_items)
               ? order.shop_order_items
               : [];

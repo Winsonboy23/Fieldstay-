@@ -15,7 +15,10 @@ import Modal from "../../ui/Modal";
 import ConfirmDelete from "../../ui/ConfirmDelete";
 import { formatCurrency } from "../../utils/helpers";
 import { openAdminOrderView } from "../../services/apiAdminView";
-import { getTemperature } from "../../utils/productTemperature";
+import {
+  getOrderTemperature,
+  homeDeliveryLabel,
+} from "../../utils/productTemperature";
 import { useUpdateShopOrder, useDeleteShopOrder } from "./useShopOrders";
 import {
   notifyShopCancelled,
@@ -137,7 +140,7 @@ function ShopOrderRow({ order }) {
   const { deleteOrder, isDeleting } = useDeleteShopOrder();
 
   const badge = shopStatusBadge(order);
-  const temp = getTemperature(order.temperature);
+  const temp = getOrderTemperature(order.temperature);
   const isCvs = order.delivery_type === "cvs";
   const isCancelled = order.status === "cancelled";
   const isPending = order.status === "pending";
@@ -216,7 +219,7 @@ function ShopOrderRow({ order }) {
           <TempTag $color={temp.color}>{temp.label}</TempTag>
           {isCvs
             ? `${CVS_LABEL[order.cvs_brand] || ""} ${order.cvs_store_name || ""}（${order.cvs_store_id || ""}）`
-            : "低溫宅配"}
+            : homeDeliveryLabel(order)}
         </span>
       </Stacked>
 

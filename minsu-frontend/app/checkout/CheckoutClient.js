@@ -6,24 +6,25 @@ import { useEffect, useState } from "react";
 
 import { useCart } from "../_components/CartContext";
 import {
-  TEMPERATURE_ORDER,
+  CVS_BRANDS,
+  availableCvsBrands,
+  boxWeightG,
+  canChooseCold,
+  cvsWeightLimitG,
   formatPrice,
-  getFreeShippingGap,
-  getShippingFee,
-  getTemperature,
+  formatWeight,
+  getShippingQuote,
   isSoldOut,
+  orderTemperatureOf,
+  totalWeightG,
   unitPrice,
 } from "../_lib/product-utils";
 
-// 常溫可選兩家；冷凍在 v1 只能寄全家（7-11 冷凍無法在門市自行寄件）
-const CVS_OPTIONS = {
-  normal: [
-    { value: "UNIMART", label: "7-ELEVEN", url: "https://emap.pcsc.com.tw/" },
-    { value: "FAMI", label: "全家", url: "https://www.family.com.tw/Marketing/inquiry/inquiry_store.aspx" },
-  ],
-  frozen: [
-    { value: "FAMI", label: "全家", url: "https://www.family.com.tw/Marketing/inquiry/inquiry_store.aspx" },
-  ],
+// 配送方式：cvs 超商取貨／home 常溫宅配／home-cold 低溫宅配
+const METHOD_LABEL = {
+  cvs: "超商取貨",
+  home: "宅配",
+  "home-cold": "低溫宅配",
 };
 
 // 去綠界地圖選店前把表單暫存起來，回來時再還原
@@ -49,7 +50,8 @@ export default function CheckoutClient({ products, settings, guest }) {
   const router = useRouter();
   const { items, isLoaded, removeItem, setQty } = useCart();
 
-  const [temperature, setTemperature] = useState(null);
+  // 顧客選的配送方式；null = 還沒選，用系統預設
+  const [method, setMethod] = useState(null);
   const [form, setForm] = useState({
     contactName: guest?.fullName || "",
     contactEmail: guest?.email || "",
@@ -81,7 +83,7 @@ export default function CheckoutClient({ products, settings, guest }) {
     } catch {
       draft = null;
     }
-    if (draft?.temperature) setTemperature(draft.temperature);
+    if (draft?.method) setMethod(draft.method);
     setForm((prev) => ({
       ...prev,
       ...(draft?.form || {}),
@@ -116,29 +118,46 @@ export default function CheckoutClient({ products, settings, guest }) {
     })
     .filter(Boolean);
 
-  const groups = TEMPERATURE_ORDER.map((value) => {
-    const lines = validLines.filter((line) => line.product.temperature === value);
-    const itemsTotal = lines.reduce(
-      (sum, line) => sum + unitPrice(line.variant) * line.qty,
-      0
-    );
-    return {
-      temp: getTemperature(value),
-      lines,
-      itemsTotal,
-      shippingFee: getShippingFee(value, itemsTotal, settings),
-      freeGap: getFreeShippingGap(value, itemsTotal, settings),
-      hasProblem: lines.some(
-        (line) =>
-          isSoldOut(line.variant) ||
-          (line.variant.stock !== null &&
-            line.variant.stock !== undefined &&
-            line.qty > line.variant.stock)
-      ),
-    };
-  }).filter((group) => group.lines.length > 0);
+  // 整個購物車合併成一張訂單
+  const lines = validLines;
+  const itemsTotal = lines.reduce(
+    (sum, line) => sum + unitPrice(line.variant) * line.qty,
+    0
+  );
+  const weightG = totalWeightG(lines);
+  const hasProblem = lines.some(
+    (line) =>
+      isSoldOut(line.variant) ||
+      (line.variant.stock !== null &&
+        line.variant.stock !== undefined &&
+        line.qty > line.variant.stock)
+  );
 
-  if (groups.length === 0) {
+  // 只要有一件必須低溫，整筆就只能低溫宅配
+  const forcedCold = orderTemperatureOf(lines) === "cold";
+  const coldOptional = canChooseCold(lines);
+  const cvsBrands = availableCvsBrands(forcedCold ? "cold" : "normal", weightG, settings);
+  const methods = forcedCold
+    ? ["home-cold"]
+    : [
+        ...(cvsBrands.length > 0 ? ["cvs"] : []),
+        "home",
+        ...(coldOptional ? ["home-cold"] : []),
+      ];
+  // 之前選的方式若已不能用（例如加購後超重），退回第一個可用的
+  const activeMethod = methods.includes(method) ? method : methods[0];
+  const isCvs = activeMethod === "cvs";
+  const temperature = activeMethod === "home-cold" ? "cold" : "normal";
+  const quote = getShippingQuote({
+    temperature,
+    deliveryType: isCvs ? "cvs" : "home",
+    itemsTotal,
+    weightG,
+    settings,
+  });
+  const cvsOverweight = !forcedCold && cvsBrands.length === 0;
+
+  if (lines.length === 0) {
     // 購物車有東西但都已失效（商品被刪或下架）
     const hasUnavailable = items.length > 0;
     return (
@@ -161,18 +180,14 @@ export default function CheckoutClient({ products, settings, guest }) {
     );
   }
 
-  // 尚未選溫層時預設選第一組
-  const active = groups.find((g) => g.temp.value === temperature) || groups[0];
-  const isCvs = active.temp.value !== "chilled";
-  const cvsOptions = CVS_OPTIONS[active.temp.value] || [];
-  const selectedCvs = cvsOptions.find((o) => o.value === form.cvsBrand);
+  const selectedCvs = cvsBrands.find((o) => o.value === form.cvsBrand);
 
   // 綠界電子地圖要在同一個分頁開（iOS 不能開新視窗），所以先暫存表單再整頁跳轉
   function openCvsMap() {
     try {
       window.sessionStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ temperature: active.temp.value, form })
+        JSON.stringify({ method: activeMethod, form })
       );
     } catch {
       // 暫存失敗就只帶門市回來，其他欄位請顧客再填
@@ -184,11 +199,11 @@ export default function CheckoutClient({ products, settings, guest }) {
     e.preventDefault();
     setError("");
 
-    if (active.hasProblem) {
-      setError("此溫層中有商品已售完或超過庫存，請回購物車調整後再結帳");
+    if (hasProblem) {
+      setError("購物車中有商品已售完或超過庫存，請調整後再結帳");
       return;
     }
-    if (isCvs && !form.cvsBrand) {
+    if (isCvs && !selectedCvs) {
       setError("請選擇取貨超商");
       return;
     }
@@ -214,8 +229,9 @@ export default function CheckoutClient({ products, settings, guest }) {
           contactName: form.contactName,
           contactEmail: form.contactEmail,
           contactPhone: form.contactPhone,
-          temperature: active.temp.value,
-          items: active.lines.map((line) => ({
+          deliveryType: isCvs ? "cvs" : "home",
+          preferCold: activeMethod === "home-cold" && !forcedCold,
+          items: lines.map((line) => ({
             variantId: line.variant.id,
             quantity: line.qty,
           })),
@@ -235,8 +251,8 @@ export default function CheckoutClient({ products, settings, guest }) {
         return;
       }
 
-      // 下單成功才把這組商品移出購物車
-      active.lines.forEach((line) => removeItem(line.variant.id));
+      // 下單成功才把商品移出購物車
+      lines.forEach((line) => removeItem(line.variant.id));
       router.push(
         `/shop/thankyou?orderId=${data.orderId}${
           data.token ? `&token=${data.token}` : ""
@@ -251,42 +267,6 @@ export default function CheckoutClient({ products, settings, guest }) {
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        {/* 溫層選擇 */}
-        {groups.length > 1 && (
-          <section className="rounded-xl border border-primary-200 bg-primary-50 p-5">
-            <h2 className="font-serif text-base font-semibold text-primary-900">
-              選擇本次要結帳的溫層
-            </h2>
-            <p className="mt-1 text-xs text-primary-500">
-              不同溫層需分開寄送，因此要分開結帳。結完這一組後，購物車會保留其他溫層供您接著下單。
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {groups.map((group) => {
-                const on = group.temp.value === active.temp.value;
-                return (
-                  <button
-                    key={group.temp.value}
-                    type="button"
-                    onClick={() => {
-                      setTemperature(group.temp.value);
-                      update("cvsBrand", "");
-                      setError("");
-                    }}
-                    className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
-                      on
-                        ? "border-transparent text-white"
-                        : "border-primary-200 text-primary-700 hover:border-primary-400"
-                    }`}
-                    style={on ? { background: group.temp.color } : undefined}
-                  >
-                    {group.temp.label}（{group.lines.length} 項）
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
         {/* 收件人 */}
         <section className="rounded-xl border border-primary-200 bg-primary-50 p-5">
           <h2 className="font-serif text-base font-semibold text-primary-900">
@@ -329,37 +309,79 @@ export default function CheckoutClient({ products, settings, guest }) {
             配送方式
           </h2>
 
-          {isCvs ? (
+          {forcedCold ? (
+            <p className="mt-1 text-xs leading-relaxed text-primary-500">
+              購物車內有需低溫配送的商品，整筆訂單會一起以黑貓低溫宅配寄出。
+            </p>
+          ) : (
             <>
-              <p className="mt-1 text-xs text-primary-500">
-                {active.temp.label}商品以超商取貨寄送。可直接在地圖上選門市，或自行查詢後填入門市名稱與店號。
-              </p>
-
               <div className="mt-4 flex flex-wrap gap-2">
-                {cvsOptions.map((option) => {
-                  const on = form.cvsBrand === option.value;
+                {methods.map((value) => {
+                  const on = value === activeMethod;
                   return (
                     <button
-                      key={option.value}
+                      key={value}
                       type="button"
-                      onClick={() => update("cvsBrand", option.value)}
+                      onClick={() => {
+                        setMethod(value);
+                        setError("");
+                      }}
                       className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition ${
                         on
                           ? "border-accent-500 bg-accent-50 text-accent-700"
                           : "border-primary-200 text-primary-700 hover:border-primary-400"
                       }`}
                     >
-                      {option.label}
+                      {METHOD_LABEL[value]}
                     </button>
                   );
                 })}
               </div>
-
-              {active.temp.value === "frozen" && (
-                <p className="mt-3 text-xs text-primary-500">
-                  冷凍商品需以冷凍店到店寄送，目前僅開放全家取貨。
+              {cvsOverweight && (
+                <p className="mt-3 text-xs text-clay-500">
+                  總重 {formatWeight(weightG)} 已超過超商取貨的重量上限，這筆訂單只能宅配。
                 </p>
               )}
+            </>
+          )}
+
+          {isCvs ? (
+            <>
+              <p className="mt-4 text-xs text-primary-500">
+                可直接在地圖上選門市，或自行查詢後填入門市名稱與店號。
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {CVS_BRANDS.map((option) => {
+                  const on = form.cvsBrand === option.value;
+                  const allowed = cvsBrands.some((b) => b.value === option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      disabled={!allowed}
+                      onClick={() => update("cvsBrand", option.value)}
+                      title={
+                        allowed
+                          ? undefined
+                          : `超過 ${option.label} 取貨上限 ${formatWeight(
+                              cvsWeightLimitG(option.value, settings)
+                            )}`
+                      }
+                      className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition ${
+                        !allowed
+                          ? "cursor-not-allowed border-primary-200 text-primary-300"
+                          : on
+                          ? "border-accent-500 bg-accent-50 text-accent-700"
+                          : "border-primary-200 text-primary-700 hover:border-primary-400"
+                      }`}
+                    >
+                      {option.label}
+                      {!allowed && "（超重）"}
+                    </button>
+                  );
+                })}
+              </div>
 
               {selectedCvs && (
                 <div className="mt-4 flex flex-col gap-4">
@@ -415,8 +437,10 @@ export default function CheckoutClient({ products, settings, guest }) {
             </>
           ) : (
             <>
-              <p className="mt-1 text-xs text-primary-500">
-                冷藏商品以低溫宅配寄送，請填寫完整收件地址。
+              <p className="mt-4 text-xs text-primary-500">
+                {activeMethod === "home-cold"
+                  ? "以黑貓低溫宅配寄送，請填寫完整收件地址。"
+                  : "以宅配寄送，請填寫完整收件地址。"}
               </p>
               <div className="mt-4">
                 <Field label="收件地址" required hint="請包含縣市、鄉鎮區與詳細地址">
@@ -466,11 +490,11 @@ export default function CheckoutClient({ products, settings, guest }) {
       {/* 訂單摘要 */}
       <aside className="h-fit rounded-xl border border-primary-200 bg-primary-50 p-6 lg:sticky lg:top-24">
         <h2 className="font-serif text-lg font-semibold text-primary-900">
-          {active.temp.label}訂單
+          訂單摘要
         </h2>
 
         <ul className="mt-4 flex flex-col gap-3">
-          {active.lines.map((line) => {
+          {lines.map((line) => {
             const soldOut = isSoldOut(line.variant);
             const overStock =
               line.variant.stock !== null &&
@@ -516,51 +540,67 @@ export default function CheckoutClient({ products, settings, guest }) {
         <dl className="mt-5 flex flex-col gap-2 border-t border-primary-200 pt-4 text-sm">
           <div className="flex justify-between">
             <dt className="text-primary-600">商品小計</dt>
-            <dd className="text-primary-900">{formatPrice(active.itemsTotal)}</dd>
+            <dd className="text-primary-900">{formatPrice(itemsTotal)}</dd>
           </div>
+          <div className="flex justify-between">
+            <dt className="text-primary-600">配送方式</dt>
+            <dd className="text-primary-900">{METHOD_LABEL[activeMethod]}</dd>
+          </div>
+          {weightG > 0 && (
+            <div className="flex justify-between">
+              <dt className="text-primary-600">總重</dt>
+              <dd className="text-primary-900">
+                {formatWeight(weightG)}
+                {!isCvs && `・${quote.boxes} 箱`}
+              </dd>
+            </div>
+          )}
           <div className="flex justify-between">
             <dt className="text-primary-600">運費</dt>
             <dd className="text-primary-900">
-              {active.shippingFee === 0 ? (
+              {quote.fee === 0 ? (
                 <span className="font-medium text-accent-600">免運</span>
               ) : (
-                formatPrice(active.shippingFee)
+                formatPrice(quote.fee)
               )}
             </dd>
           </div>
         </dl>
 
-        {active.freeGap !== null && (
+        {!isCvs && quote.boxes > 1 && (
+          <p className="mt-2 text-xs text-primary-500">
+            每箱上限 {formatWeight(boxWeightG(settings))}，共 {quote.boxes} 箱
+            {quote.freeBoxes > 0 &&
+              `，已免 ${Math.min(quote.freeBoxes, quote.boxes)} 箱運費`}
+            。
+          </p>
+        )}
+        {quote.freeGap !== null && (
           <p className="mt-2 text-xs text-accent-600">
-            再買 {formatPrice(active.freeGap)} 即可免運
+            再買 {formatPrice(quote.freeGap)}
+            {quote.chargedBoxes > 1 ? " 可再免一箱運費" : " 即可免運"}
           </p>
         )}
 
         <div className="mt-4 flex items-baseline justify-between border-t border-primary-200 pt-4">
           <span className="text-sm text-primary-600">應付金額</span>
           <span className="text-2xl font-semibold text-primary-900">
-            {formatPrice(active.itemsTotal + active.shippingFee)}
+            {formatPrice(itemsTotal + quote.fee)}
           </span>
         </div>
 
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={submitting || active.hasProblem}
+          disabled={submitting || hasProblem}
           className={`mt-5 w-full rounded-lg px-5 py-3 text-sm font-semibold transition ${
-            submitting || active.hasProblem
+            submitting || hasProblem
               ? "cursor-not-allowed bg-primary-200 text-primary-500"
               : "bg-accent-500 text-white hover:bg-accent-700"
           }`}
         >
           {submitting ? "訂單處理中…" : "確認送出訂單"}
         </button>
-
-        {groups.length > 1 && (
-          <p className="mt-3 text-xs text-primary-500">
-            購物車還有其他溫層的商品，送出這張訂單後可再回來結帳。
-          </p>
-        )}
 
         <Link
           href="/cart"

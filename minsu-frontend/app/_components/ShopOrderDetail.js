@@ -1,4 +1,9 @@
-import { formatPrice, getTemperature } from "../_lib/product-utils";
+import {
+  deliveryLabel,
+  formatPrice,
+  formatWeight,
+  getOrderTemperature,
+} from "../_lib/product-utils";
 
 export const SHOP_STATUS = {
   pending: { label: "待匯款", className: "bg-clay-50 text-clay-700 border-clay-100" },
@@ -27,7 +32,7 @@ export function StatusBadge({ order }) {
 const CVS_LABEL = { UNIMART: "7-ELEVEN", FAMI: "全家" };
 
 export default function ShopOrderDetail({ order, settings, showBank = false }) {
-  const temp = getTemperature(order.temperature);
+  const temp = getOrderTemperature(order.temperature);
   const items = Array.isArray(order.shop_order_items) ? order.shop_order_items : [];
   const isCvs = order.delivery_type === "cvs";
   const deadline = settings?.payment_deadline_hours ?? 48;
@@ -168,9 +173,19 @@ export default function ShopOrderDetail({ order, settings, showBank = false }) {
               <div className="flex justify-between gap-4 py-2.5">
                 <dt className="text-primary-500">配送方式</dt>
                 <dd className="text-right font-medium text-primary-900">
-                  低溫宅配
+                  {deliveryLabel(order)}
                 </dd>
               </div>
+              {Number(order.box_count) > 1 && (
+                <div className="flex justify-between gap-4 py-2.5">
+                  <dt className="text-primary-500">包裹</dt>
+                  <dd className="text-right font-medium text-primary-900">
+                    {order.box_count} 箱
+                    {Number(order.total_weight_g) > 0 &&
+                      `・共 ${formatWeight(order.total_weight_g)}`}
+                  </dd>
+                </div>
+              )}
               <div className="flex justify-between gap-4 py-2.5">
                 <dt className="text-primary-500">收件地址</dt>
                 <dd className="text-right font-medium text-primary-900">

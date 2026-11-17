@@ -20,7 +20,7 @@ export default async function ShopPage() {
 
   const groups = TEMPERATURE_ORDER.map((value) => ({
     temp: getTemperature(value),
-    items: products.filter((p) => p.temperature === value),
+    items: products.filter((p) => getTemperature(p.temperature).value === value),
   })).filter((group) => group.items.length > 0);
 
   return (
