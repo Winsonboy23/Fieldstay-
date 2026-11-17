@@ -20,6 +20,11 @@ export default function ActivitySidebar({ activity }) {
     : isFull
     ? "已額滿"
     : null;
+  const remainingLabel = isPast
+    ? "已截止"
+    : isFull
+    ? "已額滿"
+    : `${remaining} ${activity.unit || "人"}`;
   const ctaLabel = isPast
     ? "活動已截止"
     : isFull
@@ -78,10 +83,8 @@ export default function ActivitySidebar({ activity }) {
             <Row label="活動時間" value={activity.time} />
             <Row label="活動時長" value={activity.duration} />
             <Row
-              label="已報名"
-              value={`${activity.registered} / ${activity.capacity} ${
-                activity.unit || "人"
-              }`}
+              label="剩餘名額"
+              value={remainingLabel}
               last
             />
           </div>
@@ -165,10 +168,8 @@ export default function ActivitySidebar({ activity }) {
           <Row label="活動時間" value={activity.time} />
           <Row label="活動時長" value={activity.duration} />
           <Row
-            label="已報名"
-            value={`${activity.registered} / ${activity.capacity} ${
-              activity.unit || "人"
-            }`}
+            label="剩餘名額"
+            value={remainingLabel}
             last
           />
         </div>

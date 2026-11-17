@@ -58,6 +58,14 @@ function seatTagText(a) {
   return "名額充足";
 }
 
+// 名額一律顯示「剩餘」，不顯示已報名人數
+function seatCountText(a) {
+  if (isPastActivity(a)) return "已截止";
+  const remaining = (a.capacity || 0) - (a.registered || 0);
+  if (remaining <= 0) return "已額滿";
+  return `剩餘 ${remaining} ${a.unit || "人"}`;
+}
+
 const ClockIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="12" cy="12" r="10" />
@@ -166,7 +174,7 @@ export default function ActivitiesGrid({ activities }) {
                       <ClockIcon /> {a.duration || ""}
                     </span>
                     <span>
-                      <PeopleIcon /> {a.registered} / {a.capacity} {a.unit || "人"}
+                      <PeopleIcon /> {seatCountText(a)}
                     </span>
                     <span>
                       <PinIcon /> {a.location || ""}

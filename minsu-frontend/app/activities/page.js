@@ -166,7 +166,13 @@ export default async function ActivitiesPage() {
                   <div>
                     <div className="meta-item-label">名額 · CAPACITY</div>
                     <div className="meta-item-value">
-                      {featured.registered} / {featured.capacity} 已報名
+                      {isPastFeatured
+                        ? "已結束"
+                        : featured.capacity - featured.registered <= 0
+                        ? "已額滿"
+                        : `剩餘 ${featured.capacity - featured.registered} ${
+                            featured.unit || "人"
+                          }`}
                     </div>
                   </div>
                 </div>

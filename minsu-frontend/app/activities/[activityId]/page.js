@@ -79,7 +79,13 @@ export default async function ActivityDetailPage({ params }) {
             </span>
             <span className="inline-flex items-center gap-2">
               <UserGroupIcon className="h-5 w-5 text-[#009b73]" />
-              {activity.registered} / {activity.capacity} {activity.unit || "人"}
+              {activity.isPast
+                ? "已截止"
+                : activity.capacity - activity.registered <= 0
+                ? "已額滿"
+                : `剩餘 ${activity.capacity - activity.registered} ${
+                    activity.unit || "人"
+                  }`}
             </span>
             <span className="inline-flex items-center gap-2">
               <MapPinIcon className="h-5 w-5 text-[#009b73]" />
