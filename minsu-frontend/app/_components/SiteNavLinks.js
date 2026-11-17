@@ -18,7 +18,10 @@ export default function SiteNavLinks({ solid }) {
       }`}
     >
       {LINKS.map((l) => (
-        <li key={l.href}>
+        <li
+          key={l.href}
+          data-nav-transport={l.href === "/#transport" ? "" : undefined}
+        >
           <Link
             href={l.href}
             className={`inline-flex h-[26px] items-center whitespace-nowrap rounded-full px-3 text-[13px] font-medium leading-none tracking-[0.02em] transition hover:bg-accent-500 hover:text-white lg:px-[18px] lg:text-sm ${

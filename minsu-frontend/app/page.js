@@ -7,6 +7,7 @@ import {
   getSettings,
 } from "./_lib/data-service";
 import { auth } from "./_lib/auth";
+import { resolveHomeBlocks } from "./_lib/home-blocks";
 import HomeInteractions from "./_components/HomeInteractions";
 import HomeCartBadge from "./_components/HomeCartBadge";
 import ProductCard from "./_components/ProductCard";
@@ -112,7 +113,16 @@ export default async function Page() {
       `;
     })
     .join("");
-  const featuredProducts = (await getProducts().catch(() => [])).slice(0, 3);
+  const allProducts = await getProducts().catch(() => []);
+  const pickedProductIds = Array.isArray(settings.home_featured_product_ids)
+    ? settings.home_featured_product_ids.map(Number)
+    : [];
+  const pickedProducts = pickedProductIds
+    .map((id) => allProducts.find((p) => Number(p.id) === id))
+    .filter(Boolean);
+  // 後台有指定首頁商品就照指定的順序；沒指定（或指定的都已下架）就取前 3 個
+  const featuredProducts =
+    pickedProducts.length > 0 ? pickedProducts : allProducts.slice(0, 3);
   const userName = session?.user?.name || session?.user?.email || "";
   const authActionHtml = session?.user
     ? `<a href="/account" class="btn btn-primary">${escapeHtml(userName)}</a>`
@@ -160,6 +170,167 @@ export default async function Page() {
       `
     )
     .join("");
+
+  // ── 首頁區塊：順序與顯示與否由後台設定（settings.home_blocks）決定 ──
+  const visibleBlocks = resolveHomeBlocks(settings).filter((b) => b.visible);
+  const showTransport = visibleBlocks.some((b) => b.key === "transport");
+  // 「關於」自己是白底；其餘區塊依出現順序深淺交錯
+  const tonedKeys = visibleBlocks.map((b) => b.key).filter((k) => k !== "about");
+  const toneOf = (key) =>
+    tonedKeys.indexOf(key) % 2 === 0 ? "section-tone-a" : "section-tone-b";
+
+  const blockHtml = {
+    about: `
+  <!-- ═══ ABOUT BAND ════════════════════════════════════ -->
+  <section class="about-band" id="about">
+    <div class="about-inner">
+      <div class="about-copy">
+        <h2>在老屋裡，讓時間變慢</h2>
+        <p class="about-eyebrow">STOP AND SMELL THE EARTH.</p>
+        <p>山田寓所是一座結合住宿、咖啡、藝術課程與社區導覽的生活實驗場。我們以設計與美感教育，串起土地、風土飲食與人之間的連結。</p>
+        <a href="/about" class="btn-outline">了解我們的故事</a>
+      </div>
+      <div class="about-visual">
+        <img src="/about-1.jpg" alt="老屋影像" />
+      </div>
+    </div>
+  </section>
+`,
+    rooms: `
+  <!-- ═══ ROOMS ════════════════════════════════════════ -->
+  <section class="section ${toneOf("rooms")}" id="rooms">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <small>ROOMS &amp; STAYS</small>
+          房型選擇
+        </h2>
+        <a href="/rooms" class="see-all">查看全部房型 →</a>
+      </div>
+
+      <div class="room-grid" id="roomGrid" data-carousel>
+        ${roomCardsHtml || '<p style="color:var(--muted);">目前沒有可預訂的房型。</p>'}
+      </div>
+      <div class="carousel-dots" data-dots-for="roomGrid">
+        ${featuredRooms.map((_, i) => `<button type="button" class="carousel-dot${i === 0 ? " active" : ""}" data-idx="${i}" aria-label="第 ${i + 1} 張"></button>`).join("")}
+      </div>
+    </div>
+  </section>
+`,
+    experience: `
+  <!-- ═══ EXPERIENCE ════════════════════════════════════ -->
+  <section class="section ${toneOf("experience")}" id="experience">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <small>FIELD EXPERIENCE</small>
+          田間體驗
+        </h2>
+        <a href="/activities" class="see-all">查看所有活動 →</a>
+      </div>
+
+      <div class="exp-grid" id="expGrid" data-carousel>
+        ${activityCardsHtml || '<p style="color:var(--muted);">目前沒有即將舉辦的活動。</p>'}
+      </div>
+      ${upcomingActivities.length ? `<div class="carousel-dots" data-dots-for="expGrid">
+        ${upcomingActivities.map((_, i) => `<button type="button" class="carousel-dot${i === 0 ? " active" : ""}" data-idx="${i}" aria-label="第 ${i + 1} 張"></button>`).join("")}
+      </div>` : ""}
+    </div>
+  </section>
+`,
+    transport: `
+  <!-- ═══ TRANSPORT ════════════════════════════════════ -->
+  <section class="section ${toneOf("transport")}" id="transport">
+    <div class="container">
+      <div class="transport-header">
+        <p class="transport-eyebrow">交通與聯絡 · VISIT US</p>
+        <h2 class="transport-title">交通資訊</h2>
+      </div>
+
+      <div class="transport-grid">
+        <div class="transport-map">
+          <iframe
+            title="山田寓所地圖"
+            src="https://www.google.com/maps?q=山田寓所&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+        </div>
+
+        <div class="transport-info">
+          <div class="info-block">
+            <p class="info-eyebrow">地址 · ADDRESS</p>
+            <p class="info-main">臺中市大甲區賢仁路 143 號</p>
+          </div>
+
+          <div class="info-block">
+            <p class="info-eyebrow">對外開放營業時間 · OPEN HOURS</p>
+            <p class="info-main">週一 五 六 日 13:30–18:00</p>
+          </div>
+
+          <div class="info-block">
+            <p class="info-eyebrow">大眾運輸 · BY TRANSIT</p>
+            <p class="info-main">大甲火車站 → 計程車約 10–15 分鐘</p>
+            <p class="info-sub">或租借 u-bike（德元宮站還車）</p>
+            <p class="info-main" style="margin-top:10px">公車（班次較少，請先查詢時刻表）</p>
+            <p class="info-sub">661（右環）德元宮站下車（<a href="https://citybus.taichung.gov.tw/ebus/route-map/661" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
+            <p class="info-sub">305 文武公園站下車 → 步行 13 分鐘（<a href="https://citybus.taichung.gov.tw/ebus/route-map/305" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
+          </div>
+
+          <div class="info-block">
+            <p class="info-eyebrow">自駕 · BY CAR</p>
+            <p class="info-main">北上：國道 3 號 164-大甲出口</p>
+            <p class="info-sub">往大甲方向下匝道 → 沿甲后路直行 → 市道 132 線</p>
+            <p class="info-main" style="margin-top:10px">南下：國道 3 號 156-苑裡出口</p>
+            <p class="info-sub">往三義方向前進 → 140 縣道</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+`,
+  };
+
+  // 選物商店用真的 ProductCard（商品圖／價格／加入購物車），不是純 HTML 卡片
+  const shopSection = (
+      <section className={`section ${toneOf("shop")}`} id="shop" key="shop">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">
+              <small>FIELDSTAY SELECT</small>
+              選物商店
+            </h2>
+            <a href="/shop" className="see-all">
+              查看全部商品 →
+            </a>
+          </div>
+
+          {featuredProducts.length === 0 ? (
+            <p style={{ color: "var(--muted)" }}>商品準備中，敬請期待。</p>
+          ) : (
+            <>
+              <div className="exp-grid" id="shopGrid" data-carousel>
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              <div className="carousel-dots" data-dots-for="shopGrid">
+                {featuredProducts.map((_, i) => (
+                  <button
+                    type="button"
+                    key={i}
+                    className={`carousel-dot${i === 0 ? " active" : ""}`}
+                    data-idx={i}
+                    aria-label={`第 ${i + 1} 張`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+  );
 
   return (
     <>
@@ -556,16 +727,11 @@ export default async function Page() {
     .container { max-width: 1200px; margin: 0 auto; width: 100%; }
 
     /* 區段分隔色塊：深淺交錯，讓每一段看得出界線 */
-    #rooms {
+    /* 區塊順序可在後台調整，所以底色跟著「第幾個」走，不綁定特定區塊 */
+    .section-tone-a {
       background: oklch(94% 0.018 75);
     }
-    #experience {
-      background: var(--surface);
-    }
-    #shop {
-      background: oklch(94% 0.018 75);
-    }
-    #transport {
+    .section-tone-b {
       background: var(--surface);
     }
     /* 固定 nav 高 100px，錨點捲動時預留，避免標題被蓋住 */
@@ -1398,7 +1564,7 @@ export default async function Page() {
       <li><a href="/rooms">房型選擇</a></li>
       <li><a href="/activities">田間體驗</a></li>
       <li><a href="/shop">選物商店</a></li>
-      <li><a href="#transport">交通資訊</a></li>
+      ${showTransport ? '<li><a href="#transport">交通資訊</a></li>' : ""}
     </ul>
 
     <div class="nav-actions">
@@ -1428,7 +1594,7 @@ export default async function Page() {
       <li><a href="/rooms">房型選擇</a></li>
       <li><a href="/activities">田間體驗</a></li>
       <li><a href="/shop">選物商店</a></li>
-      <li><a href="#transport">交通資訊</a></li>
+      ${showTransport ? '<li><a href="#transport">交通資訊</a></li>' : ""}
     </ul>
     <div class="mobile-actions">
       <a href="/cart" class="btn btn-ghost">購物車</a>
@@ -1459,154 +1625,17 @@ export default async function Page() {
 
     </div>
   </section>
-
-  <!-- ═══ ABOUT BAND ════════════════════════════════════ -->
-  <section class="about-band" id="about">
-    <div class="about-inner">
-      <div class="about-copy">
-        <h2>在老屋裡，讓時間變慢</h2>
-        <p class="about-eyebrow">STOP AND SMELL THE EARTH.</p>
-        <p>山田寓所是一座結合住宿、咖啡、藝術課程與社區導覽的生活實驗場。我們以設計與美感教育，串起土地、風土飲食與人之間的連結。</p>
-        <a href="/about" class="btn-outline">了解我們的故事</a>
-      </div>
-      <div class="about-visual">
-        <img src="/about-1.jpg" alt="老屋影像" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ ROOMS ════════════════════════════════════════ -->
-  <section class="section" id="rooms">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">
-          <small>ROOMS &amp; STAYS</small>
-          房型選擇
-        </h2>
-        <a href="/rooms" class="see-all">查看全部房型 →</a>
-      </div>
-
-      <div class="room-grid" id="roomGrid" data-carousel>
-        ${roomCardsHtml || '<p style="color:var(--muted);">目前沒有可預訂的房型。</p>'}
-      </div>
-      <div class="carousel-dots" data-dots-for="roomGrid">
-        ${featuredRooms.map((_, i) => `<button type="button" class="carousel-dot${i === 0 ? " active" : ""}" data-idx="${i}" aria-label="第 ${i + 1} 張"></button>`).join("")}
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ EXPERIENCE ════════════════════════════════════ -->
-  <section class="section section-alt" id="experience">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">
-          <small>FIELD EXPERIENCE</small>
-          田間體驗
-        </h2>
-        <a href="/activities" class="see-all">查看所有活動 →</a>
-      </div>
-
-      <div class="exp-grid" id="expGrid" data-carousel>
-        ${activityCardsHtml || '<p style="color:var(--muted);">目前沒有即將舉辦的活動。</p>'}
-      </div>
-      ${upcomingActivities.length ? `<div class="carousel-dots" data-dots-for="expGrid">
-        ${upcomingActivities.map((_, i) => `<button type="button" class="carousel-dot${i === 0 ? " active" : ""}" data-idx="${i}" aria-label="第 ${i + 1} 張"></button>`).join("")}
-      </div>` : ""}
-    </div>
-  </section>
-
 ` }} />
 
-      {/* ═══ SHOP ═══ 用真的 ProductCard（商品圖／價格／加入購物車），不是純 HTML 卡片 */}
-      <section className="section" id="shop">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              <small>FIELDSTAY SELECT</small>
-              選物商店
-            </h2>
-            <a href="/shop" className="see-all">
-              查看全部商品 →
-            </a>
-          </div>
-
-          {featuredProducts.length === 0 ? (
-            <p style={{ color: "var(--muted)" }}>商品準備中，敬請期待。</p>
-          ) : (
-            <>
-              <div className="exp-grid" id="shopGrid" data-carousel>
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-              <div className="carousel-dots" data-dots-for="shopGrid">
-                {featuredProducts.map((_, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`carousel-dot${i === 0 ? " active" : ""}`}
-                    data-idx={i}
-                    aria-label={`第 ${i + 1} 張`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
+      {visibleBlocks.map(({ key }) =>
+        key === "shop" ? (
+          shopSection
+        ) : (
+          <div key={key} dangerouslySetInnerHTML={{ __html: blockHtml[key] }} />
+        )
+      )}
 
       <div dangerouslySetInnerHTML={{ __html: `
-  <!-- ═══ TRANSPORT ════════════════════════════════════ -->
-  <section class="section section-alt" id="transport">
-    <div class="container">
-      <div class="transport-header">
-        <p class="transport-eyebrow">交通與聯絡 · VISIT US</p>
-        <h2 class="transport-title">交通資訊</h2>
-      </div>
-
-      <div class="transport-grid">
-        <div class="transport-map">
-          <iframe
-            title="山田寓所地圖"
-            src="https://www.google.com/maps?q=山田寓所&output=embed"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen
-          ></iframe>
-        </div>
-
-        <div class="transport-info">
-          <div class="info-block">
-            <p class="info-eyebrow">地址 · ADDRESS</p>
-            <p class="info-main">臺中市大甲區賢仁路 143 號</p>
-          </div>
-
-          <div class="info-block">
-            <p class="info-eyebrow">對外開放營業時間 · OPEN HOURS</p>
-            <p class="info-main">週一 五 六 日 13:30–18:00</p>
-          </div>
-
-          <div class="info-block">
-            <p class="info-eyebrow">大眾運輸 · BY TRANSIT</p>
-            <p class="info-main">大甲火車站 → 計程車約 10–15 分鐘</p>
-            <p class="info-sub">或租借 u-bike（德元宮站還車）</p>
-            <p class="info-main" style="margin-top:10px">公車（班次較少，請先查詢時刻表）</p>
-            <p class="info-sub">661（右環）德元宮站下車（<a href="https://citybus.taichung.gov.tw/ebus/route-map/661" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
-            <p class="info-sub">305 文武公園站下車 → 步行 13 分鐘（<a href="https://citybus.taichung.gov.tw/ebus/route-map/305" target="_blank" rel="noopener noreferrer">時刻表</a>）</p>
-          </div>
-
-          <div class="info-block">
-            <p class="info-eyebrow">自駕 · BY CAR</p>
-            <p class="info-main">北上：國道 3 號 164-大甲出口</p>
-            <p class="info-sub">往大甲方向下匝道 → 沿甲后路直行 → 市道 132 線</p>
-            <p class="info-main" style="margin-top:10px">南下：國道 3 號 156-苑裡出口</p>
-            <p class="info-sub">往三義方向前進 → 140 縣道</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <script>
     window.filterRooms = function filterRooms(type, btn) {
       document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));

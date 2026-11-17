@@ -115,7 +115,11 @@ function isActive(pathname, href) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function MobileMenuClient({ session, featuredRooms = [] }) {
+export default function MobileMenuClient({
+  session,
+  featuredRooms = [],
+  showTransport = true,
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -191,7 +195,9 @@ export default function MobileMenuClient({ session, featuredRooms = [] }) {
         {/* Items */}
         <nav className="flex-1 overflow-y-auto px-3 pb-4">
           <ul className="space-y-0.5">
-            {ITEMS.map((item) => {
+            {ITEMS.filter(
+              (item) => showTransport || item.href !== "/#transport"
+            ).map((item) => {
               const Icon = item.icon;
               const active = isActive(pathname, item.href);
               return (

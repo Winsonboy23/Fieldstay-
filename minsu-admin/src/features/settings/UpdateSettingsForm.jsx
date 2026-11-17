@@ -11,6 +11,7 @@ import Spinner from "../../ui/Spinner";
 import { useSettings } from "./useSettings";
 import { useUpdateSetting } from "./useUpdateSetting";
 import { uploadSiteImage } from "../../services/apiSettings";
+import HomeLayoutSettings from "./HomeLayoutSettings";
 
 const Wrapper = styled.div`
   width: min(960px, 100%);
@@ -391,6 +392,20 @@ function UpdateSettingsForm() {
           accept="image/*"
           multiple
           onChange={handleBannerPick}
+        />
+      </Section>
+
+      {/* 首頁區塊 */}
+      <Section>
+        <h3>首頁區塊</h3>
+        <p className="hint">
+          調整官網首頁各區塊的上下順序，或點眼睛圖示暫時隱藏。Banner 固定在最上方；
+          每次調整都會立即儲存。
+        </p>
+        <HomeLayoutSettings
+          settings={settings}
+          updateSetting={updateSetting}
+          disabled={disabled}
         />
       </Section>
 
