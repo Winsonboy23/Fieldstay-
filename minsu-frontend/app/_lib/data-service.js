@@ -195,6 +195,31 @@ export async function getBookedDatesByRoomId(roomId) {
   return bookedDates;
 }
 
+// 房型頁日曆用：回傳尚未結束、未取消的訂單日期區間（半開區間 [from, to)，
+// 與 DB 的 bookings_no_overlap 規則一致：退房日當天可接下一組入住）。
+// 只回日期字串，不帶任何客人資料。
+export async function getBookedRangesByRoomId(roomId) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await supabaseAdmin
+    .from("bookings")
+    .select("startDate, endDate, status")
+    .eq("roomId", roomId)
+    .gt("endDate", today);
+
+  if (error) {
+    console.error("getBookedRangesByRoomId failed", error);
+    return [];
+  }
+
+  return (data || [])
+    .filter((b) => b.status !== "cancelled" && b.startDate && b.endDate)
+    .map((b) => ({
+      from: String(b.startDate).slice(0, 10),
+      to: String(b.endDate).slice(0, 10),
+    }));
+}
+
 export async function getSettings() {
   const { data, error } = await supabase.from("settings").select("*").single();
 

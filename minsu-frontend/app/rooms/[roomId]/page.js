@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getRoom } from "@/app/_lib/data-service";
+import { getBookedRangesByRoomId, getRoom } from "@/app/_lib/data-service";
 import BookingSidebar from "./BookingSidebar";
 import SiteHeader from "@/app/_components/SiteHeader";
 import BackToListLink from "@/app/_components/BackToListLink";
@@ -73,6 +73,9 @@ function iconForAmenity(label) {
   return AMENITY_ICONS.default;
 }
 
+// 日曆上的已訂日期要即時，不能吃到快取
+export const revalidate = 0;
+
 export default async function Page({ params }) {
   const roomId = Number(params.roomId);
 
@@ -83,6 +86,8 @@ export default async function Page({ params }) {
     notFound();
   }
   if (!room) notFound();
+
+  const bookedRanges = await getBookedRangesByRoomId(roomId);
 
   const pricePerNight = Math.max(
     0,
@@ -237,6 +242,7 @@ export default async function Page({ params }) {
           serviceFeeRate={serviceFeeRate}
           maxCapacity={room.maxCapacity || 4}
           isActive={room.is_active !== false}
+          bookedRanges={bookedRanges}
         />
       </div>
 
@@ -517,6 +523,9 @@ const PAGE_CSS = `
     .dp-popover .rdp-day_selected:hover {
       background-color: var(--accent);
       color: white;
+    }
+    .dp-popover .rdp-day_booked {
+      text-decoration: line-through;
     }
     .dp-popover .rdp-day_range_middle {
       background-color: oklch(94% 0.04 183);

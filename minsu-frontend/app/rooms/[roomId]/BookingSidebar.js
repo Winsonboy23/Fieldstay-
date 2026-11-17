@@ -68,6 +68,37 @@ function parseIsoToLocalDate(iso) {
   return new Date(y, m - 1, d);
 }
 
+// 已訂區間（半開 [from, to)）展開成「被佔用的晚上」的日期字串集合
+function buildBookedNights(ranges) {
+  const nights = new Set();
+  for (const r of ranges || []) {
+    const from = parseIsoToLocalDate(r?.from);
+    const to = parseIsoToLocalDate(r?.to);
+    if (!from || !to) continue;
+    for (let d = from; d < to; d = addDays(d, 1)) nights.add(toIsoDate(d));
+  }
+  return nights;
+}
+
+// [from, to) 之間有沒有任何一晚已被訂走
+function rangeHitsBooked(from, to, bookedNights) {
+  if (!from || !to) return false;
+  for (let d = from; d < to; d = addDays(d, 1)) {
+    if (bookedNights.has(toIsoDate(d))) return true;
+  }
+  return false;
+}
+
+// 從 start 起找第一個沒被訂走的晚上（最多往後找一年）
+function firstFreeNight(start, bookedNights) {
+  let d = start;
+  for (let i = 0; i < 366; i += 1) {
+    if (!bookedNights.has(toIsoDate(d))) return d;
+    d = addDays(d, 1);
+  }
+  return null;
+}
+
 export default function BookingSidebar({
   roomId,
   pricePerNight = 0,
@@ -75,6 +106,7 @@ export default function BookingSidebar({
   serviceFeeRate = 0.05,
   maxCapacity = 4,
   isActive = true,
+  bookedRanges = [],
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -88,6 +120,11 @@ export default function BookingSidebar({
   const popoverRef = useRef(null);
   const triggerRef = useRef(null);
 
+  const bookedNights = useMemo(
+    () => buildBookedNights(bookedRanges),
+    [bookedRanges]
+  );
+
   useEffect(() => {
     if (range) return;
     const today = startOfToday();
@@ -96,7 +133,16 @@ export default function BookingSidebar({
     const from = fromParam && fromParam >= today ? fromParam : today;
     const tomorrow = addDays(from, 1);
     const to = toParam && toParam > from ? toParam : tomorrow;
-    setRange({ from, to });
+    if (!rangeHitsBooked(from, to, bookedNights)) {
+      setRange({ from, to });
+      return;
+    }
+    // 預設／網址帶入的日期已被訂走：改帶最近一個可訂的晚上
+    const free = firstFreeNight(from, bookedNights);
+    setRange(free ? { from: free, to: addDays(free, 1) } : null);
+    if (fromParam || toParam) {
+      setNote("您原本選的日期已被預訂，已改為最近可訂的日期，請再確認。付款方式：轉帳");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -144,21 +190,50 @@ export default function BookingSidebar({
     return { nights: n, roomTotal: r, serviceFee: s, total: r + cleaningFee + s };
   }, [range, pricePerNight, cleaningFee, serviceFeeRate]);
 
-  function handleSelectRange(next) {
-    if (!next) {
-      setRange(null);
+  // 正在選退房日（已點入住日、還沒點退房日）
+  const selectingEnd = Boolean(range?.from && !range?.to);
+
+  // 選退房日時最晚能選到哪天：入住日之後第一個被訂走的晚上。
+  // 那天是別人的入住日，當天退房不衝突，所以可以選；再往後就不行。
+  const checkoutLimit = useMemo(() => {
+    if (!selectingEnd) return null;
+    let d = addDays(range.from, 1);
+    for (let i = 0; i < 366; i += 1) {
+      if (bookedNights.has(toIsoDate(d))) return d;
+      d = addDays(d, 1);
+    }
+    return null;
+  }, [selectingEnd, range, bookedNights]);
+
+  function isDayDisabled(day) {
+    if (day < startOfToday()) return true;
+    if (selectingEnd && day > range.from) {
+      return Boolean(checkoutLimit && day > checkoutLimit);
+    }
+    return bookedNights.has(toIsoDate(day));
+  }
+
+  // 自己處理選取：第一下選入住日、第二下選退房日；已有完整區間時再點就重新開始。
+  // （DayPicker 內建的 range 行為會直接延伸區間，可能跨過已訂日期。）
+  function handleSelectRange(_next, day) {
+    if (!day || isDayDisabled(day)) return;
+    if (selectingEnd && day > range.from) {
+      setRange({ from: range.from, to: day });
+      setOpen(false);
       return;
     }
-    setRange(next);
-    if (next.from && next.to && next.to > next.from) {
-      setOpen(false);
-    }
+    setRange({ from: day, to: undefined });
   }
 
   function handleBook() {
     if (!isActive) return;
     if (!range?.from || !range?.to || nights <= 0) {
       setNote("請選擇正確的入住與退房日期。付款方式：轉帳");
+      setSheetOpen(true);
+      return;
+    }
+    if (rangeHitsBooked(range.from, range.to, bookedNights)) {
+      setNote("所選日期中有已被預訂的日子，請重新選擇。付款方式：轉帳");
       setSheetOpen(true);
       return;
     }
@@ -247,7 +322,14 @@ export default function BookingSidebar({
                 mode="range"
                 selected={range || undefined}
                 onSelect={handleSelectRange}
-                disabled={{ before: today }}
+                disabled={isDayDisabled}
+                modifiers={{
+                  booked: (day) =>
+                    day >= today &&
+                    bookedNights.has(toIsoDate(day)) &&
+                    isDayDisabled(day),
+                }}
+                modifiersClassNames={{ booked: "rdp-day_booked" }}
                 numberOfMonths={1}
                 showOutsideDays
                 weekStartsOn={0}
@@ -256,6 +338,8 @@ export default function BookingSidebar({
                 <span>
                   {range?.from && range?.to
                     ? `${nights} 晚`
+                    : selectingEnd
+                    ? "請點選退房日"
                     : "請點選入住日，再點退房日"}
                 </span>
                 <button
