@@ -88,7 +88,7 @@ export default function ShopOrderDetail({ order, settings, showBank = false }) {
             訂購商品
           </h2>
           <span className="text-xs text-primary-500">
-            {temp.label}・{temp.delivery}
+            {temp.label}・{deliveryLabel(order)}
           </span>
         </header>
 
