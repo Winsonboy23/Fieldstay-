@@ -11,7 +11,7 @@ import CreateProductForm from "./CreateProductForm";
 import { useDeleteProduct } from "./useDeleteProduct";
 import { useToggleProductActive } from "./useToggleProductActive";
 import { formatCurrency } from "../../utils/helpers";
-import { getTemperature } from "../../utils/productTemperature";
+import { getProductTemp } from "../../utils/productTemperature";
 import { getFrontendUrl } from "../../utils/frontendUrl";
 
 const Card = styled.article`
@@ -198,7 +198,7 @@ function ProductCard({ product }) {
   const { toggleActive, isToggling } = useToggleProductActive();
   const variants = Array.isArray(product.variants) ? product.variants : [];
   const isActive = product.is_active !== false;
-  const temp = getTemperature(product.temperature);
+  const temp = getProductTemp(product);
   const isSoldOut =
     variants.length > 0 &&
     variants.every(

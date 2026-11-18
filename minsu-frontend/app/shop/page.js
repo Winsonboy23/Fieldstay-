@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { auth } from "../_lib/auth";
 import { getProducts } from "../_lib/data-service";
-import { TEMPERATURE_ORDER, getTemperature } from "../_lib/product-utils";
+import { TEMPERATURE_ORDER, getProductTemp } from "../_lib/product-utils";
 import ProductCard from "../_components/ProductCard";
 import SiteHeader from "../_components/SiteHeader";
 import PageHero from "../_components/PageHero";
@@ -18,10 +18,19 @@ export default async function ShopPage() {
   const session = await auth();
   const products = await getProducts();
 
-  const groups = TEMPERATURE_ORDER.map((value) => ({
-    temp: getTemperature(value),
-    items: products.filter((p) => getTemperature(p.temperature).value === value),
-  })).filter((group) => group.items.length > 0);
+  // 依「可寄送的溫層」分區：常溫、冷藏、冷凍，以及可複選的組合（例：冷藏／冷凍）
+  const byKey = new Map();
+  products.forEach((product) => {
+    const temp = getProductTemp(product);
+    if (!byKey.has(temp.key)) byKey.set(temp.key, { temp, items: [] });
+    byKey.get(temp.key).items.push(product);
+  });
+  const groups = [...byKey.values()].sort(
+    (a, b) =>
+      TEMPERATURE_ORDER.indexOf(a.temp.temps[0]) -
+        TEMPERATURE_ORDER.indexOf(b.temp.temps[0]) ||
+      a.temp.temps.length - b.temp.temps.length
+  );
 
   return (
     <>
@@ -61,7 +70,7 @@ export default async function ShopPage() {
           </div>
         ) : (
           groups.map((group) => (
-            <section key={group.temp.value} className="mb-14">
+            <section key={group.temp.key} className="mb-14">
               <div className="mb-5 flex items-center gap-3">
                 <span
                   className="h-3 w-3 rounded-full"

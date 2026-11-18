@@ -9,6 +9,7 @@ import {
   formatPrice,
   boxWeightG,
   formatWeight,
+  getProductTemp,
   getTemperature,
   isProductSoldOut,
   priceRange,
@@ -35,22 +36,31 @@ export default async function ProductPage({ params }) {
 
   if (!product) notFound();
 
-  const temp = getTemperature(product.temperature);
+  const temp = getProductTemp(product);
   const soldOut = isProductSoldOut(product);
   const variants = variantsOf(product);
   const minPrice = priceRange(product).min;
-  // 運費說明：低溫只有宅配；常溫（含兩種都可以）可超商取貨或宅配
-  const isCold = temp.value === "cold";
-  const shipThreshold = Number(
-    isCold
-      ? settings?.free_ship_threshold_chilled
-      : settings?.free_ship_threshold_normal
-  );
-  const shippingText = isCold
-    ? `低溫宅配每箱 ${formatPrice(settings?.ship_fee_chilled_home)}`
-    : `超商取貨 ${formatPrice(settings?.ship_fee_normal)}／宅配每箱 ${formatPrice(
-        settings?.ship_fee_normal_home
-      )}`;
+  // 運費說明：這個商品能走的每個溫層各列一行
+  const SHIPPING_TEXT = {
+    normal: `超商取貨 ${formatPrice(settings?.ship_fee_normal)}／宅配每箱 ${formatPrice(
+      settings?.ship_fee_normal_home
+    )}`,
+    chilled: `黑貓冷藏宅配每箱 ${formatPrice(settings?.ship_fee_chilled_home)}`,
+    frozen: `全家冷凍取貨 ${formatPrice(
+      settings?.ship_fee_frozen_fami
+    )}／黑貓冷凍宅配每箱 ${formatPrice(settings?.ship_fee_frozen_home ?? 180)}`,
+  };
+  const THRESHOLD = {
+    normal: settings?.free_ship_threshold_normal,
+    chilled: settings?.free_ship_threshold_chilled,
+    frozen: settings?.free_ship_threshold_frozen,
+  };
+  const shippingRows = temp.temps.map((value) => ({
+    value,
+    label: getTemperature(value).label,
+    text: SHIPPING_TEXT[value],
+    threshold: Number(THRESHOLD[value]) > 0 ? Number(THRESHOLD[value]) : null,
+  }));
   // 封面＋附圖組成圖庫，去除空值與重複
   const galleryImages = [
     ...new Set(
@@ -63,14 +73,19 @@ export default async function ProductPage({ params }) {
     : [];
   const features = Array.isArray(product.features) ? product.features.filter(Boolean) : [];
   const notes = Array.isArray(product.notes) ? product.notes.filter(Boolean) : [];
-  const deliveryNote = isCold
-    ? "低溫商品以黑貓低溫宅配寄送，結帳時請填寫收件地址。"
-    : temp.value === "flex"
-    ? "此商品可常溫或低溫寄送，結帳時可自行選擇；常溫可選超商取貨或宅配。"
-    : "常溫商品可選超商取貨或宅配；總重超過超商限重時只能宅配。";
+  const DELIVERY_NOTE = {
+    normal: "常溫商品可選超商取貨或宅配；總重超過超商限重時只能宅配。",
+    chilled: "冷藏商品以黑貓冷藏宅配寄送，結帳時請填寫收件地址。",
+    frozen:
+      "冷凍商品可選全家冷凍取貨或黑貓冷凍宅配；總重超過全家限重時只能宅配。",
+  };
+  const deliveryNote =
+    temp.temps.length === 1
+      ? DELIVERY_NOTE[temp.temps[0]]
+      : `此商品可用${temp.label}寄送，結帳時可自行選擇配送方式。`;
   const boxNote = `宅配依總重分箱計費，每箱上限 ${formatWeight(
     boxWeightG(settings)
-  )}。購物車內只要有需低溫配送的商品，整筆訂單會合併以低溫宅配寄出。`;
+  )}。購物車內不能用同一種溫層寄送的商品，會自動分成不同訂單、各自計算運費。`;
   const specRows = [
     ["內容量", product.spec_content],
     ["產地", product.spec_origin],
@@ -175,13 +190,20 @@ export default async function ProductPage({ params }) {
               </div>
               <div className="flex justify-between gap-6 py-3">
                 <dt className="flex-shrink-0 text-primary-500">運費</dt>
-                <dd className="text-right font-medium text-primary-900">
-                  {shippingText}
-                  {shipThreshold > 0 && (
-                    <span className="ml-2 text-xs font-normal text-accent-600">
-                      每滿 {formatPrice(shipThreshold)} 免一箱運費
+                <dd className="flex flex-col gap-1.5 text-right font-medium text-primary-900">
+                  {shippingRows.map((row) => (
+                    <span key={row.value}>
+                      {shippingRows.length > 1 && (
+                        <span className="mr-1.5 text-primary-500">{row.label}</span>
+                      )}
+                      {row.text}
+                      {row.threshold && (
+                        <span className="ml-2 text-xs font-normal text-accent-600">
+                          每滿 {formatPrice(row.threshold)} 免一箱運費
+                        </span>
+                      )}
                     </span>
-                  )}
+                  ))}
                 </dd>
               </div>
               {variants.length > 1 && (

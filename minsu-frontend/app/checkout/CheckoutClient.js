@@ -6,26 +6,17 @@ import { useEffect, useState } from "react";
 
 import { useCart } from "../_components/CartContext";
 import {
-  CVS_BRANDS,
-  availableCvsBrands,
+  CHECKOUT_GROUPS_KEY,
   boxWeightG,
-  canChooseCold,
+  cvsBrandsOf,
   cvsWeightLimitG,
   formatPrice,
   formatWeight,
-  getShippingQuote,
+  groupLinesByTemp,
   isSoldOut,
-  orderTemperatureOf,
-  totalWeightG,
+  summarizeGroup,
   unitPrice,
 } from "../_lib/product-utils";
-
-// 配送方式：cvs 超商取貨／home 常溫宅配／home-cold 低溫宅配
-const METHOD_LABEL = {
-  cvs: "超商取貨",
-  home: "宅配",
-  "home-cold": "低溫宅配",
-};
 
 // 去綠界地圖選店前把表單暫存起來，回來時再還原
 const DRAFT_KEY = "fieldstay-checkout-draft";
@@ -46,20 +37,27 @@ function Field({ label, required, hint, children }) {
   );
 }
 
+// 每筆訂單各自的配送選擇
+const EMPTY_CHOICE = {
+  method: null, // 形如 "frozen:cvs"；null = 還沒選，用第一個可用的
+  cvsBrand: "",
+  cvsStoreName: "",
+  cvsStoreId: "",
+  cvsStoreAddress: "",
+};
+
 export default function CheckoutClient({ products, settings, guest }) {
   const router = useRouter();
   const { items, isLoaded, removeItem, setQty } = useCart();
 
-  // 顧客選的配送方式；null = 還沒選，用系統預設
-  const [method, setMethod] = useState(null);
+  // 購物車頁勾選要結帳的訂單；null = 沒指定，整個購物車一起結
+  const [selectedKeys, setSelectedKeys] = useState(null);
+  // { [訂單 key]: 配送選擇 }
+  const [choices, setChoices] = useState({});
   const [form, setForm] = useState({
     contactName: guest?.fullName || "",
     contactEmail: guest?.email || "",
     contactPhone: guest?.phone || "",
-    cvsBrand: "",
-    cvsStoreName: "",
-    cvsStoreId: "",
-    cvsStoreAddress: "",
     receiverAddress: "",
     specialRequest: "",
   });
@@ -70,34 +68,55 @@ export default function CheckoutClient({ products, settings, guest }) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  // 從綠界地圖選店回來：還原暫存表單，填入門市，清掉網址上的參數
+  function updateChoice(groupKey, patch) {
+    setChoices((prev) => ({
+      ...prev,
+      [groupKey]: { ...EMPTY_CHOICE, ...prev[groupKey], ...patch },
+    }));
+  }
+
   useEffect(() => {
+    let keys = null;
+    try {
+      const saved = JSON.parse(
+        window.sessionStorage.getItem(CHECKOUT_GROUPS_KEY) || "null"
+      );
+      if (Array.isArray(saved)) keys = saved;
+    } catch {
+      keys = null;
+    }
+
+    // 從綠界地圖選店回來：還原暫存表單，把門市填回當初那筆訂單，清掉網址上的參數
     const params = new URLSearchParams(window.location.search);
     const result = params.get("cvsMap");
-    if (!result) return;
+    if (result) {
+      let draft = null;
+      try {
+        draft = JSON.parse(window.sessionStorage.getItem(DRAFT_KEY) || "null");
+        window.sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        draft = null;
+      }
+      if (Array.isArray(draft?.selectedKeys)) keys = draft.selectedKeys;
+      if (draft?.form) setForm((prev) => ({ ...prev, ...draft.form }));
 
-    let draft = null;
-    try {
-      draft = JSON.parse(window.sessionStorage.getItem(DRAFT_KEY) || "null");
-      window.sessionStorage.removeItem(DRAFT_KEY);
-    } catch {
-      draft = null;
+      const restored = { ...(draft?.choices || {}) };
+      if (result === "ok" && draft?.mapGroup) {
+        restored[draft.mapGroup] = {
+          ...EMPTY_CHOICE,
+          ...restored[draft.mapGroup],
+          cvsBrand: params.get("cvsBrand") || "",
+          cvsStoreId: params.get("cvsStoreId") || "",
+          cvsStoreName: params.get("cvsStoreName") || "",
+          cvsStoreAddress: params.get("cvsStoreAddress") || "",
+        };
+      }
+      setChoices(restored);
+      if (result !== "ok") setError("地圖選店失敗，請再試一次或自行填寫門市");
+      window.history.replaceState(null, "", "/checkout");
     }
-    if (draft?.method) setMethod(draft.method);
-    setForm((prev) => ({
-      ...prev,
-      ...(draft?.form || {}),
-      ...(result === "ok"
-        ? {
-            cvsBrand: params.get("cvsBrand") || "",
-            cvsStoreId: params.get("cvsStoreId") || "",
-            cvsStoreName: params.get("cvsStoreName") || "",
-            cvsStoreAddress: params.get("cvsStoreAddress") || "",
-          }
-        : {}),
-    }));
-    if (result !== "ok") setError("地圖選店失敗，請再試一次或自行填寫門市");
-    window.history.replaceState(null, "", "/checkout");
+
+    setSelectedKeys(keys);
   }, []);
 
   if (!isLoaded) {
@@ -118,46 +137,39 @@ export default function CheckoutClient({ products, settings, guest }) {
     })
     .filter(Boolean);
 
-  // 整個購物車合併成一張訂單
-  const lines = validLines;
-  const itemsTotal = lines.reduce(
-    (sum, line) => sum + unitPrice(line.variant) * line.qty,
+  // 依溫層分筆；只留購物車頁勾選的那幾筆（勾選已失效就整個購物車一起結）
+  const allGroups = groupLinesByTemp(validLines).map((group) =>
+    summarizeGroup(group, settings)
+  );
+  const picked = Array.isArray(selectedKeys)
+    ? allGroups.filter((group) => selectedKeys.includes(group.key))
+    : [];
+  const groups = (picked.length > 0 ? picked : allGroups).map((group) => {
+    const choice = { ...EMPTY_CHOICE, ...choices[group.key] };
+    // 還沒選、或之前選的方式已不能用（例如加購後超重）時，預設運費最低的
+    const method =
+      group.methods.find((m) => m.id === choice.method) ||
+      [...group.methods].sort((a, b) => a.quote.fee - b.quote.fee)[0];
+    const isCvs = method.deliveryType === "cvs";
+    // 只有一家超商可選時（例如冷凍只有全家）直接帶入
+    const brand = isCvs
+      ? method.brands.find((b) => b.value === choice.cvsBrand) ||
+        (method.brands.length === 1 ? method.brands[0] : null)
+      : null;
+    return { ...group, choice, method, isCvs, brand };
+  });
+  const multi = groups.length > 1;
+  const leftCount = allGroups.length - groups.length;
+
+  const hasProblem = groups.some((group) => group.hasProblem);
+  const needsAddress = groups.some((group) => !group.isCvs);
+  const itemsTotal = groups.reduce((sum, group) => sum + group.itemsTotal, 0);
+  const shippingTotal = groups.reduce(
+    (sum, group) => sum + group.method.quote.fee,
     0
   );
-  const weightG = totalWeightG(lines);
-  const hasProblem = lines.some(
-    (line) =>
-      isSoldOut(line.variant) ||
-      (line.variant.stock !== null &&
-        line.variant.stock !== undefined &&
-        line.qty > line.variant.stock)
-  );
 
-  // 只要有一件必須低溫，整筆就只能低溫宅配
-  const forcedCold = orderTemperatureOf(lines) === "cold";
-  const coldOptional = canChooseCold(lines);
-  const cvsBrands = availableCvsBrands(forcedCold ? "cold" : "normal", weightG, settings);
-  const methods = forcedCold
-    ? ["home-cold"]
-    : [
-        ...(cvsBrands.length > 0 ? ["cvs"] : []),
-        "home",
-        ...(coldOptional ? ["home-cold"] : []),
-      ];
-  // 之前選的方式若已不能用（例如加購後超重），退回第一個可用的
-  const activeMethod = methods.includes(method) ? method : methods[0];
-  const isCvs = activeMethod === "cvs";
-  const temperature = activeMethod === "home-cold" ? "cold" : "normal";
-  const quote = getShippingQuote({
-    temperature,
-    deliveryType: isCvs ? "cvs" : "home",
-    itemsTotal,
-    weightG,
-    settings,
-  });
-  const cvsOverweight = !forcedCold && cvsBrands.length === 0;
-
-  if (lines.length === 0) {
+  if (groups.length === 0) {
     // 購物車有東西但都已失效（商品被刪或下架）
     const hasUnavailable = items.length > 0;
     return (
@@ -180,19 +192,25 @@ export default function CheckoutClient({ products, settings, guest }) {
     );
   }
 
-  const selectedCvs = cvsBrands.find((o) => o.value === form.cvsBrand);
-
   // 綠界電子地圖要在同一個分頁開（iOS 不能開新視窗），所以先暫存表單再整頁跳轉
-  function openCvsMap() {
+  function openCvsMap(group) {
     try {
       window.sessionStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ method: activeMethod, form })
+        JSON.stringify({
+          form,
+          choices: {
+            ...choices,
+            [group.key]: { ...group.choice, method: group.method.id },
+          },
+          selectedKeys: groups.map((g) => g.key),
+          mapGroup: group.key,
+        })
       );
     } catch {
       // 暫存失敗就只帶門市回來，其他欄位請顧客再填
     }
-    window.location.assign(`/api/logistics/cvs-map?brand=${form.cvsBrand}`);
+    window.location.assign(`/api/logistics/cvs-map?brand=${group.brand.value}`);
   }
 
   async function handleSubmit(e) {
@@ -203,19 +221,23 @@ export default function CheckoutClient({ products, settings, guest }) {
       setError("購物車中有商品已售完或超過庫存，請調整後再結帳");
       return;
     }
-    if (isCvs && !selectedCvs) {
-      setError("請選擇取貨超商");
-      return;
+    for (const group of groups) {
+      if (!group.isCvs) continue;
+      const prefix = multi ? `「${group.label}訂單」` : "";
+      if (!group.brand) {
+        setError(`${prefix}請選擇取貨超商`);
+        return;
+      }
+      if (!group.choice.cvsStoreName.trim() || !group.choice.cvsStoreId.trim()) {
+        setError(`${prefix}請填寫取貨門市名稱與店號`);
+        return;
+      }
+      if (!/^\d{4,8}$/.test(group.choice.cvsStoreId.trim())) {
+        setError(`${prefix}門市店號格式有誤，應為 4–8 位數字`);
+        return;
+      }
     }
-    if (isCvs && (!form.cvsStoreName.trim() || !form.cvsStoreId.trim())) {
-      setError("請填寫取貨門市名稱與店號");
-      return;
-    }
-    if (isCvs && !/^\d{4,8}$/.test(form.cvsStoreId.trim())) {
-      setError("門市店號格式有誤，應為 4–8 位數字");
-      return;
-    }
-    if (!isCvs && !form.receiverAddress.trim()) {
+    if (needsAddress && !form.receiverAddress.trim()) {
       setError("請填寫收件地址");
       return;
     }
@@ -229,33 +251,44 @@ export default function CheckoutClient({ products, settings, guest }) {
           contactName: form.contactName,
           contactEmail: form.contactEmail,
           contactPhone: form.contactPhone,
-          deliveryType: isCvs ? "cvs" : "home",
-          preferCold: activeMethod === "home-cold" && !forcedCold,
-          items: lines.map((line) => ({
-            variantId: line.variant.id,
-            quantity: line.qty,
-          })),
-          cvsBrand: isCvs ? form.cvsBrand : null,
-          cvsStoreName: isCvs ? form.cvsStoreName : null,
-          cvsStoreId: isCvs ? form.cvsStoreId : null,
-          cvsStoreAddress: isCvs ? form.cvsStoreAddress : null,
-          receiverAddress: isCvs ? null : form.receiverAddress,
           specialRequest: form.specialRequest,
+          orders: groups.map((group) => ({
+            temperature: group.method.temperature,
+            deliveryType: group.method.deliveryType,
+            items: group.lines.map((line) => ({
+              variantId: line.variant.id,
+              quantity: line.qty,
+            })),
+            cvsBrand: group.isCvs ? group.brand.value : null,
+            cvsStoreName: group.isCvs ? group.choice.cvsStoreName : null,
+            cvsStoreId: group.isCvs ? group.choice.cvsStoreId : null,
+            cvsStoreAddress: group.isCvs ? group.choice.cvsStoreAddress : null,
+            receiverAddress: group.isCvs ? null : form.receiverAddress,
+          })),
         }),
       });
       const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
+      if (!res.ok || !Array.isArray(data.orders) || data.orders.length === 0) {
         setError(data.error || "訂單建立失敗，請稍後再試");
         setSubmitting(false);
         return;
       }
 
-      // 下單成功才把商品移出購物車
-      lines.forEach((line) => removeItem(line.variant.id));
+      // 下單成功才把這幾筆的商品移出購物車，沒結帳的留著
+      groups.forEach((group) =>
+        group.lines.forEach((line) => removeItem(line.variant.id))
+      );
+      try {
+        window.sessionStorage.removeItem(CHECKOUT_GROUPS_KEY);
+      } catch {
+        // 忽略
+      }
+      const ids = data.orders.map((order) => order.id).join(",");
+      const tokens = data.orders.map((order) => order.token || "");
       router.push(
-        `/shop/thankyou?orderId=${data.orderId}${
-          data.token ? `&token=${data.token}` : ""
+        `/shop/thankyou?orderId=${ids}${
+          tokens.every(Boolean) ? `&token=${tokens.join(",")}` : ""
         }`
       );
     } catch {
@@ -303,158 +336,226 @@ export default function CheckoutClient({ products, settings, guest }) {
           </div>
         </section>
 
-        {/* 配送方式 */}
+        {multi && (
+          <p className="rounded-lg border border-primary-200 bg-primary-100 px-4 py-3 text-xs leading-relaxed text-primary-700">
+            這次一起結 {groups.length}{" "}
+            筆訂單，溫層不同所以分開寄送、各自計算運費，請分別選擇配送方式。
+          </p>
+        )}
+
+        {/* 配送方式：每筆訂單各選一次 */}
+        {groups.map((group, index) => {
+          const candidates = cvsBrandsOf(group.method.temperature);
+          return (
+            <section
+              key={group.key}
+              className="overflow-hidden rounded-xl border border-primary-200 bg-primary-50"
+              style={{ borderTop: `3px solid ${group.color}` }}
+            >
+              <div className="p-5">
+                <h2 className="font-serif text-base font-semibold text-primary-900">
+                  {multi
+                    ? `訂單 ${index + 1}・${group.label}`
+                    : `配送方式（${group.label}）`}
+                </h2>
+                {multi && (
+                  <p className="mt-1 text-xs leading-relaxed text-primary-500">
+                    {group.lines
+                      .map(
+                        (line) =>
+                          `${line.product.name}${
+                            line.variant.name ? ` ${line.variant.name}` : ""
+                          } × ${line.qty}`
+                      )
+                      .join("、")}
+                  </p>
+                )}
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {group.methods.map((option) => {
+                    const on = option.id === group.method.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => {
+                          updateChoice(group.key, { method: option.id });
+                          setError("");
+                        }}
+                        className={`rounded-lg border px-5 py-2.5 text-left text-sm font-medium transition ${
+                          on
+                            ? "border-accent-500 bg-accent-50 text-accent-700"
+                            : "border-primary-200 text-primary-700 hover:border-primary-400"
+                        }`}
+                      >
+                        {option.label}
+                        <span className="ml-2 text-xs font-normal">
+                          {option.quote.fee === 0
+                            ? "免運"
+                            : formatPrice(option.quote.fee)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {group.overweight.length > 0 && (
+                  <p className="mt-3 text-xs text-clay-500">
+                    總重 {formatWeight(group.weightG)} 已超過
+                    {group.overweight.join("、")}的重量上限，無法選擇。
+                  </p>
+                )}
+
+                {group.isCvs ? (
+                  <>
+                    <p className="mt-4 text-xs text-primary-500">
+                      可直接在地圖上選門市，或自行查詢後填入門市名稱與店號。
+                    </p>
+
+                    {candidates.length > 1 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {candidates.map((option) => {
+                          const on = group.brand?.value === option.value;
+                          const allowed = group.method.brands.some(
+                            (b) => b.value === option.value
+                          );
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              disabled={!allowed}
+                              onClick={() =>
+                                updateChoice(group.key, {
+                                  cvsBrand: option.value,
+                                  // 換超商時清掉上一家選的門市
+                                  ...(on
+                                    ? {}
+                                    : {
+                                        cvsStoreName: "",
+                                        cvsStoreId: "",
+                                        cvsStoreAddress: "",
+                                      }),
+                                })
+                              }
+                              title={
+                                allowed
+                                  ? undefined
+                                  : `超過 ${option.label} 取貨上限 ${formatWeight(
+                                      cvsWeightLimitG(
+                                        option.value,
+                                        settings,
+                                        group.method.temperature
+                                      )
+                                    )}`
+                              }
+                              className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition ${
+                                !allowed
+                                  ? "cursor-not-allowed border-primary-200 text-primary-300"
+                                  : on
+                                  ? "border-accent-500 bg-accent-50 text-accent-700"
+                                  : "border-primary-200 text-primary-700 hover:border-primary-400"
+                              }`}
+                            >
+                              {option.label}
+                              {!allowed && "（超重）"}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {group.brand && (
+                      <div className="mt-4 flex flex-col gap-4">
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() => openCvsMap(group)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-700"
+                          >
+                            在地圖上選 {group.brand.label} 門市
+                          </button>
+                          <a
+                            href={group.brand.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-accent-500 px-4 py-2 text-sm font-medium text-accent-700 transition hover:bg-accent-50"
+                          >
+                            自行查詢 {group.brand.label} 門市
+                            <span aria-hidden="true">↗</span>
+                          </a>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <Field label="門市名稱" required hint="例如：後壁店">
+                            <input
+                              className={inputClass}
+                              value={group.choice.cvsStoreName}
+                              onChange={(e) =>
+                                updateChoice(group.key, {
+                                  cvsStoreName: e.target.value,
+                                })
+                              }
+                            />
+                          </Field>
+                          <Field
+                            label="門市店號"
+                            required
+                            hint="門市查詢頁上的數字店號"
+                          >
+                            <input
+                              className={inputClass}
+                              inputMode="numeric"
+                              value={group.choice.cvsStoreId}
+                              onChange={(e) =>
+                                updateChoice(group.key, {
+                                  cvsStoreId: e.target.value,
+                                })
+                              }
+                            />
+                          </Field>
+                          <div className="sm:col-span-2">
+                            <Field label="門市地址（選填）">
+                              <input
+                                className={inputClass}
+                                value={group.choice.cvsStoreAddress}
+                                onChange={(e) =>
+                                  updateChoice(group.key, {
+                                    cvsStoreAddress: e.target.value,
+                                  })
+                                }
+                              />
+                            </Field>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-4 text-xs text-primary-500">
+                    {group.method.temperature === "normal"
+                      ? "以宅配寄送到下方的收件地址。"
+                      : `以黑貓${group.method.temperature === "frozen" ? "冷凍" : "冷藏"}宅配寄送到下方的收件地址。`}
+                  </p>
+                )}
+              </div>
+            </section>
+          );
+        })}
+
+        {/* 收件地址與備註 */}
         <section className="rounded-xl border border-primary-200 bg-primary-50 p-5">
           <h2 className="font-serif text-base font-semibold text-primary-900">
-            配送方式
+            {needsAddress ? "收件地址與備註" : "訂單備註"}
           </h2>
-
-          {forcedCold ? (
-            <p className="mt-1 text-xs leading-relaxed text-primary-500">
-              購物車內有需低溫配送的商品，整筆訂單會一起以黑貓低溫宅配寄出。
-            </p>
-          ) : (
-            <>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {methods.map((value) => {
-                  const on = value === activeMethod;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => {
-                        setMethod(value);
-                        setError("");
-                      }}
-                      className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition ${
-                        on
-                          ? "border-accent-500 bg-accent-50 text-accent-700"
-                          : "border-primary-200 text-primary-700 hover:border-primary-400"
-                      }`}
-                    >
-                      {METHOD_LABEL[value]}
-                    </button>
-                  );
-                })}
-              </div>
-              {cvsOverweight && (
-                <p className="mt-3 text-xs text-clay-500">
-                  總重 {formatWeight(weightG)} 已超過超商取貨的重量上限，這筆訂單只能宅配。
-                </p>
-              )}
-            </>
-          )}
-
-          {isCvs ? (
-            <>
-              <p className="mt-4 text-xs text-primary-500">
-                可直接在地圖上選門市，或自行查詢後填入門市名稱與店號。
-              </p>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {CVS_BRANDS.map((option) => {
-                  const on = form.cvsBrand === option.value;
-                  const allowed = cvsBrands.some((b) => b.value === option.value);
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      disabled={!allowed}
-                      onClick={() => update("cvsBrand", option.value)}
-                      title={
-                        allowed
-                          ? undefined
-                          : `超過 ${option.label} 取貨上限 ${formatWeight(
-                              cvsWeightLimitG(option.value, settings)
-                            )}`
-                      }
-                      className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition ${
-                        !allowed
-                          ? "cursor-not-allowed border-primary-200 text-primary-300"
-                          : on
-                          ? "border-accent-500 bg-accent-50 text-accent-700"
-                          : "border-primary-200 text-primary-700 hover:border-primary-400"
-                      }`}
-                    >
-                      {option.label}
-                      {!allowed && "（超重）"}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {selectedCvs && (
-                <div className="mt-4 flex flex-col gap-4">
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={openCvsMap}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-700"
-                    >
-                      在地圖上選 {selectedCvs.label} 門市
-                    </button>
-                    <a
-                      href={selectedCvs.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-accent-500 px-4 py-2 text-sm font-medium text-accent-700 transition hover:bg-accent-50"
-                    >
-                      自行查詢 {selectedCvs.label} 門市
-                      <span aria-hidden="true">↗</span>
-                    </a>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label="門市名稱" required hint="例如：後壁店">
-                      <input
-                        className={inputClass}
-                        value={form.cvsStoreName}
-                        onChange={(e) => update("cvsStoreName", e.target.value)}
-                      />
-                    </Field>
-                    <Field label="門市店號" required hint="門市查詢頁上的數字店號">
-                      <input
-                        className={inputClass}
-                        inputMode="numeric"
-                        value={form.cvsStoreId}
-                        onChange={(e) => update("cvsStoreId", e.target.value)}
-                      />
-                    </Field>
-                    <div className="sm:col-span-2">
-                      <Field label="門市地址（選填）">
-                        <input
-                          className={inputClass}
-                          value={form.cvsStoreAddress}
-                          onChange={(e) =>
-                            update("cvsStoreAddress", e.target.value)
-                          }
-                        />
-                      </Field>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="mt-4 text-xs text-primary-500">
-                {activeMethod === "home-cold"
-                  ? "以黑貓低溫宅配寄送，請填寫完整收件地址。"
-                  : "以宅配寄送，請填寫完整收件地址。"}
-              </p>
-              <div className="mt-4">
-                <Field label="收件地址" required hint="請包含縣市、鄉鎮區與詳細地址">
-                  <input
-                    className={inputClass}
-                    value={form.receiverAddress}
-                    onChange={(e) => update("receiverAddress", e.target.value)}
-                  />
-                </Field>
-              </div>
-            </>
-          )}
-
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-4">
+            {needsAddress && (
+              <Field label="收件地址" required hint="請包含縣市、鄉鎮區與詳細地址">
+                <input
+                  className={inputClass}
+                  value={form.receiverAddress}
+                  onChange={(e) => update("receiverAddress", e.target.value)}
+                />
+              </Field>
+            )}
             <Field label="訂單備註（選填）">
               <textarea
                 rows={3}
@@ -493,101 +594,139 @@ export default function CheckoutClient({ products, settings, guest }) {
           訂單摘要
         </h2>
 
-        <ul className="mt-4 flex flex-col gap-3">
-          {lines.map((line) => {
-            const soldOut = isSoldOut(line.variant);
-            const overStock =
-              line.variant.stock !== null &&
-              line.variant.stock !== undefined &&
-              line.qty > line.variant.stock;
-            return (
-              <li key={line.variant.id} className="text-sm">
-                <div className="flex justify-between gap-3">
-                  <span className="text-primary-700">
-                    {line.product.name}
-                    {line.variant.name && (
-                      <span className="text-primary-600"> {line.variant.name}</span>
-                    )}
-                    <span className="text-primary-500"> × {line.qty}</span>
-                  </span>
-                  <span className="whitespace-nowrap font-medium text-primary-900">
-                    {formatPrice(unitPrice(line.variant) * line.qty)}
-                  </span>
-                </div>
-                {(soldOut || overStock) && (
-                  <p className="mt-1 flex items-center gap-2 text-xs text-clay-500">
-                    {soldOut
-                      ? "已售完"
-                      : `庫存僅剩 ${line.variant.stock} 件`}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        soldOut
-                          ? removeItem(line.variant.id)
-                          : setQty(line.variant.id, line.variant.stock)
-                      }
-                      className="underline transition hover:text-clay-700"
-                    >
-                      {soldOut ? "移除" : "調整為可購買數量"}
-                    </button>
-                  </p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-
-        <dl className="mt-5 flex flex-col gap-2 border-t border-primary-200 pt-4 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-primary-600">商品小計</dt>
-            <dd className="text-primary-900">{formatPrice(itemsTotal)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-primary-600">配送方式</dt>
-            <dd className="text-primary-900">{METHOD_LABEL[activeMethod]}</dd>
-          </div>
-          {weightG > 0 && (
-            <div className="flex justify-between">
-              <dt className="text-primary-600">總重</dt>
-              <dd className="text-primary-900">
-                {formatWeight(weightG)}
-                {!isCvs && `・${quote.boxes} 箱`}
-              </dd>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <dt className="text-primary-600">運費</dt>
-            <dd className="text-primary-900">
-              {quote.fee === 0 ? (
-                <span className="font-medium text-accent-600">免運</span>
-              ) : (
-                formatPrice(quote.fee)
+        {groups.map((group, index) => {
+          const quote = group.method.quote;
+          return (
+            <div
+              key={group.key}
+              className={
+                index > 0 ? "mt-5 border-t border-primary-200 pt-5" : "mt-4"
+              }
+            >
+              {multi && (
+                <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-primary-700">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ background: group.color }}
+                    aria-hidden="true"
+                  />
+                  訂單 {index + 1}・{group.label}
+                </p>
               )}
-            </dd>
-          </div>
-        </dl>
 
-        {!isCvs && quote.boxes > 1 && (
-          <p className="mt-2 text-xs text-primary-500">
-            每箱上限 {formatWeight(boxWeightG(settings))}，共 {quote.boxes} 箱
-            {quote.freeBoxes > 0 &&
-              `，已免 ${Math.min(quote.freeBoxes, quote.boxes)} 箱運費`}
-            。
-          </p>
-        )}
-        {quote.freeGap !== null && (
-          <p className="mt-2 text-xs text-accent-600">
-            再買 {formatPrice(quote.freeGap)}
-            {quote.chargedBoxes > 1 ? " 可再免一箱運費" : " 即可免運"}
-          </p>
-        )}
+              <ul className="flex flex-col gap-3">
+                {group.lines.map((line) => {
+                  const soldOut = isSoldOut(line.variant);
+                  const overStock =
+                    line.variant.stock !== null &&
+                    line.variant.stock !== undefined &&
+                    line.qty > line.variant.stock;
+                  return (
+                    <li key={line.variant.id} className="text-sm">
+                      <div className="flex justify-between gap-3">
+                        <span className="text-primary-700">
+                          {line.product.name}
+                          {line.variant.name && (
+                            <span className="text-primary-600">
+                              {" "}
+                              {line.variant.name}
+                            </span>
+                          )}
+                          <span className="text-primary-500"> × {line.qty}</span>
+                        </span>
+                        <span className="whitespace-nowrap font-medium text-primary-900">
+                          {formatPrice(unitPrice(line.variant) * line.qty)}
+                        </span>
+                      </div>
+                      {(soldOut || overStock) && (
+                        <p className="mt-1 flex items-center gap-2 text-xs text-clay-500">
+                          {soldOut
+                            ? "已售完"
+                            : `庫存僅剩 ${line.variant.stock} 件`}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              soldOut
+                                ? removeItem(line.variant.id)
+                                : setQty(line.variant.id, line.variant.stock)
+                            }
+                            className="underline transition hover:text-clay-700"
+                          >
+                            {soldOut ? "移除" : "調整為可購買數量"}
+                          </button>
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
 
-        <div className="mt-4 flex items-baseline justify-between border-t border-primary-200 pt-4">
-          <span className="text-sm text-primary-600">應付金額</span>
+              <dl className="mt-4 flex flex-col gap-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-primary-600">商品小計</dt>
+                  <dd className="text-primary-900">
+                    {formatPrice(group.itemsTotal)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-primary-600">配送方式</dt>
+                  <dd className="text-right text-primary-900">
+                    {group.method.label}
+                  </dd>
+                </div>
+                {group.weightG > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-primary-600">總重</dt>
+                    <dd className="text-primary-900">
+                      {formatWeight(group.weightG)}
+                      {!group.isCvs && `・${quote.boxes} 箱`}
+                    </dd>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <dt className="text-primary-600">運費</dt>
+                  <dd className="text-primary-900">
+                    {quote.fee === 0 ? (
+                      <span className="font-medium text-accent-600">免運</span>
+                    ) : (
+                      formatPrice(quote.fee)
+                    )}
+                  </dd>
+                </div>
+              </dl>
+
+              {!group.isCvs && quote.boxes > 1 && (
+                <p className="mt-2 text-xs text-primary-500">
+                  每箱上限 {formatWeight(boxWeightG(settings))}，共 {quote.boxes} 箱
+                  {quote.freeBoxes > 0 &&
+                    `，已免 ${Math.min(quote.freeBoxes, quote.boxes)} 箱運費`}
+                  。
+                </p>
+              )}
+              {quote.freeGap !== null && (
+                <p className="mt-2 text-xs text-accent-600">
+                  再買 {formatPrice(quote.freeGap)}
+                  {quote.chargedBoxes > 1 ? " 可再免一箱運費" : " 即可免運"}
+                </p>
+              )}
+            </div>
+          );
+        })}
+
+        <div className="mt-5 flex items-baseline justify-between border-t border-primary-200 pt-4">
+          <span className="text-sm text-primary-600">
+            應付金額{multi && `（${groups.length} 筆）`}
+          </span>
           <span className="text-2xl font-semibold text-primary-900">
-            {formatPrice(itemsTotal + quote.fee)}
+            {formatPrice(itemsTotal + shippingTotal)}
           </span>
         </div>
+
+        {leftCount > 0 && (
+          <p className="mt-3 text-xs text-primary-500">
+            購物車裡還有 {leftCount} 筆訂單這次沒有結帳，會繼續留在購物車。
+          </p>
+        )}
 
         <button
           type="button"
@@ -599,7 +738,11 @@ export default function CheckoutClient({ products, settings, guest }) {
               : "bg-accent-500 text-white hover:bg-accent-700"
           }`}
         >
-          {submitting ? "訂單處理中…" : "確認送出訂單"}
+          {submitting
+            ? "訂單處理中…"
+            : multi
+            ? `確認送出 ${groups.length} 筆訂單`
+            : "確認送出訂單"}
         </button>
 
         <Link

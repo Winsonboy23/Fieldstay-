@@ -237,7 +237,7 @@ export async function getSettings() {
 // Products
 // 價格／庫存／重量在 product_variants，商品層只留共用資訊
 const PRODUCT_COLUMNS =
-  "id, name, subtitle, description, temperature, image, gallery_images, detail_images, sort_order, features, notes, spec_content, spec_origin, spec_ingredients, spec_shelf_life, spec_storage, product_variants(id, name, price, discount, stock, weight_g, sort_order, is_active)";
+  "id, name, subtitle, description, temperature, ship_temps, image, gallery_images, detail_images, sort_order, features, notes, spec_content, spec_origin, spec_ingredients, spec_shelf_life, spec_storage, product_variants(id, name, price, discount, stock, weight_g, sort_order, is_active)";
 
 // 只留上架中的規格，並依 sort_order 排序
 function normalizeProduct(product) {
@@ -284,29 +284,32 @@ export async function getProduct(id) {
 }
 
 // Shop orders
-export async function createShopOrder(payload) {
-  // 溫層由 RPC 依購物車內容判定；preferCold 是顧客自選低溫（購物車需有可低溫的商品）
-  const { data, error } = await supabaseAdmin.rpc("create_shop_order_v2", {
+// 一次建立多張訂單（購物車依溫層分筆）：全部成功才成立，回傳訂單陣列。
+// 每張訂單的溫層與配送方式由顧客在結帳頁選，RPC 會逐項驗證商品是否允許。
+export async function createShopOrders(payload) {
+  const { data, error } = await supabaseAdmin.rpc("create_shop_orders_v3", {
     p_guest_id: payload.guestId ?? null,
     p_contact_name: payload.contactName,
     p_contact_email: payload.contactEmail,
     p_contact_phone: payload.contactPhone,
-    p_delivery_type: payload.deliveryType,
-    p_prefer_cold: payload.preferCold === true,
-    p_items: payload.items,
-    p_cvs_brand: payload.cvsBrand ?? null,
-    p_cvs_store_id: payload.cvsStoreId ?? null,
-    p_cvs_store_name: payload.cvsStoreName ?? null,
-    p_cvs_store_address: payload.cvsStoreAddress ?? null,
-    p_receiver_address: payload.receiverAddress ?? null,
-    p_special_request: payload.specialRequest ?? null,
+    p_orders: payload.orders.map((order) => ({
+      temperature: order.temperature,
+      delivery_type: order.deliveryType,
+      items: order.items,
+      cvs_brand: order.cvsBrand ?? null,
+      cvs_store_id: order.cvsStoreId ?? null,
+      cvs_store_name: order.cvsStoreName ?? null,
+      cvs_store_address: order.cvsStoreAddress ?? null,
+      receiver_address: order.receiverAddress ?? null,
+      special_request: payload.specialRequest ?? null,
+    })),
   });
 
   if (error) {
     console.error(error);
     throw new Error(error.message);
   }
-  return data;
+  return Array.isArray(data) ? data : data ? [data] : [];
 }
 
 export async function cancelShopOrder(orderId) {

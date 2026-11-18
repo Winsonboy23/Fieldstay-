@@ -4,7 +4,7 @@ import AddToCartButton from "./AddToCartButton";
 import {
   firstAvailableVariant,
   formatPrice,
-  getTemperature,
+  getProductTemp,
   hasVariantChoice,
   isProductSoldOut,
   priceRange,
@@ -13,7 +13,7 @@ import {
 } from "../_lib/product-utils";
 
 export default function ProductCard({ product }) {
-  const temp = getTemperature(product.temperature);
+  const temp = getProductTemp(product);
   const variants = variantsOf(product);
   const soldOut = isProductSoldOut(product);
   const multi = hasVariantChoice(product);

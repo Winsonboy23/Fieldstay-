@@ -485,12 +485,13 @@ function UpdateSettingsForm() {
       <Section>
         <h3>商城運費</h3>
         <p className="hint">
-          所有商品合併成一張訂單。購物車只要有一件必須低溫的商品，整筆就走低溫宅配。
+          每個商品在「商品管理」設定可以用哪些溫層寄送。購物車會挑一個所有商品都能走的溫層合併成一筆訂單；
+          沒有共同溫層的商品會自動分成不同訂單，各自計算運費。
           宅配依總重分箱：箱數 = 總重 ÷ 每箱重量上限（無條件進位），每滿一次免運門檻就免一箱運費。
           例：每箱 20 公斤、門檻 2000 元時，22 公斤買 2000 元收 1 箱運費，買 4000 元全免。
           修改後只影響新訂單。
         </p>
-        <FieldGrid cols="1fr 1fr">
+        <FieldGrid cols="1fr 1fr 1fr">
           <Field>
             <span>常溫・超商取貨運費（元 / 件）</span>
             <TextInput
@@ -524,9 +525,10 @@ function UpdateSettingsForm() {
               onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_normal")}
             />
           </Field>
+
           <span />
           <Field>
-            <span>低溫・黑貓宅配運費（元 / 箱）</span>
+            <span>冷藏・黑貓宅配運費（元 / 箱）</span>
             <TextInput
               type="number"
               min="0"
@@ -537,7 +539,7 @@ function UpdateSettingsForm() {
             />
           </Field>
           <Field>
-            <span>低溫・免運門檻（元，留空=不免運）</span>
+            <span>冷藏・免運門檻（元，留空=不免運）</span>
             <TextInput
               type="number"
               min="0"
@@ -547,12 +549,46 @@ function UpdateSettingsForm() {
               onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_chilled")}
             />
           </Field>
+
+          <Field>
+            <span>冷凍・全家取貨運費（元 / 件）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="120"
+              defaultValue={settings.ship_fee_frozen_fami ?? 120}
+              disabled={disabled}
+              onBlur={(e) => handleFeeBlur(e, "ship_fee_frozen_fami")}
+            />
+          </Field>
+          <Field>
+            <span>冷凍・黑貓宅配運費（元 / 箱）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="180"
+              defaultValue={settings.ship_fee_frozen_home ?? 180}
+              disabled={disabled}
+              onBlur={(e) => handleFeeBlur(e, "ship_fee_frozen_home")}
+            />
+          </Field>
+          <Field>
+            <span>冷凍・免運門檻（元，留空=不免運）</span>
+            <TextInput
+              type="number"
+              min="0"
+              placeholder="例：2000"
+              defaultValue={settings.free_ship_threshold_frozen ?? ""}
+              disabled={disabled}
+              onBlur={(e) => handleThresholdBlur(e, "free_ship_threshold_frozen")}
+            />
+          </Field>
         </FieldGrid>
 
         <p className="hint" style={{ marginTop: "2rem" }}>
-          重量限制（公斤）。超商限重請依門市實際規定填寫；超過限重的訂單，結帳時就不能選那家超商。
+          重量限制（公斤）。超商限重請依門市實際規定填寫；超過限重的訂單，結帳時就不能選那家超商，只能宅配。
         </p>
-        <FieldGrid cols="1fr 1fr 1fr">
+        <FieldGrid cols="1fr 1fr">
           <Field>
             <span>宅配每箱重量上限</span>
             <TextInput
@@ -566,7 +602,7 @@ function UpdateSettingsForm() {
             />
           </Field>
           <Field>
-            <span>7-ELEVEN 取貨限重</span>
+            <span>7-ELEVEN 常溫取貨限重</span>
             <TextInput
               type="number"
               min="1"
@@ -578,7 +614,7 @@ function UpdateSettingsForm() {
             />
           </Field>
           <Field>
-            <span>全家取貨限重</span>
+            <span>全家常溫取貨限重</span>
             <TextInput
               type="number"
               min="1"
@@ -587,6 +623,18 @@ function UpdateSettingsForm() {
               defaultValue={gramsToKg(settings.cvs_weight_limit_fami_g, 5)}
               disabled={disabled}
               onBlur={(e) => handleKgBlur(e, "cvs_weight_limit_fami_g", 5)}
+            />
+          </Field>
+          <Field>
+            <span>全家冷凍取貨限重</span>
+            <TextInput
+              type="number"
+              min="1"
+              step="0.1"
+              placeholder="10"
+              defaultValue={gramsToKg(settings.cvs_weight_limit_fami_frozen_g, 10)}
+              disabled={disabled}
+              onBlur={(e) => handleKgBlur(e, "cvs_weight_limit_fami_frozen_g", 10)}
             />
           </Field>
         </FieldGrid>

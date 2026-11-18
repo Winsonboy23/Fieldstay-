@@ -1,6 +1,8 @@
 // Email 範本（樣式 B）— 訂房 / 報名 / 已收款通知
 // 沿用 auth email-hook 的視覺語言：米白底、藍色主色 #3a7ea1、Georgia 標題
 
+import { deliveryLabel } from "./product-utils";
+
 const BRAND_BLUE = "#3a7ea1";
 
 export function formatPrice(n) {
@@ -509,13 +511,9 @@ export function activityPaidEmail({
 // ============================================================
 // 商品訂單共用區塊
 // ============================================================
-// cold 是現行的低溫；chilled / frozen 是改版前的舊訂單
-const TEMP_LABEL = { normal: "常溫", cold: "低溫", chilled: "冷藏", frozen: "冷凍" };
+// cold 是曾經合併冷藏冷凍的那一版留下的訂單
+const TEMP_LABEL = { normal: "常溫", chilled: "冷藏", frozen: "冷凍", cold: "低溫" };
 const CVS_LABEL = { UNIMART: "7-ELEVEN", FAMI: "全家" };
-
-function homeDeliveryLabel(order) {
-  return order?.temperature && order.temperature !== "normal" ? "低溫宅配" : "宅配";
-}
 
 function shopItemsCard(order) {
   const items = Array.isArray(order?.shop_order_items) ? order.shop_order_items : [];
@@ -545,13 +543,16 @@ function shopDeliveryCard(order) {
   const rows =
     order.delivery_type === "cvs"
       ? [
-          { label: "取貨方式", value: `${CVS_LABEL[order.cvs_brand] || ""} 超商取貨` },
+          {
+            label: "取貨方式",
+            value: `${CVS_LABEL[order.cvs_brand] || ""} ${deliveryLabel(order)}`,
+          },
           { label: "取貨門市", value: escape(order.cvs_store_name) },
           { label: "門市店號", value: escape(order.cvs_store_id) },
           { label: "門市地址", value: escape(order.cvs_store_address || "") },
         ]
       : [
-          { label: "配送方式", value: homeDeliveryLabel(order) },
+          { label: "配送方式", value: deliveryLabel(order) },
           ...(Number(order.box_count) > 1
             ? [{ label: "包裹箱數", value: `${order.box_count} 箱` }]
             : []),

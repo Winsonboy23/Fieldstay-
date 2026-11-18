@@ -1,4 +1,5 @@
 import supabase from "./supabase";
+import { legacyTemperature, shipTempsOf } from "../utils/productTemperature";
 
 const BUCKET = "product-images";
 
@@ -103,11 +104,15 @@ export async function createEditProduct(newProduct, id) {
   // --- Build payload ---
   const isBlank = (v) => v === "" || v === null || v === undefined;
 
+  const shipTemps = shipTempsOf(newProduct);
+
   const productPayload = {
     name: newProduct.name,
     subtitle: newProduct.subtitle || null,
     description: newProduct.description || "",
-    temperature: newProduct.temperature || "normal",
+    // 可寄送的溫層（可複選）；舊欄位 temperature 一併寫回，值域 normal / cold / flex
+    ship_temps: shipTemps,
+    temperature: legacyTemperature(shipTemps),
     sort_order: Number(newProduct.sort_order) || 0,
     image: imagePath,
     gallery_images: [...existingGalleryUrls, ...uploadedGallery],

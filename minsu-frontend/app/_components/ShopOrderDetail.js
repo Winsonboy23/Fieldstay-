@@ -150,7 +150,7 @@ export default function ShopOrderDetail({ order, settings, showBank = false }) {
               <div className="flex justify-between gap-4 py-2.5">
                 <dt className="text-primary-500">取貨方式</dt>
                 <dd className="text-right font-medium text-primary-900">
-                  {CVS_LABEL[order.cvs_brand] || ""} 超商取貨
+                  {CVS_LABEL[order.cvs_brand] || ""} {deliveryLabel(order)}
                 </dd>
               </div>
               <div className="flex justify-between gap-4 py-2.5">

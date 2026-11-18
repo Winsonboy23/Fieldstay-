@@ -15,8 +15,9 @@ import { useCreateProduct } from "./useCreateProduct";
 import { useEditProduct } from "./useEditProduct";
 import {
   TEMPERATURES,
-  getTemperature,
-  normalizeProductTemp,
+  TEMPERATURE_ORDER,
+  getProductTemp,
+  shipTempsOf,
 } from "../../utils/productTemperature";
 
 const Wrapper = styled.div`
@@ -130,7 +131,6 @@ const inputStyle = `
 
 const TextInput = styled.input`${inputStyle}`;
 const NumberInput = styled.input.attrs({ type: "number" })`${inputStyle}`;
-const StyledSelect = styled.select`${inputStyle}`;
 const TextareaInput = styled.textarea`
   ${inputStyle}
   resize: vertical;
@@ -150,6 +150,44 @@ const DeliveryHint = styled.p`
   background: var(--color-grey-50);
   border-left: 3px solid ${(p) => p.$color};
   border-radius: var(--border-radius-sm);
+`;
+
+const FieldCaption = styled.span`
+  display: block;
+  margin-bottom: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--color-grey-700);
+
+  &::after {
+    content: " *";
+    color: var(--color-red-700);
+  }
+`;
+
+const TempOptions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+`;
+
+const TempOption = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.4rem;
+  border: 1px solid ${(p) => (p.$on ? p.$color : "var(--color-grey-200)")};
+  border-radius: var(--border-radius-sm);
+  background: ${(p) => (p.$on ? "var(--color-grey-50)" : "var(--color-grey-0)")};
+  font-size: 1.4rem;
+  font-weight: ${(p) => (p.$on ? 600 : 400)};
+  color: var(--color-grey-700);
+  cursor: pointer;
+
+  input {
+    width: 1.6rem;
+    height: 1.6rem;
+    accent-color: ${(p) => p.$color};
+  }
 `;
 
 const ImageGrid = styled.div`
@@ -469,15 +507,27 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
   );
   const detailInputRef = useRef(null);
 
-  const { register, handleSubmit, watch, formState } = useForm({
-    // 舊商品的溫層可能還是 chilled / frozen，帶進表單時轉成現行的值
+  // 這個商品可以用哪些溫層寄送（可複選）
+  const [shipTemps, setShipTemps] = useState(() =>
+    isEditSession ? shipTempsOf(editValues) : ["normal"]
+  );
+  const tempInfo = getProductTemp({ ship_temps: shipTemps });
+
+  function toggleShipTemp(value) {
+    setShipTemps((prev) =>
+      TEMPERATURE_ORDER.filter((t) =>
+        t === value ? !prev.includes(t) : prev.includes(t)
+      )
+    );
+  }
+
+  const { register, handleSubmit, formState } = useForm({
     defaultValues: isEditSession
-      ? { ...editValues, temperature: normalizeProductTemp(editValues.temperature) }
-      : { temperature: "normal", discount: 0, sort_order: 0 },
+      ? editValues
+      : { discount: 0, sort_order: 0 },
   });
 
   const { errors } = formState;
-  const selectedTemp = getTemperature(watch("temperature"));
 
   function addFeature() {
     const v = newFeature.trim();
@@ -581,6 +631,11 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       return;
     }
 
+    if (shipTemps.length === 0) {
+      alert("請至少勾選一種可寄送的溫層");
+      return;
+    }
+
     const cleanVariants = variants.filter(
       (v) => String(v.price).trim() !== "" || v.name.trim() !== ""
     );
@@ -618,6 +673,7 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
       detail_items: detailItems.map((item) => item.file || item.url),
       features,
       notes,
+      ship_temps: shipTemps,
       variants: cleanVariants,
     };
 
@@ -706,27 +762,46 @@ function CreateProductForm({ productToEdit = {}, onCloseModal }) {
           <Section>
             <h3>溫層與配送</h3>
 
-            <Field>
-              <span className="req">溫層</span>
-              <StyledSelect disabled={isWorking} {...register("temperature")}>
-                {TEMPERATURES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.optionLabel}
-                  </option>
-                ))}
-              </StyledSelect>
-            </Field>
+            <div>
+              <FieldCaption>可以用哪些溫層寄送（可複選）</FieldCaption>
+              <TempOptions>
+                {TEMPERATURES.map((t) => {
+                  const on = shipTemps.includes(t.value);
+                  return (
+                    <TempOption key={t.value} $on={on} $color={t.color}>
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        disabled={isWorking}
+                        onChange={() => toggleShipTemp(t.value)}
+                      />
+                      {t.label}
+                    </TempOption>
+                  );
+                })}
+              </TempOptions>
+            </div>
 
-            <DeliveryHint $color={selectedTemp.color}>
-              此商品的配送方式為
-              <strong>「{selectedTemp.delivery}」</strong>。
-              {selectedTemp.value === "cold" &&
-                "只要購物車裡有這類商品，整筆訂單都會以低溫宅配寄出。"}
-              {selectedTemp.value === "flex" &&
-                "顧客結帳時可以自己選常溫或低溫；和必須低溫的商品一起買時會跟著走低溫。"}
-              {selectedTemp.value === "normal" &&
-                "和必須低溫的商品一起買時，會跟著整筆訂單以低溫宅配寄出。"}
-              所有商品合併成一張訂單，宅配運費依總重分箱計算。
+            <DeliveryHint $color={tempInfo.color}>
+              {shipTemps.length === 0 ? (
+                "請至少勾選一種溫層。"
+              ) : (
+                <>
+                  {shipTemps.length === 1 ? (
+                    <>
+                      此商品只能用<strong>「{tempInfo.label}」</strong>寄送，配送方式為
+                      <strong>「{tempInfo.delivery}」</strong>。
+                    </>
+                  ) : (
+                    <>
+                      此商品可以用<strong>「{tempInfo.label}」</strong>
+                      寄送，顧客結帳時可以自己選。
+                    </>
+                  )}
+                  購物車會挑一個所有商品都能走的溫層合併成一筆訂單（例如和只能冷凍的商品一起買，就整筆走冷凍）；
+                  沒有共同溫層的商品會自動分成不同訂單、各自計算運費。
+                </>
+              )}
             </DeliveryHint>
           </Section>
 
